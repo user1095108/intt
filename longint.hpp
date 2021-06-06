@@ -54,34 +54,31 @@ template <typename U,
 >
 constexpr longint(U const v) noexcept
 {
-  auto const convert([&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+  [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+  {
+    if constexpr (std::is_signed_v<U>)
     {
-      if constexpr (std::is_signed_v<U>)
-      {
+      (
         (
-          (
-            v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
-              v >> I * bits_e :
-              v >= 0 ? T{} : ~T{}
-          ),
-          ...
-        );
-      }
-      else
-      {
-        (
-          (
-            v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
-              v >> I * bits_e :
-              (v >> (sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{})
-          ),
-          ...
-        );
-      }
+          v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
+            v >> I * bits_e :
+            v >= 0 ? T{} : ~T{}
+        ),
+        ...
+      );
     }
-  );
-
-  convert(std::make_index_sequence<N>());
+    else
+    {
+      (
+        (
+          v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
+            v >> I * bits_e :
+            (v >> (sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{})
+        ),
+        ...
+      );
+    }
+  }(std::make_index_sequence<N>());
 }
 
 constexpr longint(longint const&) = default;
@@ -105,7 +102,7 @@ template <typename U,
 >
 constexpr explicit operator U() const noexcept
 {
-  auto const convert([&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+  return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
       if constexpr (sizeof...(I))
       {
@@ -118,10 +115,7 @@ constexpr explicit operator U() const noexcept
       {
         return v_[0];
       }
-    }
-  );
-
-  return convert(std::make_index_sequence<(sizeof(U) * CHAR_BIT) / bits_e>());
+    }(std::make_index_sequence<(sizeof(U) * CHAR_BIT) / bits_e>());
 }
 
 // assignment
