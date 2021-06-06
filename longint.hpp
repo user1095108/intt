@@ -73,7 +73,7 @@ constexpr longint(U const v) noexcept
         (
           v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
             v >> I * bits_e :
-            (v >> (sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{})
+            (v >> ((sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{}))
         ),
         ...
       );
@@ -104,7 +104,7 @@ constexpr explicit operator U() const noexcept
 {
   return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
-      if constexpr (sizeof...(I))
+      if constexpr (bool(sizeof...(I)))
       {
         return (
           (U(v_[I]) << I * bits_e) |
