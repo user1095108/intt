@@ -6,15 +6,10 @@
 #include <climits>
 
 #include <array>
-
 #include <limits>
-
 #include <ostream>
-
 #include <sstream>
-
 #include <utility>
-
 #include <type_traits>
 
 namespace intt
@@ -32,22 +27,19 @@ public:
   value_type v_{};
 
 public:
+  enum : unsigned { size = N };
+
   enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
   enum : unsigned { bits = N * bits_e };
 
   enum : T { max_e = std::numeric_limits<T>::max() };
-
-  enum : unsigned { size = N };
 
   intt() = default;
 
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(decltype(v_) const& v) noexcept :
-    v_(v)
-  {
-  }
+  constexpr intt(decltype(v_)&& v) noexcept : v_(std::move(v)) { }
 
   template <typename U> requires(std::is_integral_v<U>)
   constexpr intt(U const v) noexcept
@@ -80,8 +72,8 @@ public:
   }
 
   // assignment
-  constexpr intt& operator=(intt const&) = default;
-  constexpr intt& operator=(intt&&) = default;
+  intt& operator=(intt const&) = default;
+  intt& operator=(intt&&) = default;
 
   #define INTT_ASSIGNMENT(OP)\
     template <typename U>\
@@ -94,6 +86,7 @@ public:
   INTT_ASSIGNMENT(-)
   INTT_ASSIGNMENT(*)
   INTT_ASSIGNMENT(/)
+  INTT_ASSIGNMENT(%)
 
   constexpr auto& operator<<=(unsigned i) noexcept
   {
@@ -114,13 +107,12 @@ public:
       }(std::make_index_sequence<N>());
   }
 
-  template <typename U>
-    requires(std::is_integral_v<U> && std::is_signed_v<U>)
+  template <typename U> requires(std::is_integral_v<U> && std::is_signed_v<U>)
   constexpr explicit operator U() const noexcept
   {
     return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
       {
-        if constexpr (bool(sizeof...(I)))
+        if constexpr(bool(sizeof...(I)))
         {
           return (
             (U(v_[I]) << I * bits_e) |
@@ -155,7 +147,7 @@ public:
   }
 
   constexpr auto operator+() const noexcept { return *this; }
-  constexpr auto operator-() const noexcept { return ~*this + intt{1}; }
+  constexpr auto operator-() const noexcept { return ~*this + 1; }
 
   //
   constexpr auto operator+(intt const& o) const noexcept
@@ -189,17 +181,17 @@ public:
     return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
       {
         return (
-          [&]<auto J>() noexcept
-          {
-            return (
-              (
-                intt(v_[J] * o[I]) << (I + J) * bits_e
-              ) +
-              ...
-            );
-          }.template operator()<I>() +
-          ...
-        );
+            [&]<auto J>() noexcept
+            {
+              return (
+                (
+                  intt(v_[J] * o[I]) << (I + J) * bits_e
+                ) +
+                ...
+              );
+            }.template operator()<I>() +
+            ...
+          );
       }(std::make_index_sequence<N>());
   }
 
