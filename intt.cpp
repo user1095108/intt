@@ -2,13 +2,13 @@
 
 #include <iostream>
 
-#include "longint.hpp"
+#include "intt.hpp"
 
 int main()
 {
-  using D = longint::longint<std::uint16_t, 8>;
-//using D = longint::longint<std::uint32_t, 4>;
-//using D = longint::longint<std::uint64_t, 2>;
+  using D = intt::intt<std::uint16_t, 8>;
+//using D = intt::intt<std::uint32_t, 4>;
+//using D = intt::intt<std::uint64_t, 2>;
 
   //
   D a(-1025);
