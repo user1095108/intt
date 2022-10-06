@@ -20,25 +20,6 @@
 namespace intt
 {
 
-namespace detail
-{
-
-constexpr auto hash_combine(auto&& ...v) noexcept requires(bool(sizeof...(v)))
-{
-  std::size_t seed{672807365};
-
-  return (
-    (
-      seed ^= std::hash<std::remove_cvref_t<decltype(v)>>()(
-        std::forward<decltype(v)>(v)) + 0x9e3779b9 + (seed << 6) +
-        (seed >> 2)
-    ),
-    ...
-  );
-}
-
-}
-
 template <typename T, unsigned N>
 class intt
 {
@@ -154,11 +135,11 @@ public:
   }
 
   // increment, decrement
-  constexpr auto& operator++() noexcept { return *this += intt{1}; }
-  constexpr auto& operator--() noexcept { return *this -= intt{1}; }
+  constexpr auto& operator++() noexcept { return *this += 1; }
+  constexpr auto& operator--() noexcept { return *this -= 1; }
 
-  constexpr auto operator++(int) const noexcept { return *this + intt{1}; }
-  constexpr auto operator--(int) const noexcept { return *this - intt{1}; }
+  constexpr auto operator++(int) const noexcept { return *this + 1; }
+  constexpr auto operator--(int) const noexcept { return *this - 1; }
 
   // member access
   constexpr auto operator[](unsigned const i) const noexcept { return v_[i]; }
@@ -166,9 +147,9 @@ public:
   //
   constexpr auto operator~() const noexcept
   {
-    return ([&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
       {
-        return intt{intt::value_type{T(~v_[I])...}};
+        return {value_type{T(~v_[I])...}};
       }
     )(std::make_index_sequence<N>());
   }
@@ -177,81 +158,58 @@ public:
   constexpr auto operator-() const noexcept { return ~*this + intt{1}; }
 
   //
-  template <typename A, unsigned B>
-  friend constexpr bool operator==(intt<A, B> const&,
-    intt<A, B> const&) noexcept;
+  constexpr auto operator+(intt const& o) const noexcept
+  {
+    return ([&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+      {
+        intt<T, N> r;
 
-  template <typename A, unsigned B, typename C, unsigned D>
-  friend constexpr auto operator+(intt<A, B> const&,
-    intt<C, D> const&) noexcept;
+        bool c{};
 
-  template <typename A, unsigned B, typename C, unsigned D>
-  friend constexpr auto operator-(intt<A, B> const&,
-    intt<C, D> const&) noexcept;
+        (
+          (
+            r.v_[I] = v_[I] + o[I] + c,
+            c = v_[I] > max_e - o[I] - c
+          ),
+          ...
+        );
 
-  template <typename A, unsigned B>
-  friend constexpr auto operator<<(intt<A, B> const&, unsigned) noexcept;
-  template <typename A, unsigned B>
-  friend constexpr auto operator>>(intt<A, B> const&, unsigned) noexcept;
+        return r;
+      }
+    )(std::make_index_sequence<N>());
+  }
+
+  constexpr auto operator-(intt const& o) const noexcept
+  {
+    return *this + (-o);
+  }
+
+  constexpr auto operator*(intt const& o) const noexcept
+  {
+    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+      {
+        return (
+          [&]<auto J>() noexcept
+          {
+            return (
+              (
+                intt(v_[J] * o[I]) << (I + J) * bits_e
+              ) +
+              ...
+            );
+          }.template operator()<I>() +
+          ...
+        );
+      }(std::make_index_sequence<N>());
+  }
+
+  constexpr auto operator%(intt const& o) const noexcept
+  {
+    return *this - (*this / o) * o;
+  }
 };
 
 //arithmetic//////////////////////////////////////////////////////////////////
-
-template <typename T, unsigned N>
-constexpr auto operator+(intt<T, N> const& a,
-  intt<T, N> const& b) noexcept
-{
-  using r_t = intt<T, N>;
-
-  return ([&]<std::size_t ...I>(
-    std::index_sequence<I...>) noexcept
-    {
-      intt<T, N> r;
-
-      bool carry{};
-
-      (
-        (
-          r.v_[I] = a[I] + b[I] + carry,
-          carry = a[I] > r_t::max_e - b[I] - carry
-        ),
-        ...
-      );
-
-      return r;
-    }
-  )(std::make_index_sequence<N>());
-}
-
-template <typename T, unsigned N>
-constexpr auto operator-(intt<T, N> const& a,
-  intt<T, N> const& b) noexcept
-{
-  return a + (-b);
-}
-
-template <typename T, unsigned N>
-constexpr auto operator*(intt<T, N> const& a,
-  intt<T, N> const& b) noexcept
-{
-  using r_t = intt<T, N>;
-
-  return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-    {
-      return (
-        [&]<auto J>() noexcept
-        {
-          return (
-            (
-              r_t(a[J] * b[I]) << (J + I) * r_t::bits_e
-            ) +
-            ...
-          );
-        }.template operator()<I>() +
-        ...
-      );
-    }(std::make_index_sequence<N>());
-}
 
 template <typename T, unsigned N>
 constexpr auto operator/(intt<T, N> a, intt<T, N> b) noexcept
@@ -287,85 +245,6 @@ constexpr auto operator/(intt<T, N> a, intt<T, N> b) noexcept
   }
 
   return q;
-}
-
-template <typename A, unsigned B>
-constexpr auto operator%(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
-{
-  return a - (a / b) * b;
-}
-
-// conversions
-template <typename A, unsigned B, typename U>
-constexpr auto operator+(intt<A, B> const& a, U const b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return a + intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator-(intt<A, B> const& a, U const b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return a - intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator*(intt<A, B> const& a, U const b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return a * intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator/(intt<A, B> const& a, U const b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return a / intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator%(intt<A, B> const& a, U const b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return a % intt<A, B>(b);
-}
-
-// conversions
-template <typename A, unsigned B, typename U>
-constexpr auto operator+(U const a, intt<A, B> const& b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return intt<A, B>(a) + b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator-(U const a, intt<A, B> const& b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return intt<A, B>(a) - b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator*(U const a, intt<A, B> const& b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return intt<A, B>(a) * b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator/(U const a, intt<A, B> const& b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return intt<A, B>(a) / b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator%(U const a, intt<A, B> const& b) noexcept
-{
-  static_assert(std::is_arithmetic_v<U>);
-  return intt<A, B>(a) % b;
 }
 
 //
@@ -442,138 +321,67 @@ constexpr auto operator>>(intt<T, N> const& a, unsigned M) noexcept
 
 //comparison//////////////////////////////////////////////////////////////////
 template <typename A, unsigned B>
-constexpr bool operator==(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
+constexpr auto operator==(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return a.v_ == b.v_;
 }
 
 template <typename A, unsigned B>
-constexpr auto operator!=(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
-{
-  return !(a == b);
-}
-
-//
-template <typename A, unsigned B>
-constexpr bool operator<(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
+constexpr auto operator<(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return is_negative(a - b);
 }
 
 template <typename A, unsigned B>
-constexpr auto operator>(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
+constexpr auto operator<=>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
-  return b < a;
+  return a == b ?
+    std::strong_ordering::equal :
+    a < b ? std::strong_ordering::less : std::strong_ordering::greater;
 }
-
-template <typename A, unsigned B>
-constexpr auto operator<=(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
-{
-  return !(b < a);
-}
-
-template <typename A, unsigned B>
-constexpr auto operator>=(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
-{
-  return !(a < b);
-}
-
-#if __cplusplus > 201703L
-template <typename A, unsigned B>
-constexpr auto operator<=>(intt<A, B> const& a,
-  intt<A, B> const& b) noexcept
-{
-  return (a > b) - (a < b);
-}
-#endif
 
 // conversions
-template <typename A, unsigned B, typename U>
-constexpr auto operator==(intt<A, B> const& a, U const& b) noexcept
-{
-  return a == intt<A, B>(b);
+#define INTT_LEFT_CONVERSION(OP)\
+template <typename A, unsigned B, typename U>\
+constexpr auto operator OP (U&& a, intt<A, B> const& b) noexcept\
+  requires(std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+{\
+  return intt<A, B>(std::forward<U>(a)) OP b;\
 }
 
-template <typename A, unsigned B, typename U>
-constexpr auto operator!=(intt<A, B> const& a, U const& b) noexcept
-{
-  return a != intt<A, B>(b);
+INTT_LEFT_CONVERSION(+)
+INTT_LEFT_CONVERSION(-)
+INTT_LEFT_CONVERSION(*)
+INTT_LEFT_CONVERSION(/)
+INTT_LEFT_CONVERSION(%)
+INTT_LEFT_CONVERSION(==)
+INTT_LEFT_CONVERSION(!=)
+INTT_LEFT_CONVERSION(<)
+INTT_LEFT_CONVERSION(<=)
+INTT_LEFT_CONVERSION(>)
+INTT_LEFT_CONVERSION(>=)
+INTT_LEFT_CONVERSION(<=>)
+
+#define INTT_RIGHT_CONVERSION(OP)\
+template <typename A, unsigned B, typename U>\
+constexpr auto operator OP (intt<A, B> const& a, U&& b) noexcept\
+  requires(std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+{\
+  return a OP intt<A, B>(std::forward<U>(b));\
 }
 
-template <typename A, unsigned B, typename U>
-constexpr auto operator<(intt<A, B> const& a, U const& b) noexcept
-{
-  return a < intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator>(intt<A, B> const& a, U const& b) noexcept
-{
-  return a > intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator<=(intt<A, B> const& a, U const& b) noexcept
-{
-  return a <= intt<A, B>(b);
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator>=(intt<A, B> const& a, U const& b) noexcept
-{
-  return a >= intt<A, B>(b);
-}
-
-#if __cplusplus > 201703L
-template <typename A, unsigned B, typename U>
-constexpr auto operator<=>(intt<A, B> const& a, U const& b) noexcept
-{
-  return (a > b) - (a < b);
-}
-#endif
-
-// conversions
-template <typename A, unsigned B, typename U>
-constexpr auto operator==(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) == b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator!=(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) != b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator<(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) < b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator>(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) > b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator<=(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) <= b;
-}
-
-template <typename A, unsigned B, typename U>
-constexpr auto operator>=(U const& a, intt<A, B> const& b) noexcept
-{
-  return intt<A, B>(a) >= b;
-}
+INTT_RIGHT_CONVERSION(+)
+INTT_RIGHT_CONVERSION(-)
+INTT_RIGHT_CONVERSION(*)
+INTT_RIGHT_CONVERSION(/)
+INTT_RIGHT_CONVERSION(%)
+INTT_RIGHT_CONVERSION(==)
+INTT_RIGHT_CONVERSION(!=)
+INTT_RIGHT_CONVERSION(<)
+INTT_RIGHT_CONVERSION(<=)
+INTT_RIGHT_CONVERSION(>)
+INTT_RIGHT_CONVERSION(>=)
+INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
 template <typename A, unsigned B>
@@ -645,14 +453,12 @@ struct hash<intt::intt<T, N>>
       {
         std::size_t seed{672807365};
 
-        (
+        return (
           (
             seed ^= hash<T>()(a[I]) + 0x9e3779b9 + (seed << 6) + (seed >> 2)
           ),
           ...
         );
-
-        return seed;
       }(std::make_index_sequence<N>());
   }
 };
