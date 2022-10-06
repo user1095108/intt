@@ -39,7 +39,10 @@ public:
 
   enum : unsigned { size = N };
 
-  constexpr intt() noexcept = default;
+  intt() = default;
+
+  intt(intt const&) = default;
+  intt(intt&&) = default;
 
   constexpr intt(decltype(v_) const& v) noexcept :
     v_(v)
@@ -68,16 +71,13 @@ public:
           (
             v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
               v >> I * bits_e :
-              (v >> ((sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{}))
+              v >> ((sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{})
           ),
           ...
         );
       }
     }(std::make_index_sequence<N>());
   }
-
-  constexpr intt(intt const&) = default;
-  constexpr intt(intt&&) = default;
 
   // assignment
   constexpr intt& operator=(intt const&) = default;
