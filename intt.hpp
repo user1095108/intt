@@ -6,7 +6,6 @@
 #include <climits>
 
 #include <array>
-#include <limits>
 #include <ostream>
 #include <sstream>
 #include <utility>
@@ -15,11 +14,34 @@
 namespace intt
 {
 
+namespace detail
+{
+
+template <typename U>
+static constexpr auto bit_size_v(CHAR_BIT * sizeof(U));
+
+template <typename U>
+static constexpr auto min_v{
+  std::is_signed_v<U> ? U{1} << (bit_size_v<U> - 1) : U{}
+};
+
+template <typename U>
+static constexpr auto max_v{
+  std::is_signed_v<U> ? -(min_v<U> + U(1)) : ~U()
+};
+
+}
+
 template <typename T, unsigned N>
 class intt
 {
-static_assert(std::is_unsigned_v<T>);
-static_assert(N > 0);
+  static_assert(std::is_unsigned_v<T>);
+  static_assert(N > 0);
+
+  enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
+  enum : unsigned { bits = N * bits_e };
+
+  enum : T { max_e = detail::max_v<T> };
 
 public:
   using value_type = std::array<T, N>;
@@ -28,11 +50,6 @@ public:
 
 public:
   enum : unsigned { size = N };
-
-  enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
-  enum : unsigned { bits = N * bits_e };
-
-  enum : T { max_e = std::numeric_limits<T>::max() };
 
   intt() = default;
 
@@ -46,13 +63,13 @@ public:
   {
     [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
-      if constexpr (std::is_signed_v<U>)
+      if constexpr(std::is_signed_v<U>)
       {
         (
           (
-            v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
+            v_[I] = I * bits_e < detail::bit_size_v<U> ?
               v >> I * bits_e :
-              v >= 0 ? T{} : ~T{}
+              v >= U{} ? T{} : ~T{}
           ),
           ...
         );
@@ -61,9 +78,9 @@ public:
       {
         (
           (
-            v_[I] = I * bits_e < sizeof(U) * CHAR_BIT ?
+            v_[I] = I * bits_e < detail::bit_size_v<U> ?
               v >> I * bits_e :
-              v >> ((sizeof(U) * CHAR_BIT) - 1 ? ~T{} : T{})
+              T{}
           ),
           ...
         );
