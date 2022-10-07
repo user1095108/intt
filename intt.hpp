@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <climits>
+#include <cmath>
 
 #include <array>
 #include <iomanip>
@@ -59,7 +60,7 @@ public:
 
   constexpr intt(decltype(v_)&& v) noexcept : v_(std::move(v)) { }
 
-  template <typename U> requires(std::is_integral_v<U>)
+  template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
   {
     [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
@@ -128,6 +129,27 @@ public:
       }(std::make_index_sequence<N>());
   }
 
+  template <typename U> requires(std::is_floating_point_v<U>)
+  constexpr explicit operator U() const noexcept
+  {
+    if (is_negative(*this))
+    {
+      auto const a(-*this);
+
+      return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+        {
+          return -((a.v_[I] * std::pow(U(2), I * bits_e)) + ...);
+        }(std::make_index_sequence<N>());
+    }
+    else
+    {
+      return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+        {
+          return ((v_[I] * std::pow(U(2), I * bits_e)) + ...);
+        }(std::make_index_sequence<N>());
+    }
+  }
+
   template <typename U> requires(std::is_integral_v<U>)
   constexpr explicit operator U() const noexcept
   {
@@ -177,7 +199,7 @@ public:
   INTT_BITWISE(|)
   INTT_BITWISE(^)
 
-  constexpr auto operator<<(unsigned M) const noexcept
+  constexpr auto operator<<(std::size_t M) const noexcept
   {
     auto r(*this);
 
@@ -196,9 +218,9 @@ public:
       }
     );
 
-    for (; M >= bits_e; M -= bits_e)
+    for (; M >= bits_e - 1; M -= bits_e - 1)
     {
-      shl.template operator()(bits_e, std::make_index_sequence<N - 1>());
+      shl.template operator()(bits_e - 1, std::make_index_sequence<N - 1>());
     }
 
     shl.template operator()(M, std::make_index_sequence<N - 1>());
@@ -206,7 +228,7 @@ public:
     return r;
   }
 
-  constexpr auto operator>>(unsigned M) const noexcept
+  constexpr auto operator>>(std::size_t M) const noexcept
   {
     auto r(*this);
 
@@ -225,9 +247,9 @@ public:
       }
     );
 
-    for (; M >= bits_e; M -= bits_e)
+    for (; M >= bits_e - 1; M -= bits_e - 1)
     {
-      shr.template operator()(bits_e, std::make_index_sequence<N - 1>());
+      shr.template operator()(bits_e - 1, std::make_index_sequence<N - 1>());
     }
 
     shr.template operator()(M, std::make_index_sequence<N - 1>());
@@ -292,7 +314,7 @@ public:
       }(std::make_index_sequence<N>());
   }
 
-  constexpr auto operator/(intt<T, N> const& o) noexcept
+  constexpr auto operator/(intt<T, N> const& o) const noexcept
   {
     auto a(is_negative(o) ? -*this : *this);
     auto b(is_negative(o) ? -o : o); // b is positive
@@ -370,7 +392,8 @@ constexpr auto operator<=>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 #define INTT_LEFT_CONVERSION(OP)\
 template <typename A, unsigned B, typename U>\
 constexpr auto operator OP (U&& a, intt<A, B> const& b) noexcept\
-  requires(std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+  requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
+    std::is_arithmetic_v<std::remove_cvref_t<U>>)\
 {\
   return intt<A, B>(std::forward<U>(a)) OP b;\
 }
@@ -391,7 +414,8 @@ INTT_LEFT_CONVERSION(<=>)
 #define INTT_RIGHT_CONVERSION(OP)\
 template <typename A, unsigned B, typename U>\
 constexpr auto operator OP (intt<A, B> const& a, U&& b) noexcept\
-  requires(std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+  requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
+    std::is_arithmetic_v<std::remove_cvref_t<U>>)\
 {\
   return a OP intt<A, B>(std::forward<U>(b));\
 }
