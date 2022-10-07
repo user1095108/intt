@@ -21,14 +21,14 @@ template <typename U>
 static constexpr auto bit_size_v(CHAR_BIT * sizeof(U));
 
 template <typename U>
-static constexpr auto min_v{
+static constexpr U min_v(
   std::is_signed_v<U> ? U{1} << (bit_size_v<U> - 1) : U{}
-};
+);
 
 template <typename U>
-static constexpr auto max_v{
-  std::is_signed_v<U> ? -(min_v<U> + U(1)) : ~U()
-};
+static constexpr U max_v(
+  std::is_signed_v<U> ? -(min_v<U> + U(1)) : ~U{}
+);
 
 }
 
