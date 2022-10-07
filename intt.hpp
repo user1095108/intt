@@ -134,11 +134,11 @@ public:
   {
     if (is_negative(*this))
     {
-      auto const a(-*this);
+      auto const a(~*this);
 
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return -((a.v_[I] * std::pow(U(2), I * bits_e)) + ...);
+          return -(((a.v_[I] * std::pow(U(2), I * bits_e)) + ...) + U{1});
         }(std::make_index_sequence<N>());
     }
     else
@@ -325,7 +325,7 @@ public:
 
     if (is_negative(a))
     {
-      while (a <= b)
+      while (-a >= b)
       {
         a += b;
 

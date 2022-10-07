@@ -37,12 +37,12 @@ int main()
     std::cout << int(D(1049600)) << " : " << to_raw(D(1049600)) << std::endl;
     std::cout << to_raw(a) << std::endl;
     std::cout << to_raw(b) << std::endl;
-    std::cout << double(-(a * b)) << " : " << to_raw(a * b) << std::endl;
+    std::cout << (a * b) << " : " << to_raw(a * b) << std::endl;
     //std::cout << (a * b) << std::endl;
   }
 
   {
-    std::cout << D(333) / D(3) << std::endl;
+    std::cout << D(-333) / D(3) << std::endl;
   }
 
   //
