@@ -292,49 +292,40 @@ public:
       }(std::make_index_sequence<N>());
   }
 
+  constexpr auto operator/(intt<T, N> const& o) noexcept
+  {
+    auto a(is_negative(o) ? -*this : *this);
+    auto b(is_negative(o) ? -o : o); // b is positive
+
+    intt q{};
+
+    if (is_negative(a))
+    {
+      while (a <= b)
+      {
+        a += b;
+
+        --q;
+      }
+    }
+    else
+    {
+      while (a >= b)
+      {
+        a -= b;
+
+        ++q;
+      }
+    }
+
+    return q;
+  }
+
   constexpr auto operator%(intt const& o) const noexcept
   {
     return *this - (*this / o) * o;
   }
 };
-
-//arithmetic//////////////////////////////////////////////////////////////////
-
-template <typename T, unsigned N>
-constexpr auto operator/(intt<T, N> a, intt<T, N> b) noexcept
-{
-  using r_t = intt<T, N>;
-
-  if (is_negative(b))
-  {
-    a = -a;
-    b = -b;
-  }
-
-  r_t q;
-  r_t r(a);
-
-  std::cout << int(a) << " " << int(b) << " " << int(q) << " " << int(r) << " : " << to_raw(r) << std::endl;
-
-  if (is_negative(a))
-  {
-    while (r >= b)
-    {
-      --q;
-      r += b;
-    }
-  }
-  else
-  {
-    while (r >= b)
-    {
-      ++q;
-      r -= b;
-    }
-  }
-
-  return q;
-}
 
 //comparison//////////////////////////////////////////////////////////////////
 template <typename A, unsigned B>
@@ -347,6 +338,24 @@ template <typename A, unsigned B>
 constexpr auto operator<(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return is_negative(a - b);
+}
+
+template <typename A, unsigned B>
+constexpr auto operator>(intt<A, B> const& a, intt<A, B> const& b) noexcept
+{
+  return is_negative(b - a);
+}
+
+template <typename A, unsigned B>
+constexpr auto operator<=(intt<A, B> const& a, intt<A, B> const& b) noexcept
+{
+  return !(a > b);
+}
+
+template <typename A, unsigned B>
+constexpr auto operator>=(intt<A, B> const& a, intt<A, B> const& b) noexcept
+{
+  return !(a < b);
 }
 
 template <typename A, unsigned B>
@@ -407,6 +416,12 @@ constexpr bool is_negative(intt<A, B> const& a) noexcept
   return a[B - 1] >> (intt<A, B>::bits_e - 1);
 }
 
+template <typename A, unsigned B>
+constexpr bool is_positive(intt<A, B> const& a) noexcept
+{
+  return !is_negative(a);
+}
+
 //
 template <typename T, unsigned N>
 auto to_raw(intt<T, N> const& a) noexcept
@@ -415,9 +430,12 @@ auto to_raw(intt<T, N> const& a) noexcept
 
   std::stringstream ss;
 
-  ss << std::hex << std::internal << std::setfill('0');
+  ss << std::hex << std::setfill('0');
 
-  for (auto i(N - 1); i; --i) ss << std::setw(2) << U(a[i]) << " ";
+  for (auto i(N - 1); i; --i)
+  {
+    ss << std::setw(2) << U(a[i]) << " ";
+  }
 
   ss << std::setw(2) << U(*a);
 
