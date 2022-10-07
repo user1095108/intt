@@ -110,12 +110,14 @@ public:
   INTT_ASSIGNMENT(|)
   INTT_ASSIGNMENT(^)
 
-  constexpr auto& operator<<=(unsigned i) noexcept
+  constexpr auto& operator<<=(auto const i) noexcept
+    requires(std::is_integral_v<decltype(i)>)
   {
     return *this = *this << i;
   }
 
-  constexpr auto& operator>>=(unsigned i) noexcept
+  constexpr auto& operator>>=(auto const i) noexcept
+    requires(std::is_integral_v<decltype(i)>)
   {
     return *this = *this >> i;
   }
