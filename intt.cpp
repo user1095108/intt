@@ -42,7 +42,7 @@ int main()
   }
 
   {
-    std::cout << D(-333) / D(3) << std::endl;
+    std::cout << double(D(-333) / D(3)) << std::endl;
   }
 
   //
