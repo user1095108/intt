@@ -6,6 +6,7 @@
 #include <climits>
 
 #include <array>
+#include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <utility>
@@ -410,19 +411,15 @@ constexpr bool is_negative(intt<A, B> const& a) noexcept
 template <typename T, unsigned N>
 auto to_raw(intt<T, N> const& a) noexcept
 {
+  using U = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
+
   std::stringstream ss;
 
-  ss << std::hex;
+  ss << std::hex << std::internal << std::setfill('0');
 
-  if constexpr(std::is_same_v<T, std::uint8_t>)
-    for (auto i(N - 1); i; --i) ss << unsigned(a[i]) << " ";
-  else
-    for (auto i(N - 1); i; --i) ss << a[i] << " ";
+  for (auto i(N - 1); i; --i) ss << std::setw(2) << U(a[i]) << " ";
 
-  if constexpr(std::is_same_v<T, std::uint8_t>)
-    ss << unsigned(*a);
-  else
-    ss << *a;
+  ss << std::setw(2) << U(*a);
 
   return ss.str();
 }
