@@ -41,7 +41,7 @@ class intt
 public:
   using value_type = std::array<T, N>;
 
-  value_type v_{};
+  value_type v_;
 
 public:
   enum : unsigned { size = N };
@@ -64,7 +64,7 @@ public:
     [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
       if constexpr(std::is_signed_v<U>)
-      {
+      { // v_[0] is least significant, v_[N - 1] most significant
         (
           (
             v_[I] = I * bits_e < detail::bit_size_v<U> ?
@@ -104,6 +104,9 @@ public:
   INTT_ASSIGNMENT(*)
   INTT_ASSIGNMENT(/)
   INTT_ASSIGNMENT(%)
+  INTT_ASSIGNMENT(&)
+  INTT_ASSIGNMENT(|)
+  INTT_ASSIGNMENT(^)
 
   constexpr auto& operator<<=(unsigned i) noexcept
   {
@@ -118,16 +121,16 @@ public:
   //
   constexpr explicit operator bool() const noexcept
   {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
         return (v_[I] || ...);
       }(std::make_index_sequence<N>());
   }
 
-  template <typename U> requires(std::is_integral_v<U> && std::is_signed_v<U>)
+  template <typename U> requires(std::is_integral_v<U>)
   constexpr explicit operator U() const noexcept
   {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
         if constexpr(bool(sizeof...(I)))
         {
@@ -138,12 +141,15 @@ public:
         }
         else
         {
-          return v_[0];
+          return v_.front();
         }
-      }(std::make_index_sequence<(sizeof(U) * CHAR_BIT) / bits_e>());
+      }(std::make_index_sequence<detail::bit_size_v<U> / bits_e>());
   }
 
   // member access
+  constexpr auto& operator*() noexcept { return v_.front(); }
+  constexpr auto& operator*() const noexcept { return v_.front(); }
+
   constexpr auto operator[](unsigned const i) const noexcept { return v_[i]; }
 
   //
@@ -155,6 +161,20 @@ public:
       }
     )(std::make_index_sequence<N>());
   }
+
+  #define INTT_BITWISE(OP)\
+  constexpr auto operator OP(intt const& o) const noexcept\
+  {\
+    return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
+      {\
+        return {value_type{(v_[I] OP o[I])...}};\
+      }\
+    )(std::make_index_sequence<N>());\
+  }
+
+  INTT_BITWISE(&)
+  INTT_BITWISE(|)
+  INTT_BITWISE(^)
 
   constexpr auto operator<<(unsigned M) const noexcept
   {
@@ -171,7 +191,7 @@ public:
           ...
         );
 
-        r.v_[0] <<= e;
+        *r <<= e;
       }
     );
 
@@ -394,12 +414,15 @@ auto to_raw(intt<T, N> const& a) noexcept
 
   ss << std::hex;
 
-  for (auto i(N - 1); i; --i)
-  {
-    ss << a[i] << " ";
-  }
+  if constexpr(std::is_same_v<T, std::uint8_t>)
+    for (auto i(N - 1); i; --i) ss << unsigned(a[i]) << " ";
+  else
+    for (auto i(N - 1); i; --i) ss << a[i] << " ";
 
-  ss << a[0];
+  if constexpr(std::is_same_v<T, std::uint8_t>)
+    ss << unsigned(*a);
+  else
+    ss << *a;
 
   return ss.str();
 }
