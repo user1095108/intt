@@ -38,11 +38,6 @@ class intt
   static_assert(std::is_unsigned_v<T>);
   static_assert(N > 0);
 
-  enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
-  enum : unsigned { bits = N * bits_e };
-
-  enum : T { max_e = detail::max_v<T> };
-
 public:
   using value_type = std::array<T, N>;
 
@@ -50,6 +45,11 @@ public:
 
 public:
   enum : unsigned { size = N };
+
+  enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
+  enum : unsigned { bits = N * bits_e };
+
+  enum : T { max_e = detail::max_v<T> };
 
   intt() = default;
 
@@ -143,13 +143,6 @@ public:
       }(std::make_index_sequence<(sizeof(U) * CHAR_BIT) / bits_e>());
   }
 
-  // increment, decrement
-  constexpr auto& operator++() noexcept { return *this += 1; }
-  constexpr auto& operator--() noexcept { return *this -= 1; }
-
-  constexpr auto operator++(int) const noexcept { return *this + 1; }
-  constexpr auto operator--(int) const noexcept { return *this - 1; }
-
   // member access
   constexpr auto operator[](unsigned const i) const noexcept { return v_[i]; }
 
@@ -163,6 +156,72 @@ public:
     )(std::make_index_sequence<N>());
   }
 
+  constexpr auto operator<<(unsigned M) const noexcept
+  {
+    auto r(*this);
+
+    auto const shl([&r]<std::size_t ...I>(unsigned const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            r.v_[N - 1 - I] =
+              (r[N - 1 - I] << e) | (r[N - 1 - I - 1] >> (bits_e - e))
+          ),
+          ...
+        );
+
+        r.v_[0] <<= e;
+      }
+    );
+
+    for (; M >= bits_e; M -= bits_e)
+    {
+      shl.template operator()(bits_e, std::make_index_sequence<N - 1>());
+    }
+
+    shl.template operator()(M, std::make_index_sequence<N - 1>());
+
+    return r;
+  }
+
+  constexpr auto operator>>(unsigned M) const noexcept
+  {
+    auto r(*this);
+
+    auto const shr([neg(is_negative(*this)), &r]<auto ...I>(unsigned const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            r.v_[I] = (r[I] >> e) | (r[I + 1] << (bits_e - e))
+          ),
+          ...
+        );
+
+        r.v_[N - 1] =
+          (r.v_[N - 1] >> e) | (neg ? ~T{} << (bits_e - e) : T{});
+      }
+    );
+
+    for (; M >= bits_e; M -= bits_e)
+    {
+      shr.template operator()(bits_e, std::make_index_sequence<N - 1>());
+    }
+
+    shr.template operator()(M, std::make_index_sequence<N - 1>());
+
+    return r;
+  }
+
+  // increment, decrement
+  constexpr auto& operator++() noexcept { return *this += 1; }
+  constexpr auto& operator--() noexcept { return *this -= 1; }
+
+  constexpr auto operator++(int) const noexcept { return *this + 1; }
+  constexpr auto operator--(int) const noexcept { return *this - 1; }
+
+  //
   constexpr auto operator+() const noexcept { return *this; }
   constexpr auto operator-() const noexcept { return ~*this + 1; }
 
@@ -254,78 +313,6 @@ constexpr auto operator/(intt<T, N> a, intt<T, N> b) noexcept
   }
 
   return q;
-}
-
-//
-template <typename T, unsigned N>
-constexpr auto operator<<(intt<T, N> const& a, unsigned M) noexcept
-{
-  using r_t = intt<T, N>;
-
-  auto r(a);
-
-  auto const shl([&]<std::size_t ...I>(unsigned const e,
-    std::index_sequence<I...>) noexcept
-    {
-      (
-        (
-          r.v_[N - 1 - I] = 
-            (r[N - 1 - I] << e) |
-            (r[N - 1 - I - 1] >> (r_t::bits_e - e))
-        ),
-        ...
-      );
-
-      r.v_[0] <<= e;
-    }
-  );
-
-  while (M >= r_t::bits_e)
-  {
-    shl.template operator()(r_t::bits_e, std::make_index_sequence<N - 1>());
-    M -= r_t::bits_e;
-  }
-
-  shl.template operator()(M % r_t::bits_e, std::make_index_sequence<N - 1>());
-
-  return r;
-}
-
-template <typename T, unsigned N>
-constexpr auto operator>>(intt<T, N> const& a, unsigned M) noexcept
-{
-  using r_t = intt<T, N>;
-
-  auto const neg(is_negative(a));
-
-  auto r(a);
-
-  auto const shr([&]<std::size_t ...I>(unsigned const e,
-    std::index_sequence<I...>) noexcept
-    {
-      (
-        (
-          r.v_[I] =
-            (r[I] >> e) |
-            (r[I + 1] << (r_t::bits_e - e))
-        ),
-        ...
-      );
-
-      r.v_[N - 1] = (r.v_[N - 1] >> e) |
-        (neg ? T(~T{}) << (r_t::bits_e - e) : T{});
-    }
-  );
-
-  while (M >= r_t::bits_e)
-  {
-    shr.template operator()(r_t::bits_e, std::make_index_sequence<N - 1>());
-    M -= r_t::bits_e;
-  }
-
-  shr.template operator()(M % r_t::bits_e, std::make_index_sequence<N - 1>());
-
-  return r;
 }
 
 //comparison//////////////////////////////////////////////////////////////////
