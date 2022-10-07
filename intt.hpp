@@ -151,7 +151,7 @@ public:
   }
 
   template <typename U> requires(std::is_integral_v<U>)
-  constexpr explicit operator U() const noexcept
+  constexpr operator U() const noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
@@ -171,7 +171,7 @@ public:
 
   // member access
   constexpr auto& operator*() noexcept { return v_.front(); }
-  constexpr auto& operator*() const noexcept { return v_.front(); }
+  constexpr auto operator*() const noexcept { return v_.front(); }
 
   constexpr auto operator[](unsigned const i) const noexcept { return v_[i]; }
 
@@ -199,7 +199,8 @@ public:
   INTT_BITWISE(|)
   INTT_BITWISE(^)
 
-  constexpr auto operator<<(std::size_t M) const noexcept
+  constexpr auto operator<<(auto M) const noexcept
+    requires(std::is_integral_v<decltype(M)>)
   {
     auto r(*this);
 
@@ -228,7 +229,8 @@ public:
     return r;
   }
 
-  constexpr auto operator>>(std::size_t M) const noexcept
+  constexpr auto operator>>(auto M) const noexcept
+    requires(std::is_integral_v<decltype(M)>)
   {
     auto r(*this);
 
