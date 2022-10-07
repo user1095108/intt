@@ -325,9 +325,11 @@ public:
 
     if (is_negative(a))
     {
-      while (-a >= b)
+      a = -a;
+
+      while (a >= b)
       {
-        a += b;
+        a -= b;
 
         --q;
       }
