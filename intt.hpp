@@ -44,10 +44,9 @@ struct intt
 
   std::array<T, N> v_;
 
-  enum : std::size_t { size = N }; // number of words
-
   enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
   enum : std::size_t { bits = N * wbits }; // size in bits
+  enum : std::size_t { size = N }; // number of words
 
   enum : T { wmax = detail::max_v<T> };
 
