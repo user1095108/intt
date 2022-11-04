@@ -53,11 +53,12 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct, std::integral auto const ...a) noexcept
+  template <typename ...U>
+  constexpr intt(direct, U&& ...a) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      ((v_[I] = a), ...);
+      ((v_[I] = std::forward<U>(a)), ...);
     }(std::make_index_sequence<std::min(N, sizeof...(a))>());
   }
 
@@ -264,7 +265,7 @@ struct intt
   //
   constexpr auto add(intt const& o, bool c = {}) const noexcept
   {
-    return std::pair{
+    return std::pair(
         [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
         {
           intt<T, N> r;
@@ -280,7 +281,7 @@ struct intt
           return r;
         }(std::make_index_sequence<N>()),
         c
-      };
+      );
   }
 
   constexpr auto div(intt const& o) const noexcept
