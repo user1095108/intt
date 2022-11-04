@@ -8,6 +8,8 @@
 #include <concepts>
 
 #include <array>
+#include <algorithm>
+#include <execution>
 #include <iomanip>
 #include <ostream>
 #include <sstream>
@@ -42,9 +44,7 @@ class intt
   static_assert(N > 0);
 
 public:
-  using value_type = std::array<T, N>;
-
-  value_type v_;
+  std::array<T, N> v_;
 
 public:
   enum : unsigned { size = N }; // number of words
@@ -59,7 +59,11 @@ public:
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(decltype(v_)&& v) noexcept : v_(std::move(v)) { }
+  constexpr intt(std::initializer_list<T> l)
+    noexcept(std::is_nothrow_assignable_v<T&, T&&>)
+  {
+    std::move(std::execution::unseq, l.begin(), l.end(), v_.begin());
+  }
 
   template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
@@ -67,7 +71,7 @@ public:
     [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
       if constexpr(std::is_signed_v<U>)
-      { // v_[0] is least significant, v_[N - 1] most significant
+      { // v_[0] is lsw, v_[N - 1] msw
         (
           (
             v_[I] = I * wbits < detail::bit_size_v<U> ?
@@ -111,14 +115,12 @@ public:
   INTT_ASSIGNMENT(|)
   INTT_ASSIGNMENT(^)
 
-  constexpr auto& operator<<=(auto const i) noexcept
-    requires(std::is_integral_v<decltype(i)>)
+  constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
     return *this = *this << i;
   }
 
-  constexpr auto& operator>>=(auto const i) noexcept
-    requires(std::is_integral_v<decltype(i)>)
+  constexpr auto& operator>>=(std::integral auto const i) noexcept
   {
     return *this = *this >> i;
   }
@@ -171,17 +173,14 @@ public:
   }
 
   // member access
-  constexpr auto operator[](std::size_t const i) const noexcept
-  {
-    return v_[i];
-  }
+  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
   //
   constexpr auto operator~() const noexcept
   {
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
       {
-        return {value_type{T(~v_[I])...}};
+        return {{T(~v_[I])...}};
       }
     )(std::make_index_sequence<N>());
   }
@@ -191,7 +190,7 @@ public:
   {\
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
       {\
-        return {value_type{(v_[I] OP o[I])...}};\
+        return {{(v_[I] OP o[I])...}};\
       }\
     )(std::make_index_sequence<N>());\
   }
@@ -272,50 +271,29 @@ public:
   constexpr auto operator-() const noexcept { return ~*this + 1; }
 
   //
-  constexpr auto operator+(intt const& o) const noexcept
+  constexpr auto add(intt const& o, bool c = {}) const noexcept
   {
-    return ([&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-      {
-        intt<T, N> r;
+    return std::pair{
+        [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+        {
+          intt<T, N> r;
 
-        bool c{};
-
-        (
           (
-            r.v_[I] = v_[I] + o.v_[I] + c,
-            c = c ? r.v_[I] <= v_[I] : r.v_[I] < v_[I]
-          ),
-          ...
-        );
-
-        return r;
-      }
-    )(std::make_index_sequence<N>());
-  }
-
-  constexpr auto operator-(intt const& o) const noexcept { return *this + (-o); }
-
-  constexpr auto operator*(intt const& o) const noexcept
-  {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-      {
-        return (
-            [&]<auto J>() noexcept
-            {
-              return (
-                (
-                  intt(v_[J] * o[I]) << (I + J) * wbits
-                ) +
-                ...
-              );
-            }.template operator()<I>() +
+            (
+              r.v_[I] = v_[I] + o.v_[I] + c,
+              c = c ? r.v_[I] <= v_[I] : r.v_[I] < v_[I]
+            ),
             ...
           );
-      }(std::make_index_sequence<N>());
+
+          return r;
+        }(std::make_index_sequence<N>()),
+        c
+      };
   }
 
-  constexpr auto operator/(intt<T, N> const& o) const noexcept
-  {
+  constexpr auto div(intt const& o) const noexcept
+  { // div, the queen of arithmetics
     auto a(is_neg(o) ? -*this : *this);
     auto b(is_neg(o) ? -o : o); // b is positive
 
@@ -342,12 +320,44 @@ public:
       }
     }
 
-    return q;
+    return std::pair(q, a);
+  }
+
+  //
+  constexpr auto operator+(intt const& o) const noexcept
+  {
+    return std::get<0>(add(o));
+  }
+
+  constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
+
+  constexpr auto operator*(intt const& o) const noexcept
+  {
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return (
+            [&]<auto J>() noexcept
+            {
+              return (
+                (
+                  intt(v_[I] * o.v_[J]) << (I + J) * wbits
+                ) +
+                ...
+              );
+            }.template operator()<I>() +
+            ...
+          );
+      }(std::make_index_sequence<N>());
+  }
+
+  constexpr auto operator/(intt const& o) const noexcept
+  {
+    return std::get<0>(div(o));
   }
 
   constexpr auto operator%(intt const& o) const noexcept
   {
-    return *this - (*this / o) * o;
+    return std::get<1>(div(o));
   }
 };
 
