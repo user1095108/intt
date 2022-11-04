@@ -2,7 +2,6 @@
 # define INTT_HPP
 # pragma once
 
-#include <cassert>
 #include <climits>
 #include <cmath>
 #include <concepts>
@@ -10,10 +9,9 @@
 #include <array>
 #include <algorithm>
 #include <execution>
-#include <iomanip>
+#include <iomanip> // std::hex
 #include <ostream>
-#include <sstream>
-#include <utility>
+#include <utility> // std::pair
 #include <type_traits>
 
 namespace intt
@@ -175,7 +173,7 @@ public:
   // member access
   constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
-  //
+  // bitwise
   constexpr auto operator~() const noexcept
   {
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
@@ -293,7 +291,7 @@ public:
   }
 
   constexpr auto div(intt const& o) const noexcept
-  { // div, the queen of arithmetics
+  {
     auto a(is_neg(o) ? -*this : *this);
     auto b(is_neg(o) ? -o : o); // b is positive
 
@@ -446,10 +444,10 @@ INTT_RIGHT_CONVERSION(>=)
 INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
-template <typename A, unsigned B>
-constexpr bool is_neg(intt<A, B> const& a) noexcept
+template <typename T, unsigned N>
+constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
-  return a[B - 1] >> (intt<A, B>::wbits - 1);
+  return a[N - 1] >> (intt<T, N>::wbits - 1);
 }
 
 //
@@ -497,8 +495,8 @@ std::string to_string(intt<T, N> a)
   return r;
 }
 
-template <typename A, unsigned B>
-inline auto& operator<<(std::ostream& os, intt<A, B> const& p)
+template <typename T, unsigned N>
+inline auto& operator<<(std::ostream& os, intt<T, N> const& p)
 {
   return os << to_string(p);
 }
