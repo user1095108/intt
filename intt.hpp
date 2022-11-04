@@ -56,14 +56,7 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  template <typename ...U>
-  constexpr intt(direct, U&& ...a) noexcept requires(sizeof...(a) == N)
-  {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((v_[I] = std::forward<U>(a)), ...);
-    }(std::make_index_sequence<N>());
-  }
+  constexpr intt(direct, auto&& ...a) noexcept: v_{T(a)...} { }
 
   template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
