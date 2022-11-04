@@ -2,14 +2,15 @@
 # define INTT_HPP
 # pragma once
 
-#include <climits>
+#include <climits> // CHAR_BIT
 #include <cmath> // std::pow()
-#include <concepts>
+#include <concepts> // std::floating_point, std::integral
 
-#include <array>
-#include <algorithm>
+#include <array> // std::array
+#include <algorithm> // std::max()
 #include <iomanip> // std::hex
-#include <ostream>
+#include <ostream> // std::ostream
+#include <sstream> // std::stringstream
 #include <utility> // std::pair
 #include <type_traits>
 
@@ -39,6 +40,8 @@ static constexpr U max_v(
 template <std::unsigned_integral T, std::size_t N> requires(N > 0)
 struct intt
 {
+  using value_type = T;
+
   std::array<T, N> v_;
 
   enum : std::size_t { size = N }; // number of words
@@ -166,6 +169,12 @@ struct intt
       }(std::make_index_sequence<detail::bit_size_v<U> / wbits>());
   }
 
+  //
+  constexpr auto begin() const noexcept { return v_.begin(); }
+  constexpr auto end() const noexcept { return v_.end(); }
+
+  constexpr auto data() const noexcept { return v_.data(); }
+
   // member access
   constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
@@ -226,7 +235,7 @@ struct intt
   {
     auto r(*this);
 
-    auto const shr([&]<auto ...I>(std::size_t const e,
+    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -236,8 +245,7 @@ struct intt
           ...
         );
 
-        r.v_[N - 1] = (r.v_[N - 1] >> e) |
-          (is_neg(*this) ? ~T{} << (wbits - e) : T{});
+        r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
       }
     );
 
@@ -441,7 +449,7 @@ INTT_RIGHT_CONVERSION(<=>)
 template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
-  return a[N - 1] >> (intt<T, N>::wbits - 1);
+  return a[N - 1] & (T(1) << (intt<T, N>::wbits - 1));
 }
 
 //
