@@ -3,12 +3,11 @@
 # pragma once
 
 #include <climits>
-#include <cmath>
+#include <cmath> // std::pow()
 #include <concepts>
 
 #include <array>
 #include <algorithm>
-#include <execution>
 #include <iomanip> // std::hex
 #include <ostream>
 #include <utility> // std::pair
@@ -16,6 +15,8 @@
 
 namespace intt
 {
+
+struct direct{};
 
 namespace detail
 {
@@ -35,20 +36,15 @@ static constexpr U max_v(
 
 }
 
-template <typename T, unsigned N>
-class intt
+template <std::unsigned_integral T, std::size_t N> requires(N > 0)
+struct intt
 {
-  static_assert(std::is_unsigned_v<T>);
-  static_assert(N > 0);
-
-public:
   std::array<T, N> v_;
 
-public:
-  enum : unsigned { size = N }; // number of words
+  enum : std::size_t { size = N }; // number of words
 
-  enum : unsigned { wbits = sizeof(T) * CHAR_BIT }; // bits per word
-  enum : unsigned { bits = N * wbits }; // size in bits
+  enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
+  enum : std::size_t { bits = N * wbits }; // size in bits
 
   enum : T { wmax = detail::max_v<T> };
 
@@ -57,16 +53,18 @@ public:
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(std::initializer_list<T> l)
-    noexcept(std::is_nothrow_move_assignable_v<T>)
+  constexpr intt(direct, std::integral auto const ...a) noexcept
   {
-    std::move(std::execution::unseq, l.begin(), l.end(), v_.begin());
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((v_[I] = a), ...);
+    }(std::make_index_sequence<std::min(N, sizeof...(a))>());
   }
 
   template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
   {
-    [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       if constexpr(std::is_signed_v<U>)
       { // v_[0] is lsw, v_[N - 1] msw
@@ -133,7 +131,7 @@ public:
   }
 
   template <std::floating_point U>
-  constexpr explicit operator U() const noexcept
+  explicit operator U() const noexcept
   {
     if (is_neg(*this))
     {
@@ -158,10 +156,7 @@ public:
       {
         if constexpr(bool(sizeof...(I)))
         {
-          return (
-            (U(v_[I]) << I * wbits) |
-            ...
-          );
+          return ((U(v_[I]) << I * wbits) | ...);
         }
         else
         {
@@ -171,14 +166,14 @@ public:
   }
 
   // member access
-  constexpr T operator[](unsigned const i) const noexcept { return v_[i]; }
+  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
   // bitwise
   constexpr auto operator~() const noexcept
   {
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
       {
-        return {{T(~v_[I])...}};
+        return {direct{}, ~v_[I]...};
       }
     )(std::make_index_sequence<N>());
   }
@@ -188,7 +183,7 @@ public:
   {\
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
       {\
-        return {{(v_[I] OP o[I])...}};\
+        return {direct{}, (v_[I] OP o[I])...};\
       }\
     )(std::make_index_sequence<N>());\
   }
@@ -201,7 +196,7 @@ public:
   {
     auto r(*this);
 
-    auto const shl([&]<auto ...I>(unsigned const e,
+    auto const shl([&]<auto ...I>(std::size_t const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -230,7 +225,7 @@ public:
   {
     auto r(*this);
 
-    auto const shr([&]<auto ...I>(unsigned const e,
+    auto const shr([&]<auto ...I>(std::size_t const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -241,7 +236,7 @@ public:
         );
 
         r.v_[N - 1] = (r.v_[N - 1] >> e) |
-          is_neg(*this) ? ~T{} << (wbits - e) : T{};
+          (is_neg(*this) ? ~T{} << (wbits - e) : T{});
       }
     );
 
@@ -358,37 +353,37 @@ public:
 };
 
 //comparison//////////////////////////////////////////////////////////////////
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator==(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return a.v_ == b.v_;
 }
 
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator<(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return is_neg(a - b);
 }
 
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return is_neg(b - a);
 }
 
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator<=(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return !(a > b);
 }
 
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator>=(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return !(a < b);
 }
 
-template <typename A, unsigned B>
+template <typename A, std::size_t B>
 constexpr auto operator<=>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
   return a == b ?
@@ -398,7 +393,7 @@ constexpr auto operator<=>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 
 // conversions
 #define INTT_LEFT_CONVERSION(OP)\
-template <typename A, unsigned B, typename U>\
+template <typename A, std::size_t B, typename U>\
 constexpr auto operator OP (U&& a, intt<A, B> const& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
     std::is_arithmetic_v<std::remove_cvref_t<U>>)\
@@ -420,7 +415,7 @@ INTT_LEFT_CONVERSION(>=)
 INTT_LEFT_CONVERSION(<=>)
 
 #define INTT_RIGHT_CONVERSION(OP)\
-template <typename A, unsigned B, typename U>\
+template <typename A, std::size_t B, typename U>\
 constexpr auto operator OP (intt<A, B> const& a, U&& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
     std::is_arithmetic_v<std::remove_cvref_t<U>>)\
@@ -442,14 +437,14 @@ INTT_RIGHT_CONVERSION(>=)
 INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
-template <typename T, unsigned N>
+template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
   return a[N - 1] >> (intt<T, N>::wbits - 1);
 }
 
 //
-template <typename T, unsigned N>
+template <typename T, std::size_t N>
 auto to_raw(intt<T, N> const& a) noexcept
 {
   using U = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
@@ -468,7 +463,7 @@ auto to_raw(intt<T, N> const& a) noexcept
   return ss.str();
 }
 
-template <typename T, unsigned N>
+template <typename T, std::size_t N>
 std::string to_string(intt<T, N> a)
 {
   auto const neg(is_neg(a));
@@ -493,7 +488,7 @@ std::string to_string(intt<T, N> a)
   return r;
 }
 
-template <typename T, unsigned N>
+template <typename T, std::size_t N>
 inline auto& operator<<(std::ostream& os, intt<T, N> const& p)
 {
   return os << to_string(p);
@@ -504,7 +499,7 @@ inline auto& operator<<(std::ostream& os, intt<T, N> const& p)
 namespace std
 {
 
-template <typename T, unsigned N>
+template <typename T, std::size_t N>
 struct hash<intt::intt<T, N>>
 {
   auto operator()(intt::intt<T, N> const& a) const noexcept
