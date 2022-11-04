@@ -256,15 +256,15 @@ public:
   }
 
   // increment, decrement
-  constexpr auto& operator++() noexcept { return *this += 1; }
-  constexpr auto& operator--() noexcept { return *this -= 1; }
+  constexpr auto& operator++() noexcept { return *this += '\1'; }
+  constexpr auto& operator--() noexcept { return *this -= '\1'; }
 
-  constexpr auto operator++(int) const noexcept { return *this + 1; }
-  constexpr auto operator--(int) const noexcept { return *this - 1; }
+  constexpr auto operator++(int) const noexcept { return *this + '\1'; }
+  constexpr auto operator--(int) const noexcept { return *this - '\1'; }
 
   //
   constexpr auto operator+() const noexcept { return *this; }
-  constexpr auto operator-() const noexcept { return ~*this + 1; }
+  constexpr auto operator-() const noexcept { return ~*this + '\1'; }
 
   //
   constexpr auto add(intt const& o, bool c = {}) const noexcept
