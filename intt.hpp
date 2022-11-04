@@ -1,10 +1,11 @@
-#ifndef LONGINT_HPP
-# define LONGINT_HPP
+#ifndef INTT_HPP
+# define INTT_HPP
 # pragma once
 
 #include <cassert>
 #include <climits>
 #include <cmath>
+#include <concepts>
 
 #include <array>
 #include <iomanip>
@@ -46,12 +47,12 @@ public:
   value_type v_;
 
 public:
-  enum : unsigned { size = N };
+  enum : unsigned { size = N }; // number of words
 
-  enum : unsigned { bits_e = sizeof(T) * CHAR_BIT };
-  enum : unsigned { bits = N * bits_e };
+  enum : unsigned { wbits = sizeof(T) * CHAR_BIT }; // bits per word
+  enum : unsigned { bits = N * wbits }; // size in bits
 
-  enum : T { max_e = detail::max_v<T> };
+  enum : T { wmax = detail::max_v<T> };
 
   intt() = default;
 
@@ -69,8 +70,8 @@ public:
       { // v_[0] is least significant, v_[N - 1] most significant
         (
           (
-            v_[I] = I * bits_e < detail::bit_size_v<U> ?
-              v >> I * bits_e :
+            v_[I] = I * wbits < detail::bit_size_v<U> ?
+              v >> I * wbits :
               v >= U{} ? T{} : ~T{}
           ),
           ...
@@ -80,8 +81,8 @@ public:
       {
         (
           (
-            v_[I] = I * bits_e < detail::bit_size_v<U> ?
-              v >> I * bits_e :
+            v_[I] = I * wbits < detail::bit_size_v<U> ?
+              v >> I * wbits :
               T{}
           ),
           ...
@@ -131,26 +132,26 @@ public:
       }(std::make_index_sequence<N>());
   }
 
-  template <typename U> requires(std::is_floating_point_v<U>)
+  template <std::floating_point U>
   constexpr explicit operator U() const noexcept
   {
-    if (is_negative(*this))
+    if (is_neg(*this))
     {
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return -(((T(~v_[I]) * std::pow(U(2), I * bits_e)) + ...) + U{1});
+          return -(((T(~v_[I]) * std::pow(U(2), I * wbits)) + ...) + U{1});
         }(std::make_index_sequence<N>());
     }
     else
     {
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return ((v_[I] * std::pow(U(2), I * bits_e)) + ...);
+          return ((v_[I] * std::pow(U(2), I * wbits)) + ...);
         }(std::make_index_sequence<N>());
     }
   }
 
-  template <typename U> requires(std::is_integral_v<U>)
+  template <std::integral U>
   constexpr operator U() const noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -158,7 +159,7 @@ public:
         if constexpr(bool(sizeof...(I)))
         {
           return (
-            (U(v_[I]) << I * bits_e) |
+            (U(v_[I]) << I * wbits) |
             ...
           );
         }
@@ -166,14 +167,14 @@ public:
         {
           return v_.front();
         }
-      }(std::make_index_sequence<detail::bit_size_v<U> / bits_e>());
+      }(std::make_index_sequence<detail::bit_size_v<U> / wbits>());
   }
 
   // member access
-  constexpr auto& operator*() noexcept { return v_.front(); }
-  constexpr auto operator*() const noexcept { return v_.front(); }
-
-  constexpr auto operator[](unsigned const i) const noexcept { return v_[i]; }
+  constexpr auto operator[](std::size_t const i) const noexcept
+  {
+    return v_[i];
+  }
 
   //
   constexpr auto operator~() const noexcept
@@ -210,18 +211,18 @@ public:
         (
           (
             r.v_[N - 1 - I] =
-              (r[N - 1 - I] << e) | (r[N - 1 - I - 1] >> (bits_e - e))
+              (r[N - 1 - I] << e) | (r[N - 1 - I - 1] >> (wbits - e))
           ),
           ...
         );
 
-        *r <<= e;
+        r.v_.front() <<= e;
       }
     );
 
-    for (; M >= bits_e - 1; M -= bits_e - 1)
+    for (; M >= wbits - 1; M -= wbits - 1)
     {
-      shl.template operator()(bits_e - 1, std::make_index_sequence<N - 1>());
+      shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
     }
 
     shl.template operator()(M, std::make_index_sequence<N - 1>());
@@ -234,24 +235,24 @@ public:
   {
     auto r(*this);
 
-    auto const shr([neg(is_negative(*this)), &r]<auto ...I>(unsigned const e,
+    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(unsigned const e,
       std::index_sequence<I...>) noexcept
       {
         (
           (
-            r.v_[I] = (r[I] >> e) | (r[I + 1] << (bits_e - e))
+            r.v_[I] = (r[I] >> e) | (r[I + 1] << (wbits - e))
           ),
           ...
         );
 
         r.v_[N - 1] =
-          (r.v_[N - 1] >> e) | (neg ? ~T{} << (bits_e - e) : T{});
+          (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
       }
     );
 
-    for (; M >= bits_e - 1; M -= bits_e - 1)
+    for (; M >= wbits - 1; M -= wbits - 1)
     {
-      shr.template operator()(bits_e - 1, std::make_index_sequence<N - 1>());
+      shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
     }
 
     shr.template operator()(M, std::make_index_sequence<N - 1>());
@@ -281,8 +282,8 @@ public:
 
         (
           (
-            r.v_[I] = v_[I] + o[I] + c,
-            c = v_[I] > max_e - o[I] - c
+            r.v_[I] = v_[I] + o.v_[I] + c,
+            c = c ? r.v_[I] <= v_[I] : r.v_[I] < v_[I]
           ),
           ...
         );
@@ -292,10 +293,7 @@ public:
     )(std::make_index_sequence<N>());
   }
 
-  constexpr auto operator-(intt const& o) const noexcept
-  {
-    return *this + (-o);
-  }
+  constexpr auto operator-(intt const& o) const noexcept { return *this + (-o); }
 
   constexpr auto operator*(intt const& o) const noexcept
   {
@@ -306,7 +304,7 @@ public:
             {
               return (
                 (
-                  intt(v_[J] * o[I]) << (I + J) * bits_e
+                  intt(v_[J] * o[I]) << (I + J) * wbits
                 ) +
                 ...
               );
@@ -318,12 +316,12 @@ public:
 
   constexpr auto operator/(intt<T, N> const& o) const noexcept
   {
-    auto a(is_negative(o) ? -*this : *this);
-    auto b(is_negative(o) ? -o : o); // b is positive
+    auto a(is_neg(o) ? -*this : *this);
+    auto b(is_neg(o) ? -o : o); // b is positive
 
     intt q{};
 
-    if (is_negative(a))
+    if (is_neg(a))
     {
       a = -a;
 
@@ -363,13 +361,13 @@ constexpr auto operator==(intt<A, B> const& a, intt<A, B> const& b) noexcept
 template <typename A, unsigned B>
 constexpr auto operator<(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
-  return is_negative(a - b);
+  return is_neg(a - b);
 }
 
 template <typename A, unsigned B>
 constexpr auto operator>(intt<A, B> const& a, intt<A, B> const& b) noexcept
 {
-  return is_negative(b - a);
+  return is_neg(b - a);
 }
 
 template <typename A, unsigned B>
@@ -439,15 +437,9 @@ INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
 template <typename A, unsigned B>
-constexpr bool is_negative(intt<A, B> const& a) noexcept
+constexpr bool is_neg(intt<A, B> const& a) noexcept
 {
-  return a[B - 1] >> (intt<A, B>::bits_e - 1);
-}
-
-template <typename A, unsigned B>
-constexpr bool is_positive(intt<A, B> const& a) noexcept
-{
-  return !is_negative(a);
+  return a[B - 1] >> (intt<A, B>::wbits - 1);
 }
 
 //
@@ -465,7 +457,7 @@ auto to_raw(intt<T, N> const& a) noexcept
     ss << std::setw(2) << U(a[i]) << " ";
   }
 
-  ss << std::setw(2) << U(*a);
+  ss << std::setw(2) << U(a[0]);
 
   return ss.str();
 }
@@ -473,7 +465,7 @@ auto to_raw(intt<T, N> const& a) noexcept
 template <typename T, unsigned N>
 std::string to_string(intt<T, N> a)
 {
-  auto const neg(is_negative(a));
+  auto const neg(is_neg(a));
 
   std::string r;
 
@@ -511,7 +503,7 @@ struct hash<intt::intt<T, N>>
 {
   auto operator()(intt::intt<T, N> const& a) const noexcept
   {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
         std::size_t seed{672807365};
 
@@ -527,4 +519,4 @@ struct hash<intt::intt<T, N>>
 
 }
 
-#endif // LONGINT_HPP
+#endif // INTT_HPP
