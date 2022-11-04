@@ -171,7 +171,7 @@ public:
   }
 
   // member access
-  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
+  constexpr T operator[](unsigned const i) const noexcept { return v_[i]; }
 
   // bitwise
   constexpr auto operator~() const noexcept
