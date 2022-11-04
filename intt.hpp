@@ -201,7 +201,7 @@ public:
   {
     auto r(*this);
 
-    auto const shl([&]<std::size_t ...I>(unsigned const e,
+    auto const shl([&]<auto ...I>(unsigned const e,
       std::index_sequence<I...>) noexcept
       {
         (
