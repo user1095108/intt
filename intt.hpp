@@ -197,12 +197,11 @@ public:
   INTT_BITWISE(|)
   INTT_BITWISE(^)
 
-  constexpr auto operator<<(auto M) const noexcept
-    requires(std::is_integral_v<decltype(M)>)
+  constexpr auto operator<<(std::integral auto M) const noexcept
   {
     auto r(*this);
 
-    auto const shl([&r]<std::size_t ...I>(unsigned const e,
+    auto const shl([&]<std::size_t ...I>(unsigned const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -227,12 +226,11 @@ public:
     return r;
   }
 
-  constexpr auto operator>>(auto M) const noexcept
-    requires(std::is_integral_v<decltype(M)>)
+  constexpr auto operator>>(std::integral auto M) const noexcept
   {
     auto r(*this);
 
-    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(unsigned const e,
+    auto const shr([&]<auto ...I>(unsigned const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -243,7 +241,7 @@ public:
         );
 
         r.v_[N - 1] =
-          (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
+          (r.v_[N - 1] >> e) | (is_neg(*this) ? ~T{} << (wbits - e) : T{});
       }
     );
 
