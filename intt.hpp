@@ -58,7 +58,7 @@ public:
   intt(intt&&) = default;
 
   constexpr intt(std::initializer_list<T> l)
-    noexcept(std::is_nothrow_assignable_v<T&, T&&>)
+    noexcept(std::is_nothrow_move_assignable_v<T>)
   {
     std::move(std::execution::unseq, l.begin(), l.end(), v_.begin());
   }
