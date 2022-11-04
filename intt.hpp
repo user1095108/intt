@@ -240,8 +240,8 @@ public:
           ...
         );
 
-        r.v_[N - 1] =
-          (r.v_[N - 1] >> e) | (is_neg(*this) ? ~T{} << (wbits - e) : T{});
+        r.v_[N - 1] = (r.v_[N - 1] >> e) |
+          is_neg(*this) ? ~T{} << (wbits - e) : T{};
       }
     );
 
