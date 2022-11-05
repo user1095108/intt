@@ -8,7 +8,6 @@
 
 #include <array> // std::array
 #include <algorithm> // std::max()
-#include <execution>
 #include <iomanip> // std::hex
 #include <ostream> // std::ostream
 #include <sstream> // std::stringstream
@@ -26,25 +25,12 @@ namespace detail
 template <typename U>
 static constexpr auto bit_size_v(CHAR_BIT * sizeof(U));
 
-template <typename U>
-static constexpr U min_v(
-  std::is_signed_v<U> ? U{1} << (bit_size_v<U> - 1) : U{}
-);
-
-template <typename U>
-static constexpr U max_v(
-  std::is_signed_v<U> ? -(min_v<U> + U(1)) : ~U{}
-);
-
 }
 
 template <std::unsigned_integral T, std::size_t N> requires(N > 0)
 struct intt
 {
   enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
-  enum : std::size_t { bits = N * wbits }; // size in bits
-
-  enum : T { wmax = detail::max_v<T> };
 
   using value_type = T;
 
@@ -370,6 +356,14 @@ struct intt
   }
 
   //
+  constexpr auto operator==(intt<T, N> const& o) const noexcept
+  {
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return ((v_[N - 1 - I] == o.v_[N - 1 - I]) && ...);
+      }(std::make_index_sequence<N>());
+  }
+
   constexpr auto operator<=>(intt<T, N> const& o) const noexcept
   {
     if (auto const nega(is_neg(*this)), negb(is_neg(o)); nega != negb)
@@ -398,11 +392,6 @@ struct intt
     while (i);
 
     return std::strong_ordering::equal;
-  }
-
-  constexpr auto operator==(intt<T, N> const& o) const noexcept
-  {
-    return std::equal(v_.rbegin(), v_.rend(), o.v_.rbegin());
   }
 };
 
@@ -487,7 +476,7 @@ std::string to_string(intt<T, N> a)
 
   do
   {
-    std::int8_t const d(a % 10);
+    signed char const d(a % 10);
 
     r.insert(0, 1, '0' + (neg ? -d : d));
 
