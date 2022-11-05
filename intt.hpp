@@ -8,6 +8,7 @@
 
 #include <array> // std::array
 #include <algorithm> // std::max()
+#include <execution>
 #include <iomanip> // std::hex
 #include <ostream> // std::ostream
 #include <sstream> // std::stringstream
@@ -40,22 +41,21 @@ static constexpr U max_v(
 template <std::unsigned_integral T, std::size_t N> requires(N > 0)
 struct intt
 {
+  enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
+  enum : std::size_t { bits = N * wbits }; // size in bits
+
+  enum : T { wmax = detail::max_v<T> };
+
   using value_type = T;
 
   std::array<T, N> v_;
-
-  enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
-  enum : std::size_t { bits = N * wbits }; // size in bits
-  enum : std::size_t { size = N }; // number of words
-
-  enum : T { wmax = detail::max_v<T> };
 
   intt() = default;
 
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct, auto&& ...a) noexcept: v_{T(a)...} { }
+  constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
 
   template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
@@ -162,8 +162,7 @@ struct intt
   }
 
   //
-  constexpr auto begin() const noexcept { return v_.begin(); }
-  constexpr auto end() const noexcept { return v_.end(); }
+  static constexpr auto size() noexcept { return N; }
 
   constexpr auto data() const noexcept { return v_.data(); }
 
@@ -175,7 +174,7 @@ struct intt
   {
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
       {
-        return {direct{}, ~v_[I]...};
+        return {direct{}, T(~v_[I])...};
       }
     )(std::make_index_sequence<N>());
   }
@@ -252,15 +251,33 @@ struct intt
   }
 
   // increment, decrement
-  constexpr auto& operator++() noexcept { return *this += T(1); }
-  constexpr auto& operator--() noexcept { return *this -= T(1); }
+  constexpr auto& operator++() noexcept
+  {
+    return *this += intt(direct{}, T(1));
+  }
 
-  constexpr auto operator++(int) const noexcept { return *this + T(1); }
-  constexpr auto operator--(int) const noexcept { return *this - T(1); }
+  constexpr auto& operator--() noexcept
+  {
+    return *this -= intt(direct{}, T(1));
+  }
+
+  constexpr auto operator++(int) const noexcept
+  {
+    auto const r(*this); ++*this; return r;
+  }
+
+  constexpr auto operator--(int) const noexcept
+  {
+    auto const r(*this); --*this; return r;
+  }
 
   //
   constexpr auto operator+() const noexcept { return *this; }
-  constexpr auto operator-() const noexcept { return ~*this + T(1); }
+
+  constexpr auto operator-() const noexcept
+  {
+    return ~*this + intt(direct{}, T(1));
+  }
 
   //
   constexpr auto add(intt const& o, bool c = {}) const noexcept
@@ -385,7 +402,7 @@ struct intt
 
   constexpr auto operator==(intt<T, N> const& o) const noexcept
   {
-    return *this <=> o == 0;
+    return std::equal(v_.rbegin(), v_.rend(), o.v_.rbegin());
   }
 };
 
