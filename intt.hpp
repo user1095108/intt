@@ -351,46 +351,43 @@ struct intt
   {
     return std::get<1>(div(o));
   }
+
+  //
+  constexpr auto operator<=>(intt<T, N> const& o) const noexcept
+  {
+    if (auto const nega(is_neg(*this)), negb(is_neg(o)); nega != negb)
+    {
+      return nega && !negb ?
+        std::strong_ordering::less:
+        std::strong_ordering::greater;
+    }
+
+    //
+    std::size_t i{N};
+
+    do
+    {
+      --i;
+
+      if (auto const c(v_[i] <=> o.v_[i]); c < 0)
+      {
+        return std::strong_ordering::less;
+      }
+      else if (c > 0)
+      {
+        return std::strong_ordering::greater;
+      }
+    }
+    while (i);
+
+    return std::strong_ordering::equal;
+  }
+
+  constexpr auto operator==(intt<T, N> const& o) const noexcept
+  {
+    return *this <=> o == 0;
+  }
 };
-
-//comparison//////////////////////////////////////////////////////////////////
-template <typename A, std::size_t B>
-constexpr auto operator==(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return a.v_ == b.v_;
-}
-
-template <typename A, std::size_t B>
-constexpr auto operator<(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return is_neg(a - b);
-}
-
-template <typename A, std::size_t B>
-constexpr auto operator>(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return is_neg(b - a);
-}
-
-template <typename A, std::size_t B>
-constexpr auto operator<=(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return !(a > b);
-}
-
-template <typename A, std::size_t B>
-constexpr auto operator>=(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return !(a < b);
-}
-
-template <typename A, std::size_t B>
-constexpr auto operator<=>(intt<A, B> const& a, intt<A, B> const& b) noexcept
-{
-  return a == b ?
-    std::strong_ordering::equal :
-    a < b ? std::strong_ordering::less : std::strong_ordering::greater;
-}
 
 // conversions
 #define INTT_LEFT_CONVERSION(OP)\
