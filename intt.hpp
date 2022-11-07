@@ -2,6 +2,7 @@
 # define INTT_HPP
 # pragma once
 
+#include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::pow()
 #include <concepts> // std::floating_point, std::integral
@@ -48,13 +49,15 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
+      auto const neg(v < 0);
+
       if constexpr(std::is_signed_v<U>)
       { // v_[0] is lsw, v_[N - 1] msw
         (
           (
             v_[I] = I * wbits < detail::bit_size_v<U> ?
               v >> I * wbits :
-              v >= U{} ? T{} : ~T{}
+              neg ? ~T{} : T{}
           ),
           ...
         );
@@ -70,6 +73,30 @@ struct intt
           ...
         );
       }
+    }(std::make_index_sequence<N>());
+  }
+
+  template <std::size_t M>
+  constexpr intt(intt<T, M> const& o) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      auto const neg(is_neg(o));
+
+      (
+        [&]() noexcept
+        {
+          if constexpr(I < M)
+          {
+            v_[I] = o.v_[I];
+          }
+          else
+          {
+            v_[I] = neg ? ~T{} : T{};
+          }
+        }(),
+        ...
+      );
     }(std::make_index_sequence<N>());
   }
 
@@ -189,7 +216,7 @@ struct intt
         (
           (
             r.v_[N - 1 - I] =
-              (r[N - 1 - I] << e) | (r[N - 1 - I - 1] >> (wbits - e))
+              (r.v_[N - 1 - I] << e) | (r.v_[N - 1 - I - 1] >> (wbits - e))
           ),
           ...
         );
@@ -198,7 +225,7 @@ struct intt
       }
     );
 
-    for (; M >= wbits - 1; M -= wbits - 1)
+    for (; M > wbits - 1; M -= wbits - 1)
     {
       shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
     }
@@ -217,7 +244,7 @@ struct intt
       {
         (
           (
-            r.v_[I] = (r[I] >> e) | (r[I + 1] << (wbits - e))
+            r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
           ),
           ...
         );
@@ -226,7 +253,7 @@ struct intt
       }
     );
 
-    for (; M >= wbits - 1; M -= wbits - 1)
+    for (; M > wbits - 1; M -= wbits - 1)
     {
       shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
     }
@@ -266,62 +293,134 @@ struct intt
   }
 
   //
-  constexpr auto add(intt const& o, bool c = {}) const noexcept
+  constexpr auto wshl(std::size_t const n) const noexcept
   {
-    return std::pair(
-        [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-        {
-          intt<T, N> r;
+    intt<T, N> r(*this);
 
-          (
-            (
-              r.v_[I] = v_[I] + o.v_[I] + c,
-              c = c ? r.v_[I] <= v_[I] : r.v_[I] < v_[I]
-            ),
-            ...
-          );
+    for (std::size_t i{n}; i < N; ++i)
+    {
+      r.v_[i] = v_[i - n];
+    }
 
-          return r;
-        }(std::make_index_sequence<N>()),
-        c
+    for (std::size_t i{}; (i < N) && (i != n); ++i)
+    {
+      r.v_[i] = {};
+    }
+
+    return r;
+  }
+
+  constexpr auto shifted() const noexcept
+  {
+    intt<T, 2 * N> r;
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        (
+          [&]() noexcept
+          {
+            if constexpr(I >= N)
+            {
+              r.v_[I] = v_[I - N];
+            }
+            else
+            {
+              r.v_[I] = {};
+            }
+          }()
+        ),
+        ...
       );
+    }(std::make_index_sequence<2 * N>());
+
+    assert(*this && r);
+    return r;
   }
 
   constexpr auto div(intt const& o) const noexcept
   {
-    auto a(is_neg(o) ? -*this : *this);
-    auto b(is_neg(o) ? -o : o); // b is positive
+    auto const negb(is_neg(o));
+    auto const neg(is_neg(*this) ^ negb);
 
-    intt q{};
+    intt<T, 2 * N> a(*this);
+    intt<T, 2 * N> b(o);
+    intt q;
 
     if (is_neg(a))
     {
       a = -a;
+    }
 
-      while (a >= b)
+    if (is_neg(b))
+    {
+      b = -b;
+    }
+
+    if (a >= b)
+    {
+      std::size_t j{N};
+
+      do
       {
-        a -= b;
+        --j;
 
-        --q;
+        auto& qj(q.v_[j] = v_[j]);
+
+        auto const tmpb(b.wshl(j));
+
+        a -= qj * tmpb;
+
+        std::cout << "111 " << j << " " << int(a) << " " << int(b) << " " << to_raw(a) << std::endl;
+
+        while (!is_neg(a) && a)
+        {
+          ++qj;
+          a -= tmpb;
+        }
+
+        while (is_neg(a))
+        {
+          --qj;
+          a += tmpb;
+          std::cout << "222 " << int(qj) << " " << int(a) << " " << to_raw(a) << std::endl;
+        }
       }
+      while (j);
     }
     else
     {
-      while (a >= b)
-      {
-        a -= b;
-
-        ++q;
-      }
+      q = {};
     }
 
-    return std::pair(q, a);
+    return std::pair(neg ? -q : q, negb ? -intt<T, N>(a) : intt<T, N>(a));
   }
 
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
-    return std::get<0>(add(o));
+    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+      {
+        intt<T, N> r;
+
+        bool c{};
+
+        (
+          [&]() noexcept
+          {
+            auto& s(r.v_[I]);
+            auto const& a(v_[I]);
+
+            s = a + o.v_[I] + c;
+            c = c ? s <= a : s < a;
+          }(),
+          ...
+        );
+
+        //std::cout << "+ " << int(*this) << to_raw(*this) << " " << int(o) << to_raw(o) << " " << int(r) << to_raw(r) << std::endl;
+
+        return r;
+      }(std::make_index_sequence<N>());
   }
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
@@ -335,7 +434,8 @@ struct intt
             {
               return (
                 (
-                  intt(v_[I] * o.v_[J]) << (I + J) * wbits
+                  //intt(v_[J] * o.v_[I]) << ((I + J) * wbits)
+                  intt(v_[J] * o.v_[I]).wshl(I + J)
                 ) +
                 ...
               );
@@ -372,24 +472,25 @@ struct intt
         std::strong_ordering::less:
         std::strong_ordering::greater;
     }
-
-    //
-    std::size_t i{N};
-
-    do
+    else
     {
-      --i;
+      std::size_t i{N};
 
-      if (auto const c(v_[i] <=> o.v_[i]); c < 0)
+      do
       {
-        return std::strong_ordering::less;
+        --i;
+
+        if (auto const c(v_[i] <=> o.v_[i]); c < 0)
+        {
+          return std::strong_ordering::less;
+        }
+        else if (c > 0)
+        {
+          return std::strong_ordering::greater;
+        }
       }
-      else if (c > 0)
-      {
-        return std::strong_ordering::greater;
-      }
+      while (i);
     }
-    while (i);
 
     return std::strong_ordering::equal;
   }
@@ -455,14 +556,14 @@ auto to_raw(intt<T, N> const& a) noexcept
 
   std::stringstream ss;
 
-  ss << std::hex << std::setfill('0');
+  ss << '"' << std::hex << std::setfill('0');
 
   for (auto i(N - 1); i; --i)
   {
     ss << std::setw(2) << U(a[i]) << " ";
   }
 
-  ss << std::setw(2) << U(a[0]);
+  ss << std::setw(2) << U(a[0]) << '"';
 
   return ss.str();
 }
@@ -476,11 +577,13 @@ std::string to_string(intt<T, N> a)
 
   do
   {
-    signed char const d(a % 10);
+    auto const p(a.div(10));
+
+    signed char const d(std::get<1>(p));
 
     r.insert(0, 1, '0' + (neg ? -d : d));
 
-    a /= 10;
+    a = std::get<0>(p);
   }
   while (a);
 
