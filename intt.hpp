@@ -164,7 +164,7 @@ struct intt
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
         if constexpr(bool(sizeof...(I)))
-        {
+        { // words shifted to the left
           return ((U(v_[I]) << I * wbits) | ...);
         }
         else
@@ -302,7 +302,9 @@ struct intt
       r.v_[i] = v_[i - n];
     }
 
-    for (std::size_t i{}; (i < N) && (i != n); ++i)
+    auto const e(std::min(N, n));
+
+    for (std::size_t i{}; i != e; ++i)
     {
       r.v_[i] = {};
     }
@@ -373,7 +375,7 @@ struct intt
 
         std::cout << "111 " << j << " " << int(a) << " " << int(b) << " " << to_raw(a) << std::endl;
 
-        while (!is_neg(a) && a)
+        while (!is_neg(a))
         {
           ++qj;
           a -= tmpb;
@@ -393,6 +395,7 @@ struct intt
       q = {};
     }
 
+    std::cout << "333 " << int(neg ? -q : q) << " " << int(negb ? -intt<T, N>(a) : intt<T, N>(a)) << std::endl;
     return std::pair(neg ? -q : q, negb ? -intt<T, N>(a) : intt<T, N>(a));
   }
 
