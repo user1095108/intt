@@ -197,7 +197,7 @@ struct intt
   {\
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
       {\
-        return {direct{}, (v_[I] OP o[I])...};\
+        return {direct{}, T(v_[I] OP o.v_[I])...};\
       }\
     )(std::make_index_sequence<N>());\
   }
@@ -342,6 +342,57 @@ struct intt
 
   constexpr auto div(intt const& o) const noexcept
   {
+    auto const negr(is_neg(o));
+    auto const neg(is_neg(*this) ^ negr);
+
+    intt<T, 2 * N> r(*this);
+    intt q{};
+
+    if (is_neg(*this))
+    {
+      r = -r;
+    }
+
+    std::cout << "111 " << (long long)(*this) << " " << (long long)(o) << std::endl;
+
+    if (*this >= o)
+    {
+      std::size_t i{N * wbits};
+
+      auto mask(intt{direct{}, T(1)} << (i - 1));
+
+      do
+      {
+        --i;
+
+        auto const r0(r);
+
+        if ((r << 1) >= (q & mask) * o)
+        {
+          q |= mask;
+        }
+        else
+        {
+          r = r0;
+        }
+
+        mask >>= 1;
+      }
+      while (i);
+    }
+    else
+    {
+      q = {};
+    }
+
+    std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negr ? -intt<T, N>(r) : intt<T, N>(r)) << std::endl;
+
+    return std::pair(neg ? -q : q, negr ? -intt<T, N>(r) : intt<T, N>(r));
+  }
+
+  /*
+  constexpr auto div(intt const& o) const noexcept
+  {
     auto const negb(is_neg(o));
     auto const neg(is_neg(*this) ^ negb);
 
@@ -373,19 +424,20 @@ struct intt
 
         a -= qj * tmpb;
 
-        std::cout << "111 " << j << " " << int(a) << " " << int(b) << " " << to_raw(a) << std::endl;
+        std::cout << "111 " << j << " " << (long long)(a) << " " << (long long)(b) << " " << to_raw(a) << std::endl;
 
-        while (!is_neg(a))
+        while (!is_neg(a) && a)
         {
           ++qj;
           a -= tmpb;
+          std::cout << "+++ " << (long long)(qj) << " " << (long long)(a) << " " << to_raw(a) << std::endl;
         }
 
         while (is_neg(a))
         {
           --qj;
           a += tmpb;
-          std::cout << "222 " << int(qj) << " " << int(a) << " " << to_raw(a) << std::endl;
+          std::cout << "--- " << (long long)(qj) << " " << (long long)(a) << " " << to_raw(a) << std::endl;
         }
       }
       while (j);
@@ -395,9 +447,10 @@ struct intt
       q = {};
     }
 
-    std::cout << "333 " << int(neg ? -q : q) << " " << int(negb ? -intt<T, N>(a) : intt<T, N>(a)) << std::endl;
+    std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negb ? -intt<T, N>(a) : intt<T, N>(a)) << std::endl;
     return std::pair(neg ? -q : q, negb ? -intt<T, N>(a) : intt<T, N>(a));
   }
+  */
 
   //
   constexpr auto operator+(intt const& o) const noexcept
