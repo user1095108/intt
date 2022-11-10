@@ -263,6 +263,34 @@ struct intt
     return r;
   }
 
+  constexpr auto lshr(std::size_t M) const noexcept
+  {
+    auto r(*this);
+
+    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
+          ),
+          ...
+        );
+
+        r.v_[N - 1] >>= e;
+      }
+    );
+
+    for (; M > wbits - 1; M -= wbits - 1)
+    {
+      shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+    }
+
+    shr.template operator()(M, std::make_index_sequence<N - 1>());
+
+    return r;
+  }
+
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
@@ -376,9 +404,11 @@ struct intt
           r = r0;
         }
 
-        mask >>= 1;
+        mask = mask.lshr(1);
       }
       while (i);
+
+      assert(!mask);
     }
     else
     {
