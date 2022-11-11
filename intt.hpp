@@ -33,6 +33,16 @@ struct intt
 {
   enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
 
+  using doubled_t = std::conditional_t<
+    std::is_same_v<T, std::uint16_t>,
+    std::uint32_t,
+    std::conditional_t<
+      std::is_same_v<T, std::uint32_t>,
+      std::uint64_t,
+      void
+    >
+  >;
+
   using value_type = T;
 
   std::array<T, N> v_;
@@ -182,6 +192,11 @@ struct intt
   // member access
   constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
+  constexpr bool bit(std::size_t const i) const noexcept
+  {
+    return v_[i / wbits] & (T{1} << (i % wbits));
+  }
+
   // bitwise
   constexpr auto operator~() const noexcept
   {
@@ -210,27 +225,30 @@ struct intt
   {
     auto r(*this);
 
-    auto const shl([&]<auto ...I>(std::size_t const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            r.v_[N - 1 - I] =
-              (r.v_[N - 1 - I] << e) | (r.v_[N - 1 - I - 1] >> (wbits - e))
-          ),
-          ...
-        );
-
-        r.v_.front() <<= e;
-      }
-    );
-
-    for (; M > wbits - 1; M -= wbits - 1)
+    if (M)
     {
-      shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
-    }
+      auto const shl([&]<auto ...I>(std::size_t const e,
+        std::index_sequence<I...>) noexcept
+        {
+          (
+            (
+              r.v_[N - 1 - I] =
+                (r.v_[N - 1 - I] << e) | (r.v_[N - 1 - I - 1] >> (wbits - e))
+            ),
+            ...
+          );
 
-    shl.template operator()(M, std::make_index_sequence<N - 1>());
+          r.v_.front() <<= e;
+        }
+      );
+
+      for (; M > wbits - 1; M -= wbits - 1)
+      {
+        shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+      }
+
+      shl.template operator()(M, std::make_index_sequence<N - 1>());
+    }
 
     return r;
   }
@@ -239,26 +257,29 @@ struct intt
   {
     auto r(*this);
 
-    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
-          ),
-          ...
-        );
-
-        r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
-      }
-    );
-
-    for (; M > wbits - 1; M -= wbits - 1)
+    if (M)
     {
-      shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
-    }
+      auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
+        std::index_sequence<I...>) noexcept
+        {
+          (
+            (
+              r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
+            ),
+            ...
+          );
 
-    shr.template operator()(M, std::make_index_sequence<N - 1>());
+          r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
+        }
+      );
+
+      for (; M > wbits - 1; M -= wbits - 1)
+      {
+        shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+      }
+
+      shr.template operator()(M, std::make_index_sequence<N - 1>());
+    }
 
     return r;
   }
@@ -267,26 +288,29 @@ struct intt
   {
     auto r(*this);
 
-    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
-          ),
-          ...
-        );
-
-        r.v_[N - 1] >>= e;
-      }
-    );
-
-    for (; M > wbits - 1; M -= wbits - 1)
+    if (M)
     {
-      shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
-    }
+      auto const shr([neg(is_neg(*this)), &r]<auto ...I>(std::size_t const e,
+        std::index_sequence<I...>) noexcept
+        {
+          (
+            (
+              r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
+            ),
+            ...
+          );
 
-    shr.template operator()(M, std::make_index_sequence<N - 1>());
+          r.v_[N - 1] >>= e;
+        }
+      );
+
+      for (; M > wbits - 1; M -= wbits - 1)
+      {
+        shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+      }
+
+      shr.template operator()(M, std::make_index_sequence<N - 1>());
+    }
 
     return r;
   }
@@ -323,7 +347,7 @@ struct intt
   //
   constexpr auto wshl(std::size_t const n) const noexcept
   {
-    intt<T, N> r(*this);
+    intt<T, N> r;
 
     for (std::size_t i{n}; i < N; ++i)
     {
@@ -340,7 +364,7 @@ struct intt
     return r;
   }
 
-  constexpr auto shifted() const noexcept
+  constexpr auto lshifted() const noexcept
   {
     intt<T, 2 * N> r;
 
@@ -364,123 +388,70 @@ struct intt
       );
     }(std::make_index_sequence<2 * N>());
 
-    assert(*this && r);
+    //assert((*this && r) || !(*this || r));
     return r;
   }
 
+  constexpr auto rshifted() const noexcept
+  {
+    intt<T, N / 2> r;
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((r.v_[I] = v_[N / 2 + I]), ...);
+    }(std::make_index_sequence<N / 2>());
+
+    return r;
+  }
+
+
   constexpr auto div(intt const& o) const noexcept
   {
+    intt<T, 2 * N> r(*this);
+    auto D(o.lshifted());
+
     auto const negr(is_neg(o));
     auto const neg(is_neg(*this) ^ negr);
-
-    intt<T, 2 * N> r(*this);
-    intt q{};
 
     if (is_neg(*this))
     {
       r = -r;
     }
 
-    std::cout << "111 " << (long long)(*this) << " " << (long long)(o) << std::endl;
-
-    if (*this >= o)
+    if (is_neg(o))
     {
-      std::size_t i{N * wbits};
+      D = -D;
+    }
 
-      auto mask(intt{direct{}, T(1)} << (i - 1));
+    intt q{};
 
-      do
+    //std::cout << "111 " << (long long)(*this) << " " << (long long)(o) << std::endl;
+
+    std::size_t i{N * wbits};
+
+    do
+    {
+      --i;
+
+      //assert((r * decltype(r)(2)) == (r << 1));
+
+      if ((r <<= 1) >= D)
       {
-        --i;
+        r -= D;
+        //assert(!is_neg(r));
+        //assert(std::pow(double(2), i) == double(intt(direct{}, T(1)) << i));
 
-        auto const r0(r);
-
-        if ((r << 1) >= (q & mask) * o)
-        {
-          q |= mask;
-        }
-        else
-        {
-          r = r0;
-        }
-
-        mask = mask.lshr(1);
+        //std::cout << "222 " << N << " " << wbits << " " << i << std::endl;
+        q |= intt(direct{}, T(1)) << i;
       }
-      while (i);
-
-      assert(!mask);
     }
-    else
-    {
-      q = {};
-    }
+    while (i);
 
-    std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negr ? -intt<T, N>(r) : intt<T, N>(r)) << std::endl;
+    //std::cout << "222 " << to_raw(q) << std::endl;
+    //std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negr ? (-r).rshifted() : r.rshifted()) << std::endl;
 
-    return std::pair(neg ? -q : q, negr ? -intt<T, N>(r) : intt<T, N>(r));
+    return std::pair(neg ? -q : q, negr ? (-r).rshifted() : r.rshifted());
   }
-
-  /*
-  constexpr auto div(intt const& o) const noexcept
-  {
-    auto const negb(is_neg(o));
-    auto const neg(is_neg(*this) ^ negb);
-
-    intt<T, 2 * N> a(*this);
-    intt<T, 2 * N> b(o);
-    intt q;
-
-    if (is_neg(a))
-    {
-      a = -a;
-    }
-
-    if (is_neg(b))
-    {
-      b = -b;
-    }
-
-    if (a >= b)
-    {
-      std::size_t j{N};
-
-      do
-      {
-        --j;
-
-        auto& qj(q.v_[j] = v_[j]);
-
-        auto const tmpb(b.wshl(j));
-
-        a -= qj * tmpb;
-
-        std::cout << "111 " << j << " " << (long long)(a) << " " << (long long)(b) << " " << to_raw(a) << std::endl;
-
-        while (!is_neg(a) && a)
-        {
-          ++qj;
-          a -= tmpb;
-          std::cout << "+++ " << (long long)(qj) << " " << (long long)(a) << " " << to_raw(a) << std::endl;
-        }
-
-        while (is_neg(a))
-        {
-          --qj;
-          a += tmpb;
-          std::cout << "--- " << (long long)(qj) << " " << (long long)(a) << " " << to_raw(a) << std::endl;
-        }
-      }
-      while (j);
-    }
-    else
-    {
-      q = {};
-    }
-
-    std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negb ? -intt<T, N>(a) : intt<T, N>(a)) << std::endl;
-    return std::pair(neg ? -q : q, negb ? -intt<T, N>(a) : intt<T, N>(a));
-  }
-  */
 
   //
   constexpr auto operator+(intt const& o) const noexcept
@@ -497,7 +468,7 @@ struct intt
             auto& s(r.v_[I]);
             auto const& a(v_[I]);
 
-            s = a + o.v_[I] + c;
+            s = a + c + o.v_[I];
             c = c ? s <= a : s < a;
           }(),
           ...
@@ -513,22 +484,32 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        return (
-            [&]<auto J>() noexcept
-            {
-              return (
-                (
-                  //intt(v_[J] * o.v_[I]) << ((I + J) * wbits)
-                  intt(v_[J] * o.v_[I]).wshl(I + J)
-                ) +
-                ...
-              );
-            }.template operator()<I>() +
-            ...
-          );
-      }(std::make_index_sequence<N>());
+    intt<T, 2 * N> r{}, A{this->lshifted()};
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          if (o.bit(I))
+          {
+            r += A;
+          }
+
+          r >>= 1;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<wbits * N - 1>());
+
+    if (is_neg(o))
+    {
+      r -= A;
+    }
+
+    r >>= 1;
+
+    return r;
   }
 
   constexpr auto operator/(intt const& o) const noexcept
