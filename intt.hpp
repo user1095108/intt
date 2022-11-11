@@ -635,7 +635,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
     Q = (q << 1) | intt<T, 2 * N>(direct{}, T(1));
 
-    if ((r <<= 1) >= Q.lshifted())
+    if ((r <<= 1) >= Q)
     {
       r -= Q;
 
@@ -677,7 +677,7 @@ std::string to_string(intt<T, N> a)
 
   do
   {
-    auto const p(a.div(10));
+    auto const p(a.div({direct{}, T(10)}));
 
     signed char const d(std::get<1>(p));
 
