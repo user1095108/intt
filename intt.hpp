@@ -197,6 +197,11 @@ struct intt
     return v_[i / wbits] & (T{1} << (i % wbits));
   }
 
+  constexpr bool set_bit(std::size_t const i) noexcept
+  {
+    return v_[i / wbits] |= T{1} << (i % wbits);
+  }
+
   // bitwise
   constexpr auto operator~() const noexcept
   {
@@ -442,7 +447,7 @@ struct intt
         //assert(std::pow(double(2), i) == double(intt(direct{}, T(1)) << i));
 
         //std::cout << "222 " << N << " " << wbits << " " << i << std::endl;
-        q |= intt(direct{}, T(1)) << i;
+        q.set_bit(i);
       }
     }
     while (i);
@@ -614,6 +619,34 @@ constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
   return a[N - 1] & (T(1) << (intt<T, N>::wbits - 1));
 }
+
+template <typename T, std::size_t N>
+constexpr auto sqrt(intt<T, N> const& a) noexcept
+{
+  intt<T, 2 * N> r(a), Q;
+
+  intt<T, N> q{};
+
+  std::size_t i{N * intt<T, N>::wbits};
+
+  do
+  {
+    --i;
+
+    Q = (q << 1) | intt<T, 2 * N>(direct{}, T(1));
+
+    if ((r <<= 1) >= Q.lshifted())
+    {
+      r -= Q;
+
+      q.set_bit(i);
+    }
+  }
+  while (i);
+
+  return std::pair(q, r.rshifted());
+}
+
 
 //
 template <typename T, std::size_t N>
