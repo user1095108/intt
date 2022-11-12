@@ -47,11 +47,15 @@ int main()
     std::cout << (a * b) << " " << to_raw(a * b) << std::endl;
   }
 
+  std::cout << "div():" << std::endl;
+
   {
     std::cout << int(D(-123456789) / D(3)) << std::endl;
     std::cout << int(D(123456789) / D(-3)) << std::endl;
     std::cout << int(D(-123456789) / D(-3)) << std::endl;
   }
+
+  std::cout << "misc:" << std::endl;
 
   {
     std::cout << (-100 % 3) << std::endl;
@@ -59,13 +63,14 @@ int main()
     std::cout << (D(5) < (std::int64_t(1) << 63)) << std::endl;
   }
 
+  std::cout << "sqrt():" << std::endl;
+
   {
-    std::cout << to_raw(std::get<0>(sqrt(D(4)))) << std::endl;
-    std::cout << to_raw(std::get<0>(sqrt(D(9)))) << std::endl;
-    std::cout << to_raw(std::get<0>(sqrt(D(16)))) << std::endl;
-    std::cout << to_raw(std::get<0>(sqrt(D(25)))) << std::endl;
-    std::cout << to_raw(std::get<0>(sqrt(D(36)))) << std::endl;
-    std::cout << to_raw(std::get<0>(sqrt(D(49)))) << std::endl;
+    std::cout << to_raw(sqrt(D(4))) << std::endl;
+    std::cout << to_raw(sqrt(D(9))) << std::endl;
+    std::cout << to_raw(sqrt(D(16))) << std::endl;
+    std::cout << to_raw(sqrt(D(25))) << std::endl;
+    std::cout << to_raw(sqrt(D(81))) << std::endl;
   }
 
   //

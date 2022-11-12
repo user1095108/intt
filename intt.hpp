@@ -456,32 +456,7 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    intt<T, 2 * N> r{}, A{this->lshifted()};
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          if (o.bit(I))
-          {
-            r += A;
-          }
-
-          r >>= 1;
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<wbits * N - 1>());
-
-    if (is_neg(o))
-    {
-      r -= A;
-    }
-
-    r >>= 1;
-
-    return intt<T, N>(r);
+    return intt<T, N>(mul(o));
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -506,35 +481,54 @@ struct intt
 
     intt q{};
 
-    //std::cout << "111 " << (long double)(*this) << " " << (long double)(o) << std::endl;
-
-    std::size_t i{N * wbits};
-
-    do
     {
-      --i;
+      std::size_t i{N * wbits};
 
-      //assert((r * decltype(r)(2)) == (r << 1));
-
-      if ((r <<= 1) >= D)
+      do
       {
-        r -= D;
-        //assert(!is_neg(r));
-        //assert(std::pow(double(2), i) == double(intt(direct{}, T(1)) << i));
+        --i;
 
-        //std::cout << "222 " << N << " " << wbits << " " << i << std::endl;
-        q.set_bit(i);
+        if ((r <<= 1) >= D)
+        {
+          r -= D;
+
+          q.set_bit(i);
+        }
       }
+      while (i);
     }
-    while (i);
-
-    //std::cout << "222 " << to_raw(q) << std::endl;
-    //std::cout << "333 " << (long double)(q) << " " << (long double)(r.rshifted()) << std::endl;
 
     return std::pair(
-      neg ^ is_neg(o) ? -q :q,
-      neg ? (-r).rshifted() : r.rshifted()
+      neg ^ is_neg(o) ? -q : q, neg ? -r.rshifted() : r.rshifted()
     );
+  }
+
+  constexpr auto mul(intt const& o) const noexcept
+  {
+    intt<T, 2 * N> r{}, A{this->lshifted()};
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          if (o.bit(I))
+          {
+            r += A;
+          }
+
+          r >>= 1;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<wbits * N - 1>());
+
+    if (is_neg(o))
+    {
+      r -= A;
+    }
+
+    return r >> 1;
   }
 
   //
@@ -637,28 +631,32 @@ constexpr bool is_neg(intt<T, N> const& a) noexcept
 template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
-  intt<T, 2 * N> r(a), Q;
+  intt<T, 2 * N> r(a);
 
   intt<T, N> q{};
 
-  std::size_t i{N * intt<T, N>::wbits};
+  std::size_t i(N * intt<T, N>::wbits - 1);
+
+  r <<= 1;
 
   do
   {
     --i;
 
-    Q = (q << 1) | intt<T, 2 * N>(direct{}, T(1));
+    q.set_bit(i);
 
-    if ((r <<= 1) >= Q)
+    if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
     {
       r -= Q;
-
-      q.set_bit(i);
+    }
+    else
+    {
+      q.clear_bit(i);
     }
   }
   while (i);
 
-  return std::pair(q, r.rshifted());
+  return q;
 }
 
 //
