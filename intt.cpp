@@ -8,8 +8,8 @@ int main()
 {
 //using D = intt::intt<std::uint8_t, 16>;
 //using D = intt::intt<std::uint16_t, 8>;
-using D = intt::intt<std::uint32_t, 4>;
-//using D = intt::intt<std::uint64_t, 2>;
+//using D = intt::intt<std::uint32_t, 4>;
+  using D = intt::intt<std::uint64_t, 2>;
 
   std::cout << to_raw(D(-6666666666ll) >> 1) << (long long)(D(-6666666666ll) >> 1) << std::endl;
   std::cout << D(88) / D(11) << std::endl;
@@ -48,6 +48,10 @@ using D = intt::intt<std::uint32_t, 4>;
     std::cout << int(D(-123456789) / D(3)) << std::endl;
     std::cout << int(D(123456789) / D(-3)) << std::endl;
     std::cout << int(D(-123456789) / D(-3)) << std::endl;
+  }
+
+  {
+    std::cout << (-100 % 3) << std::endl;
   }
 
   {

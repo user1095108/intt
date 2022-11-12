@@ -189,18 +189,29 @@ struct intt
 
   constexpr auto data() const noexcept { return v_.data(); }
 
-  // member access
-  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
-
+  // bit access
   constexpr bool bit(std::size_t const i) const noexcept
   {
     return v_[i / wbits] & (T{1} << (i % wbits));
   }
 
-  constexpr bool set_bit(std::size_t const i) noexcept
+  constexpr void clear_bit(std::size_t const i) noexcept
   {
-    return v_[i / wbits] |= T{1} << (i % wbits);
+    v_[i / wbits] &= T(~(T{1} << (i % wbits)));
   }
+
+  constexpr void set_bit(std::size_t const i) noexcept
+  {
+    v_[i / wbits] |= T{1} << (i % wbits);
+  }
+
+  constexpr void toggle_bit(std::size_t const i) noexcept
+  {
+    v_[i / wbits] ^= T{1} << (i % wbits);
+  }
+
+  // member access
+  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
   // bitwise
   constexpr auto operator~() const noexcept
@@ -320,36 +331,6 @@ struct intt
     return r;
   }
 
-  // increment, decrement
-  constexpr auto& operator++() noexcept
-  {
-    return *this += intt(direct{}, T(1));
-  }
-
-  constexpr auto& operator--() noexcept
-  {
-    return *this -= intt(direct{}, T(1));
-  }
-
-  constexpr auto operator++(int) const noexcept
-  {
-    auto const r(*this); ++*this; return r;
-  }
-
-  constexpr auto operator--(int) const noexcept
-  {
-    auto const r(*this); --*this; return r;
-  }
-
-  //
-  constexpr auto operator+() const noexcept { return *this; }
-
-  constexpr auto operator-() const noexcept
-  {
-    return ~*this + intt(direct{}, T(1));
-  }
-
-  //
   constexpr auto wshl(std::size_t const n) const noexcept
   {
     intt<T, N> r;
@@ -393,7 +374,6 @@ struct intt
       );
     }(std::make_index_sequence<2 * N>());
 
-    //assert((*this && r) || !(*this || r));
     return r;
   }
 
@@ -409,6 +389,34 @@ struct intt
     return r;
   }
 
+  // increment, decrement
+  constexpr auto& operator++() noexcept
+  {
+    return *this += intt(direct{}, T(1));
+  }
+
+  constexpr auto& operator--() noexcept
+  {
+    return *this -= intt(direct{}, T(1));
+  }
+
+  constexpr auto operator++(int) const noexcept
+  {
+    auto const r(*this); ++*this; return r;
+  }
+
+  constexpr auto operator--(int) const noexcept
+  {
+    auto const r(*this); --*this; return r;
+  }
+
+  //
+  constexpr auto operator+() const noexcept { return *this; }
+
+  constexpr auto operator-() const noexcept
+  {
+    return ~*this + intt(direct{}, T(1));
+  }
 
   constexpr auto div(intt const& o) const noexcept
   {
@@ -461,28 +469,26 @@ struct intt
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-      {
-        intt<T, N> r;
+    intt<T, N> r;
 
-        bool c{};
+    [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    {
+      bool c{};
 
-        (
-          [&]() noexcept
-          {
-            auto& s(r.v_[I]);
-            auto const& a(v_[I]);
+      (
+        [&]() noexcept
+        {
+          auto& s(r.v_[I]);
+          auto const& a(v_[I]);
 
-            s = a + c + o.v_[I];
-            c = c ? s <= a : s < a;
-          }(),
-          ...
-        );
+          s = a + c + o.v_[I];
+          c = c ? s <= a : s < a;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
 
-        //std::cout << "+ " << int(*this) << to_raw(*this) << " " << int(o) << to_raw(o) << " " << int(r) << to_raw(r) << std::endl;
-
-        return r;
-      }(std::make_index_sequence<N>());
+    return r;
   }
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
@@ -514,7 +520,7 @@ struct intt
 
     r >>= 1;
 
-    return r;
+    return intt<T, N>(r);
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -646,7 +652,6 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
   return std::pair(q, r.rshifted());
 }
-
 
 //
 template <typename T, std::size_t N>
