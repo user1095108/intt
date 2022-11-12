@@ -59,10 +59,10 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      auto const neg(v < 0);
-
-      if constexpr(std::is_signed_v<U>)
+      if constexpr(std::is_signed_v<U> || std::is_enum_v<U>)
       { // v_[0] is lsw, v_[N - 1] msw
+        auto const neg(v < U{});
+
         (
           (
             v_[I] = I * wbits < detail::bit_size_v<U> ?
@@ -469,10 +469,10 @@ struct intt
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
-    intt<T, N> r;
-
-    [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
     {
+      intt<T, N> r;
+
       bool c{};
 
       (
@@ -486,9 +486,9 @@ struct intt
         }(),
         ...
       );
-    }(std::make_index_sequence<N>());
 
-    return r;
+      return r;
+    }(std::make_index_sequence<N>());
   }
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }

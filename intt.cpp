@@ -52,9 +52,8 @@ int main()
 
   {
     std::cout << (-100 % 3) << std::endl;
-    std::cout << (D(5) < D::min()) << std::endl;
-    std::cout << (D(5) > D::max()) << std::endl;
-    std::cout << (D(5) < D::max()) << std::endl;
+    std::cout << to_raw(D(std::int64_t(1) << 63)) << std::endl;
+    std::cout << (D(5) < (std::int64_t(1) << 63)) << std::endl;
   }
 
   {
