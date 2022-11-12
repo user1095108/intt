@@ -615,7 +615,7 @@ INTT_RIGHT_CONVERSION(<=>)
 template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
-  return a[N - 1] & (T(1) << (intt<T, N>::wbits - 1));
+  return a.template bit<N * intt<T, N>::wbits - 1>();
 }
 
 template <typename T, std::size_t N>
