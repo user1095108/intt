@@ -42,16 +42,6 @@ struct intt
 {
   enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
 
-  using doubled_t = std::conditional_t<
-    std::is_same_v<T, std::uint16_t>,
-    std::uint32_t,
-    std::conditional_t<
-      std::is_same_v<T, std::uint32_t>,
-      std::uint64_t,
-      void
-    >
-  >;
-
   using value_type = T;
 
   std::array<T, N> v_;
