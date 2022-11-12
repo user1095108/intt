@@ -26,6 +26,15 @@ namespace detail
 template <typename U>
 static constexpr auto bit_size_v(CHAR_BIT * sizeof(U));
 
+template <typename T, auto = std::is_enum_v<T>>
+struct underlying_type : std::underlying_type<T> {};
+
+template <typename T>
+struct underlying_type<T, false> { using type = T; };
+
+template <typename T>
+using underlying_type_t = typename underlying_type<T>::type;
+
 }
 
 template <std::unsigned_integral T, std::size_t N> requires(N > 0)
@@ -59,9 +68,9 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      if constexpr(std::is_signed_v<U> || std::is_enum_v<U>)
+      if constexpr(std::is_signed_v<detail::underlying_type_t<U>>)
       { // v_[0] is lsw, v_[N - 1] msw
-        auto const neg(v < U{});
+        auto const neg(v < 0);
 
         (
           (
@@ -418,54 +427,6 @@ struct intt
     return ~*this + intt(direct{}, T(1));
   }
 
-  constexpr auto div(intt const& o) const noexcept
-  {
-    intt<T, 2 * N> r(*this);
-    auto D(o.lshifted());
-
-    auto const negr(is_neg(o));
-    auto const neg(is_neg(*this) ^ negr);
-
-    if (is_neg(*this))
-    {
-      r = -r;
-    }
-
-    if (is_neg(o))
-    {
-      D = -D;
-    }
-
-    intt q{};
-
-    //std::cout << "111 " << (long long)(*this) << " " << (long long)(o) << std::endl;
-
-    std::size_t i{N * wbits};
-
-    do
-    {
-      --i;
-
-      //assert((r * decltype(r)(2)) == (r << 1));
-
-      if ((r <<= 1) >= D)
-      {
-        r -= D;
-        //assert(!is_neg(r));
-        //assert(std::pow(double(2), i) == double(intt(direct{}, T(1)) << i));
-
-        //std::cout << "222 " << N << " " << wbits << " " << i << std::endl;
-        q.set_bit(i);
-      }
-    }
-    while (i);
-
-    //std::cout << "222 " << to_raw(q) << std::endl;
-    //std::cout << "333 " << (long long)(neg ? -q : q) << " " << (long long)(negr ? (-r).rshifted() : r.rshifted()) << std::endl;
-
-    return std::pair(neg ? -q : q, negr ? (-r).rshifted() : r.rshifted());
-  }
-
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
@@ -533,6 +494,49 @@ struct intt
     return std::get<1>(div(o));
   }
 
+  constexpr auto div(intt const& o) const noexcept
+  {
+    intt<T, 2 * N> r(*this);
+    auto D(o.lshifted());
+
+    auto const neg(is_neg(*this));
+
+    if (neg) r = -r;
+    if (is_neg(o)) D = -D;
+
+    intt q{};
+
+    //std::cout << "111 " << (long double)(*this) << " " << (long double)(o) << std::endl;
+
+    std::size_t i{N * wbits};
+
+    do
+    {
+      --i;
+
+      //assert((r * decltype(r)(2)) == (r << 1));
+
+      if ((r <<= 1) >= D)
+      {
+        r -= D;
+        //assert(!is_neg(r));
+        //assert(std::pow(double(2), i) == double(intt(direct{}, T(1)) << i));
+
+        //std::cout << "222 " << N << " " << wbits << " " << i << std::endl;
+        q.set_bit(i);
+      }
+    }
+    while (i);
+
+    //std::cout << "222 " << to_raw(q) << std::endl;
+    //std::cout << "333 " << (long double)(q) << " " << (long double)(r.rshifted()) << std::endl;
+
+    return std::pair(
+      neg ^ is_neg(o) ? -q :q,
+      neg ? (-r).rshifted() : r.rshifted()
+    );
+  }
+
   //
   constexpr auto operator==(intt<T, N> const& o) const noexcept
   {
@@ -574,7 +578,7 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept { return -(++min()); }
+  static constexpr auto max() noexcept { return -++min(); }
   static constexpr auto min() noexcept { return intt(1) << (N * wbits) - 1; }
 };
 
@@ -680,9 +684,9 @@ auto to_raw(intt<T, N> const& a) noexcept
 template <typename T, std::size_t N>
 std::string to_string(intt<T, N> a)
 {
-  auto const neg(is_neg(a));
-
   std::string r;
+
+  auto const neg(is_neg(a));
 
   do
   {
