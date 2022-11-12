@@ -472,7 +472,9 @@ struct intt
     intt q{};
 
     {
-      std::size_t i{N * wbits};
+      std::size_t i{N * wbits - 1};
+
+      r <<= 1;
 
       do
       {
@@ -625,26 +627,28 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
   intt<T, N> q{};
 
-  std::size_t i(N * intt<T, N>::wbits - 1);
-
-  r <<= 1;
-
-  do
   {
-    --i;
+    r <<= 1;
 
-    q.set_bit(i);
+    std::size_t i(N * intt<T, N>::wbits - 1);
 
-    if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
+    do
     {
-      r -= Q;
+      --i;
+
+      q.set_bit(i);
+
+      if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
+      {
+        r -= Q;
+      }
+      else
+      {
+        q.clear_bit(i);
+      }
     }
-    else
-    {
-      q.clear_bit(i);
-    }
+    while (i);
   }
-  while (i);
 
   return q;
 }
