@@ -188,24 +188,22 @@ struct intt
   constexpr auto data() const noexcept { return v_.data(); }
 
   // bit access
-  constexpr bool bit(std::size_t const i) const noexcept
+  template <std::size_t I>
+  constexpr bool bit() const noexcept
   {
-    return v_[i / wbits] & (T{1} << (i % wbits));
+    return v_[I / wbits] & (T{1} << (I % wbits));
   }
 
-  constexpr void clear_bit(std::size_t const i) noexcept
+  template <std::size_t I>
+  constexpr void clear_bit() noexcept
   {
-    v_[i / wbits] &= T(~(T{1} << (i % wbits)));
+    v_[I / wbits] &= T(~(T{1} << (I % wbits)));
   }
 
-  constexpr void set_bit(std::size_t const i) noexcept
+  template <std::size_t I>
+  constexpr void set_bit() noexcept
   {
-    v_[i / wbits] |= T{1} << (i % wbits);
-  }
-
-  constexpr void toggle_bit(std::size_t const i) noexcept
-  {
-    v_[i / wbits] ^= T{1} << (i % wbits);
+    v_[I / wbits] |= T{1} << (I % wbits);
   }
 
   // member access
@@ -482,7 +480,7 @@ struct intt
           {
             r -= D;
 
-            q.set_bit(wbits * N - 2 - I);
+            q.set_bit<wbits * N - 2 - I>();
           }
         }(),
         ...
@@ -504,7 +502,7 @@ struct intt
       (
         [&]() noexcept
         {
-          if (o.bit(I))
+          if (o.bit<I>())
           {
             r += A;
           }
@@ -632,7 +630,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
     (
       [&]() noexcept
       {
-        q.set_bit(intt<T, N>::wbits * N - 2 - I);
+        q.template set_bit<intt<T, N>::wbits * N - 2 - I>();
 
         if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
         {
@@ -640,7 +638,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
         }
         else
         {
-          q.clear_bit(intt<T, N>::wbits * N - 2 - I);
+          q.template clear_bit<intt<T, N>::wbits * N - 2 - I>();
         }
       }(),
       ...
