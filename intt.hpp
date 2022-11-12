@@ -2,7 +2,6 @@
 # define INTT_HPP
 # pragma once
 
-#include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::pow()
 #include <concepts> // std::floating_point, std::integral
@@ -420,10 +419,10 @@ struct intt
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
-    return [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
-    {
-      intt<T, N> r;
+    intt<T, N> r;
 
+    [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    {
       bool c{};
 
       (
@@ -437,9 +436,9 @@ struct intt
         }(),
         ...
       );
-
-      return r;
     }(std::make_index_sequence<N>());
+
+    return r;
   }
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
