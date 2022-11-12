@@ -52,6 +52,9 @@ int main()
 
   {
     std::cout << (-100 % 3) << std::endl;
+    std::cout << (D(5) < D::min()) << std::endl;
+    std::cout << (D(5) > D::max()) << std::endl;
+    std::cout << (D(5) < D::max()) << std::endl;
   }
 
   {

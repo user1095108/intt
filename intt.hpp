@@ -572,6 +572,10 @@ struct intt
 
     return std::strong_ordering::equal;
   }
+
+  //
+  static constexpr auto max() noexcept { return -(++min()); }
+  static constexpr auto min() noexcept { return intt(1) << (N * wbits) - 1; }
 };
 
 // conversions
