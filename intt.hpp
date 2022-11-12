@@ -621,7 +621,9 @@ constexpr bool is_neg(intt<T, N> const& a) noexcept
 template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
-  intt<T, 2 * N> r(a << 1);
+  intt<T, 2 * N> r(a);
+  a <<= 1;
+
   intt<T, N> q{};
 
   //
