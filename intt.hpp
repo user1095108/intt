@@ -451,11 +451,7 @@ struct intt
 
   constexpr auto operator-() const noexcept
   {
-    auto r(*this);
-
-    r.negate();
-
-    return r;
+    auto r(*this); r.negate(); return r;
   }
 
   //
