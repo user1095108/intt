@@ -62,7 +62,12 @@ struct intt
       [&]<typename V, V ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
-          (v_[I] = ~T(std::ldexp(f, -I * V(wbits)))),
+          [&]() noexcept
+          {
+            auto const tmp(std::ldexp(f, -V(wbits)));
+
+            v_[I] = ~T(std::ldexp(tmp - (f = std::trunc(tmp)), wbits));
+          }(),
           ...
         );
 
@@ -85,7 +90,12 @@ struct intt
       [&]<typename V, V ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
-          (v_[I] = T(std::ldexp(f, -I * V(wbits)))),
+          [&]() noexcept
+          {
+            auto const tmp(std::ldexp(f, -V(wbits)));
+
+            v_[I] = std::ldexp(tmp - (f = std::trunc(tmp)), wbits);
+          }(),
           ...
         );
       }(std::make_integer_sequence<int, N>());
