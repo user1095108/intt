@@ -3,7 +3,7 @@
 # pragma once
 
 #include <climits> // CHAR_BIT
-#include <cmath> // std::pow()
+#include <cmath> // std::ldexp()
 #include <concepts> // std::floating_point, std::integral
 
 #include <array> // std::array
@@ -59,12 +59,10 @@ struct intt
     {
       f = -f;
 
-      [&]<typename V, auto ...I>(std::integer_sequence<V, I...>) noexcept
+      [&]<typename V, V ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
-          (
-            v_[I] = ~T(f * std::pow(U(2), -I * wbits))
-          ),
+          (v_[I] = ~T(std::ldexp(f, -I * V(wbits)))),
           ...
         );
 
@@ -84,15 +82,13 @@ struct intt
     }
     else
     {
-      [&]<typename V, auto ...I>(std::integer_sequence<V, I...>) noexcept
+      [&]<typename V, V ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
-          (
-            v_[I] = T(f * std::pow(U(2), -I * wbits))
-          ),
+          (v_[I] = T(std::ldexp(f, -I * V(wbits)))),
           ...
         );
-      }(std::make_integer_sequence<int, N>());
+      }(std::make_integer_sequence<long, N>());
     }
   }
 
@@ -198,14 +194,14 @@ struct intt
     {
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return -(((T(~v_[I]) * std::pow(U(2), I * wbits)) + ...) + U{1});
+          return -(((T(~v_[I]) * std::ldexp(U(1), I * wbits)) + ...) + U{1});
         }(std::make_index_sequence<N>());
     }
     else
     {
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return ((v_[I] * std::pow(U(2), I * wbits)) + ...);
+          return ((v_[I] * std::ldexp(U(1), I * wbits)) + ...);
         }(std::make_index_sequence<N>());
     }
   }
