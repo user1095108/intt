@@ -88,7 +88,7 @@ struct intt
           (v_[I] = T(std::ldexp(f, -I * V(wbits)))),
           ...
         );
-      }(std::make_integer_sequence<long, N>());
+      }(std::make_integer_sequence<int, N>());
     }
   }
 
