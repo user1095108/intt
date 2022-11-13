@@ -53,7 +53,7 @@ struct intt
   constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
 
   template <std::floating_point U>
-  intt(U f) noexcept
+  constexpr intt(U f) noexcept
   {
     if (f = std::trunc(f); f < U{})
     {
