@@ -59,11 +59,11 @@ struct intt
     {
       f = -f;
 
-      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      [&]<typename V, auto ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
           (
-            v_[I] = ~T(f * std::pow(U(2), -int(I * wbits)))
+            v_[I] = ~T(f * std::pow(U(2), -I * wbits))
           ),
           ...
         );
@@ -80,19 +80,19 @@ struct intt
           }(),
           ...
         );
-      }(std::make_index_sequence<N>());
+      }(std::make_integer_sequence<int, N>());
     }
     else
     {
-      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      [&]<typename V, auto ...I>(std::integer_sequence<V, I...>) noexcept
       {
         (
           (
-            v_[I] = T(f * std::pow(U(2), -int(I * wbits)))
+            v_[I] = T(f * std::pow(U(2), -I * wbits))
           ),
           ...
         );
-      }(std::make_index_sequence<N>());
+      }(std::make_integer_sequence<int, N>());
     }
   }
 
