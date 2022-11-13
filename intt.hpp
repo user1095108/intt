@@ -52,6 +52,50 @@ struct intt
 
   constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
 
+  template <std::floating_point U>
+  intt(U f) noexcept
+  {
+    if (f = std::trunc(f); f < U{})
+    {
+      f = -f;
+
+      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            v_[I] = ~T(f * std::pow(U(2), -int(I * wbits)))
+          ),
+          ...
+        );
+
+        bool c{true};
+
+        (
+          [&]() noexcept
+          {
+            auto& a(v_[I]);
+
+            a += c;
+            c = a < c;
+          }(),
+          ...
+        );
+      }(std::make_index_sequence<N>());
+    }
+    else
+    {
+      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            v_[I] = T(f * std::pow(U(2), -int(I * wbits)))
+          ),
+          ...
+        );
+      }(std::make_index_sequence<N>());
+    }
+  }
+
   template <typename U> requires(std::is_integral_v<U> || std::is_enum_v<U>)
   constexpr intt(U const v) noexcept
   {
@@ -411,7 +455,11 @@ struct intt
 
   constexpr auto operator-() const noexcept
   {
-    return ~*this + intt(direct{}, T(1));
+    auto r(*this);
+
+    r.negate();
+
+    return r;
   }
 
   //
@@ -463,10 +511,10 @@ struct intt
 
     auto const neg(is_neg(*this));
 
-    if (neg) r = -r;
+    if (neg) r.negate();
     r <<= 1;
 
-    if (is_neg(o)) D = -D;
+    if (is_neg(o)) D.negate();
 
     intt q{};
 
@@ -489,7 +537,8 @@ struct intt
 
     //
     return std::pair(
-      neg ^ is_neg(o) ? -q : q, neg ? -r.rshifted() : r.rshifted()
+      neg ^ is_neg(o) ? -q : q,
+      neg ? -r.rshifted() : r.rshifted()
     );
   }
 
@@ -519,6 +568,27 @@ struct intt
     }
 
     return r >> 1;
+  }
+
+  constexpr void negate() noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((v_[I] = T(~v_[I])), ...);
+
+      bool c{true};
+
+      (
+        [&]() noexcept
+        {
+          auto& a(v_[I]);
+
+          a += c;
+          c = a < c;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
   }
 
   //
