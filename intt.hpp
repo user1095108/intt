@@ -158,6 +158,24 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
+  template <typename U, std::size_t M>
+  constexpr intt(intt<U, M> const& o) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      auto const neg(is_neg(o));
+
+      (
+        (
+          v_[I] = I * wbits < M * intt<U, M>::wbits ?
+            T(o >> I * wbits) :
+            neg ? ~T{} : T{}
+        ),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
+
   // assignment
   intt& operator=(intt const&) = default;
   intt& operator=(intt&&) = default;
@@ -304,7 +322,7 @@ struct intt
         }
       );
 
-      for (; M > wbits - 1; M -= wbits - 1)
+      for (; std::size_t(M) > wbits - 1; M -= wbits - 1)
       {
         shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
       }
@@ -335,7 +353,7 @@ struct intt
         }
       );
 
-      for (; M > wbits - 1; M -= wbits - 1)
+      for (; std::size_t(M) > wbits - 1; M -= wbits - 1)
       {
         shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
       }
