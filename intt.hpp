@@ -598,16 +598,7 @@ struct intt
 
       bool c{true};
 
-      (
-        [&]() noexcept
-        {
-          auto& a(v_[I]);
-
-          a += c;
-          c = a < c;
-        }(),
-        ...
-      );
+      ((v_[I] += c, c = v_[I] < c), ...);
     }(std::make_index_sequence<N>());
   }
 
