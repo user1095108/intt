@@ -8,6 +8,7 @@
 
 #include <array> // std::array
 #include <algorithm> // std::max()
+#include <bit>
 #include <iomanip> // std::hex
 #include <ostream> // std::ostream
 #include <sstream> // std::stringstream
@@ -246,7 +247,7 @@ struct intt
 
   constexpr auto data() const noexcept { return v_.data(); }
 
-  // bit access
+  // bit operations
   template <std::size_t I>
   constexpr bool bit() const noexcept
   {
@@ -263,6 +264,15 @@ struct intt
   constexpr void set_bit() noexcept
   {
     v_[I / wbits] |= T{1} << (I % wbits);
+  }
+
+  constexpr auto clz() noexcept
+  {
+    std::size_t n{}, I{N};
+
+    do n += std::countl_zero(v_[--I]); while (!(n % wbits));
+
+    return n;
   }
 
   // member access
