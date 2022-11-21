@@ -730,7 +730,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
   }(std::make_index_sequence<intt<T, N>::wbits * N - 1>());
 
   //
-  return q;
+  return std::pair(q, r.rshifted());
 }
 
 //
