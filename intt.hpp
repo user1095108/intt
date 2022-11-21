@@ -756,11 +756,9 @@ auto to_raw(intt<T, N> const& a) noexcept
 template <typename T, std::size_t N>
 std::string to_string(intt<T, N> a)
 {
-  std::string r;
-
   auto const neg(is_neg(a));
 
-  if (neg) r.append(1, '-');
+  std::string r(neg ? "-" : "");
 
   do
   {
