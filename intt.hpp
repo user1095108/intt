@@ -758,7 +758,7 @@ std::string to_string(intt<T, N> a)
 {
   auto const neg(is_neg(a));
 
-  std::string r(neg ? "-" : "");
+  std::string r(neg ? 1 : 0, '-');
 
   do
   {
