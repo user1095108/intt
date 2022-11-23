@@ -475,7 +475,7 @@ struct intt
 
     //
     {
-      intt<T, 2 * N> const D((is_neg(o) ? o.negated() : o).lshifted());
+      auto const D((is_neg(o) ? o.negated() : o).lshifted());
 
       std::size_t CR;
 
