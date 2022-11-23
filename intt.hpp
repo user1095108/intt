@@ -281,9 +281,9 @@ struct intt
     std::size_t n{};
 
     {
-      int c;
-
       std::size_t I{N};
+
+      int c;
 
       do
       {
