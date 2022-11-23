@@ -260,17 +260,36 @@ struct intt
     v_[I / wbits] &= T(~(T{1} << (I % wbits)));
   }
 
+  constexpr void clear_bit(std::size_t const i) noexcept
+  {
+    v_[i / wbits] &= T(~(T{1} << (i % wbits)));
+  }
+
   template <std::size_t I>
   constexpr void set_bit() noexcept
   {
     v_[I / wbits] |= T{1} << (I % wbits);
   }
 
-  constexpr auto clz() noexcept
+  constexpr void set_bit(std::size_t const i) noexcept
   {
-    std::size_t n{}, I{N};
+    v_[i / wbits] |= T{1} << (i % wbits);
+  }
 
-    do n += std::countl_zero(v_[--I]); while (!(n % wbits));
+  constexpr auto clz() const noexcept
+  {
+    std::size_t n{};
+
+    {
+      int c;
+
+      std::size_t I{N};
+
+      do
+      {
+        n += (c = std::countl_zero(v_[--I]));
+      } while (I && (wbits == c));
+    }
 
     return n;
   }
@@ -527,34 +546,41 @@ struct intt
 
   constexpr auto div(intt const& o) const noexcept
   {
-    intt<T, 2 * N> r(*this);
-    auto D(o.lshifted());
-
     auto const neg(is_neg(*this));
 
-    if (neg) r.negate();
-    r <<= 1;
+    intt<T, 2 * N> r(*this);
+    intt<T, 2 * N> D(o.lshifted());
 
     if (is_neg(o)) D.negate();
+
+    std::size_t CR{};
+
+    if (neg)
+    {
+      r.negate();
+      CR = (-*this).clz();
+    }
+    else
+    {
+      CR = clz();
+    }
+
+    r <<= CR;
 
     intt q{};
 
     //
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    for (auto i(N * wbits - CR); i;)
     {
-      (
-        [&]() noexcept
-        {
-          if ((r <<= 1) >= D)
-          {
-            r -= D;
+      --i;
 
-            q.set_bit<wbits * N - 2 - I>();
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<wbits * N - 1>());
+      if ((r <<= 1) >= D)
+      {
+        r -= D;
+
+        q.set_bit(i);
+      }
+    }
 
     //
     return std::pair(
@@ -701,33 +727,55 @@ constexpr bool is_neg(intt<T, N> const& a) noexcept
 }
 
 template <typename T, std::size_t N>
+constexpr auto unsigned_compare(intt<T, N> const& a,
+  intt<T, N> const& b) noexcept
+{
+  std::size_t i{N};
+
+  do
+  {
+    --i;
+
+    if (auto const c(a[i] <=> b[i]); c < 0)
+    {
+      return std::strong_ordering::less;
+    }
+    else if (c > 0)
+    {
+      return std::strong_ordering::greater;
+    }
+  }
+  while (i);
+
+  return std::strong_ordering::equal;
+}
+
+template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
   intt<T, 2 * N> r(a);
-  r <<= 1;
+
+  auto const CR(a.clz());
+  r <<= CR;
 
   intt<T, N> q{};
 
   //
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  for (auto i(N * intt<T, N>::wbits - CR); i;)
   {
-    (
-      [&]() noexcept
-      {
-        q.template set_bit<intt<T, N>::wbits * N - 2 - I>();
+    --i;
 
-        if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
-        {
-          r -= Q;
-        }
-        else
-        {
-          q.template clear_bit<intt<T, N>::wbits * N - 2 - I>();
-        }
-      }(),
-      ...
-    );
-  }(std::make_index_sequence<intt<T, N>::wbits * N - 1>());
+    q.set_bit(i);
+
+    if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
+    {
+      r -= Q;
+    }
+    else
+    {
+      q.clear_bit(i);
+    }
+  }
 
   //
   return std::pair(q, r.rshifted());
