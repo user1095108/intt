@@ -447,11 +447,7 @@ struct intt
 
   //
   constexpr auto operator+() const noexcept { return *this; }
-
-  constexpr auto operator-() const noexcept
-  {
-    auto r(*this); r.negate(); return r;
-  }
+  constexpr auto operator-() const noexcept { return negated(); }
 
   //
   constexpr auto operator+(intt const& o) const noexcept
@@ -482,7 +478,7 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    return intt<T, N>(mul(o));
+    return intt(mul(o));
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -507,7 +503,7 @@ struct intt
 
       if (is_neg(o)) D.negate();
 
-      auto const CR(neg ? r.negate(), (-*this).clz() : clz());
+      auto const CR(neg ? r.negate(), negated().clz() : clz());
       r <<= CR;
 
       //
@@ -571,6 +567,22 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
+  constexpr auto negated() const noexcept
+  {
+    auto r(*this);
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((r.v_[I] = T(~r.v_[I])), ...);
+
+      bool c{true};
+
+      ((r.v_[I] += c, c = r.v_[I] < c), ...);
+    }(std::make_index_sequence<N>());
+
+    return r;
+  }
+
   //
   constexpr auto operator==(intt<T, N> const& o) const noexcept
   {
@@ -613,7 +625,7 @@ struct intt
 
   //
   static constexpr auto max() noexcept { return -++min(); }
-  static constexpr auto min() noexcept { return intt(1) << (N * wbits) - 1; }
+  static constexpr auto min() noexcept { return intt(1) << N * wbits - 1; }
 };
 
 // conversions
