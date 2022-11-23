@@ -439,7 +439,7 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          s = a + c + o.v_[I];
+          s = c + a + o.v_[I];
           c = c ? s <= a : s < a;
         }(),
         ...
