@@ -621,7 +621,7 @@ struct intt
 template <typename A, std::size_t B, typename U>\
 constexpr auto operator OP (U&& a, intt<A, B> const& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
-    std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+    std::is_integral_v<std::remove_cvref_t<U>>)\
 {\
   return intt<A, B>(std::forward<U>(a)) OP b;\
 }
@@ -643,7 +643,7 @@ INTT_LEFT_CONVERSION(<=>)
 template <typename A, std::size_t B, typename U>\
 constexpr auto operator OP (intt<A, B> const& a, U&& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
-    std::is_arithmetic_v<std::remove_cvref_t<U>>)\
+    std::is_integral_v<std::remove_cvref_t<U>>)\
 {\
   return a OP intt<A, B>(std::forward<U>(b));\
 }
