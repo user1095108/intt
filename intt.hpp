@@ -558,16 +558,7 @@ struct intt
 
       std::size_t CR;
 
-      if (neg)
-      {
-        r.negate();
-        CR = (-*this).clz();
-      }
-      else
-      {
-        CR = clz();
-      }
-
+      CR = neg ? r.negate(), (-*this).clz() : clz();
       r <<= CR;
 
       //
