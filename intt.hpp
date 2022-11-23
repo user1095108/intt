@@ -546,39 +546,41 @@ struct intt
 
   constexpr auto div(intt const& o) const noexcept
   {
-    auto const neg(is_neg(*this));
-
     intt<T, 2 * N> r(*this);
-    intt<T, 2 * N> D(o.lshifted());
-
-    if (is_neg(o)) D.negate();
-
-    std::size_t CR{};
-
-    if (neg)
-    {
-      r.negate();
-      CR = (-*this).clz();
-    }
-    else
-    {
-      CR = clz();
-    }
-
-    r <<= CR;
-
     intt q{};
 
-    //
-    for (auto i(N * wbits - CR); i;)
+    auto const neg(is_neg(*this));
+
     {
-      --i;
+      intt<T, 2 * N> D(o.lshifted());
 
-      if ((r <<= 1) >= D)
+      if (is_neg(o)) D.negate();
+
+      std::size_t CR{};
+
+      if (neg)
       {
-        r -= D;
+        r.negate();
+        CR = (-*this).clz();
+      }
+      else
+      {
+        CR = clz();
+      }
 
-        q.set_bit(i);
+      r <<= CR;
+
+      //
+      for (auto i(N * wbits - CR); i;)
+      {
+        --i;
+
+        if ((r <<= 1) >= D)
+        {
+          r -= D;
+
+          q.set_bit(i);
+        }
       }
     }
 
@@ -754,26 +756,26 @@ template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
   intt<T, 2 * N> r(a);
-
-  auto const CR(a.clz());
-  r <<= CR;
-
   intt<T, N> q{};
 
-  //
-  for (auto i(N * intt<T, N>::wbits - CR); i;)
   {
-    --i;
+    auto const CR(a.clz());
+    r <<= CR;
 
-    q.set_bit(i);
+    for (auto i(N * intt<T, N>::wbits - CR); i;)
+    {
+      --i;
 
-    if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
-    {
-      r -= Q;
-    }
-    else
-    {
-      q.clear_bit(i);
+      q.set_bit(i);
+
+      if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
+      {
+        r -= Q;
+      }
+      else
+      {
+        q.clear_bit(i);
+      }
     }
   }
 
