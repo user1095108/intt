@@ -639,7 +639,7 @@ struct intt
     }
     else
     {
-      std::size_t i{N};
+      auto i{N};
 
       do
       {
@@ -721,7 +721,7 @@ template <typename T, std::size_t N>
 constexpr auto unsigned_compare(intt<T, N> const& a,
   intt<T, N> const& b) noexcept
 {
-  std::size_t i{N};
+  auto i{N};
 
   do
   {
