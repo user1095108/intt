@@ -151,6 +151,28 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
+  template <std::size_t M>
+  constexpr intt(intt<T, M> const& o, direct) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          if constexpr(I < M)
+          {
+            v_[I] = o.v_[I];
+          }
+          else
+          {
+            v_[I] = {};
+          }
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
+
   template <typename U, std::size_t M>
   constexpr intt(intt<U, M> const& o) noexcept
   {
@@ -247,53 +269,6 @@ struct intt
   static constexpr auto size() noexcept { return N; }
 
   constexpr auto data() const noexcept { return v_.data(); }
-
-  // bit operations
-  template <std::size_t I>
-  constexpr void clear_bit() noexcept
-  {
-    v_[I / wbits] &= T(~(T{1} << (I % wbits)));
-  }
-
-  constexpr void clear_bit(std::size_t const i) noexcept
-  {
-    v_[i / wbits] &= T(~(T{1} << (i % wbits)));
-  }
-
-  template <std::size_t I>
-  constexpr void set_bit() noexcept
-  {
-    v_[I / wbits] |= T{1} << (I % wbits);
-  }
-
-  constexpr void set_bit(std::size_t const i) noexcept
-  {
-    v_[i / wbits] |= T{1} << (i % wbits);
-  }
-
-  template <std::size_t I>
-  constexpr bool test_bit() const noexcept
-  {
-    return v_[I / wbits] & (T{1} << (I % wbits));
-  }
-
-  constexpr auto clz() const noexcept
-  {
-    std::size_t n{};
-
-    {
-      std::size_t I{N};
-
-      int c;
-
-      do
-      {
-        n += (c = std::countl_zero(v_[--I]));
-      } while (I && (wbits == c));
-    }
-
-    return n;
-  }
 
   // member access
   constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
@@ -498,15 +473,26 @@ struct intt
 
     auto const neg(is_neg(*this));
 
+    //
     {
-      intt<T, 2 * N> D(o.lshifted());
+      intt<T, 2 * N> const D((is_neg(o) ? o.negated() : o).lshifted());
 
-      if (is_neg(o)) D.negate();
+      std::size_t CR;
 
-      auto const CR(neg ? r.negate(), negated().clz() : clz());
+      if (neg)
+      {
+        auto const tmp(negated());
+
+        r = {tmp, direct{}};
+        CR = clz(tmp);
+      }
+      else
+      {
+        CR = clz(*this);
+      }
+
       r <<= CR;
 
-      //
       for (auto i(N * wbits - CR); i;)
       {
         --i;
@@ -515,7 +501,7 @@ struct intt
         {
           r -= D;
 
-          q.set_bit(i);
+          set_bit(q, i);
         }
       }
     }
@@ -536,7 +522,7 @@ struct intt
       (
         [&]() noexcept
         {
-          if (o.test_bit<I>())
+          if (test_bit<I>(o))
           {
             r += A;
           }
@@ -675,9 +661,58 @@ INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t N>
+constexpr auto clz(intt<T, N> const& a) noexcept
+{
+  std::size_t n{};
+
+  {
+    std::size_t I{N};
+
+    int c;
+
+    do
+    {
+      n += (c = std::countl_zero(a.v_[--I]));
+    } while (I && (intt<T, N>::wbits == c));
+  }
+
+  return n;
+}
+
+template <std::size_t I, typename T, std::size_t N>
+constexpr void clear_bit(intt<T, N>& a) noexcept
+{
+  a.v_[I / intt<T, N>::wbits] &= T(~(T{1} << (I % intt<T, N>::wbits)));
+}
+
+template <typename T, std::size_t N>
+constexpr void clear_bit(intt<T, N>& a, std::size_t const i) noexcept
+{
+  a.v_[i / intt<T, N>::wbits] &= T(~(T{1} << (i % intt<T, N>::wbits)));
+}
+
+template <std::size_t I, typename T, std::size_t N>
+constexpr bool test_bit(intt<T, N> const& a) noexcept
+{
+  return a.v_[I / intt<T, N>::wbits] & (T{1} << (I % intt<T, N>::wbits));
+}
+
+template <std::size_t I, typename T, std::size_t N>
+constexpr void set_bit(intt<T, N>& a) noexcept
+{
+  a.v_[I / intt<T, N>::wbits] |= T{1} << (I % intt<T, N>::wbits);
+}
+
+template <typename T, std::size_t N>
+constexpr void set_bit(intt<T, N>& a, std::size_t const i) noexcept
+{
+  a.v_[i / intt<T, N>::wbits] |= T{1} << (i % intt<T, N>::wbits);
+}
+
+template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
-  return a.template test_bit<N * intt<T, N>::wbits - 1>();
+  return test_bit<N * intt<T, N>::wbits - 1>(a);
 }
 
 template <typename T, std::size_t N>
@@ -711,14 +746,14 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
   intt<T, N> q{};
 
   {
-    auto const CR(a.clz());
+    auto const CR(clz(a));
     r <<= CR;
 
     for (auto i(N * intt<T, N>::wbits - CR); i;)
     {
       --i;
 
-      q.set_bit(i);
+      set_bit(q, i);
 
       if (auto const Q(q.lshifted()); unsigned_compare(r <<= 1, Q) >= 0)
       {
@@ -726,7 +761,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
       }
       else
       {
-        q.clear_bit(i);
+        clear_bit(q, i);
       }
     }
   }
@@ -737,7 +772,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
 //
 template <typename T>
-constexpr std::pair<T, bool> to_intt(std::input_iterator auto i,
+constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   decltype(i) const end) noexcept
 {
   if (T r{}; i == end)
@@ -822,10 +857,10 @@ constexpr std::pair<T, bool> to_intt(std::input_iterator auto i,
 }
 
 template <typename T, typename S>
-constexpr auto to_intt(S const& s) noexcept ->
+constexpr auto to_integral(S const& s) noexcept ->
   decltype(std::cbegin(s), std::cend(s), std::pair<T, bool>())
 {
-  return to_intt<T>(std::cbegin(s), std::cend(s));
+  return to_integral<T>(std::cbegin(s), std::cend(s));
 }
 
 template <typename T, std::size_t N>

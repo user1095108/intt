@@ -76,7 +76,7 @@ int main()
   }
 
   {
-    std::cout << intt::to_intt<D>("12345678901").first + 1 << std::endl;
+    std::cout << intt::to_integral<D>("123456789012").first + 1 << std::endl;
   }
 
   //
