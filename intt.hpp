@@ -556,7 +556,7 @@ struct intt
 
       if (is_neg(o)) D.negate();
 
-      std::size_t CR{};
+      std::size_t CR;
 
       if (neg)
       {
