@@ -429,7 +429,7 @@ struct intt
   {
     intt<T, N> r;
 
-    [&]<std::size_t ...I>(std::index_sequence<I...>) noexcept
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       bool c{};
 
