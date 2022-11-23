@@ -266,12 +266,12 @@ struct intt
   }
 
   //
+  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
+
+  //
   static constexpr auto size() noexcept { return N; }
 
   constexpr auto data() const noexcept { return v_.data(); }
-
-  // member access
-  constexpr T operator[](std::size_t const i) const noexcept { return v_[i]; }
 
   // bitwise
   constexpr auto operator~() const noexcept
@@ -360,45 +360,6 @@ struct intt
     return r;
   }
 
-  constexpr auto lshifted() const noexcept
-  {
-    intt<T, 2 * N> r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        (
-          [&]() noexcept
-          {
-            if constexpr(I >= N)
-            {
-              r.v_[I] = v_[I - N];
-            }
-            else
-            {
-              r.v_[I] = {};
-            }
-          }()
-        ),
-        ...
-      );
-    }(std::make_index_sequence<2 * N>());
-
-    return r;
-  }
-
-  constexpr auto rshifted() const noexcept
-  {
-    intt<T, N / 2> r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((r.v_[I] = v_[N / 2 + I]), ...);
-    }(std::make_index_sequence<N / 2>());
-
-    return r;
-  }
-
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
@@ -464,6 +425,46 @@ struct intt
   constexpr auto operator%(intt const& o) const noexcept
   {
     return std::get<1>(div(o));
+  }
+
+  //
+  constexpr auto lshifted() const noexcept
+  {
+    intt<T, 2 * N> r;
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        (
+          [&]() noexcept
+          {
+            if constexpr(I >= N)
+            {
+              r.v_[I] = v_[I - N];
+            }
+            else
+            {
+              r.v_[I] = {};
+            }
+          }()
+        ),
+        ...
+      );
+    }(std::make_index_sequence<2 * N>());
+
+    return r;
+  }
+
+  constexpr auto rshifted() const noexcept
+  {
+    intt<T, N / 2> r;
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((r.v_[I] = v_[N / 2 + I]), ...);
+    }(std::make_index_sequence<N / 2>());
+
+    return r;
   }
 
   constexpr auto div(intt const& o) const noexcept
