@@ -555,18 +555,7 @@ struct intt
 
   constexpr auto negated() const noexcept
   {
-    auto r(*this);
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((r.v_[I] = T(~r.v_[I])), ...);
-
-      bool c{true};
-
-      ((r.v_[I] += c, c = r.v_[I] < c), ...);
-    }(std::make_index_sequence<N>());
-
-    return r;
+    auto r(*this); r.negate(); return r;
   }
 
   //
