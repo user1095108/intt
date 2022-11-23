@@ -325,27 +325,30 @@ struct intt
   {
     auto r(*this);
 
-    auto const shl([&]<auto ...I>(auto const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            r.v_[N - 1 - I] = (r.v_[N - 1 - I] << e) |
-              (r.v_[N - 1 - I - 1] >> (wbits - e))
-          ),
-          ...
-        );
-
-        r.v_.front() <<= e;
-      }
-    );
-
-    for (; std::size_t(M) > wbits - 1; M -= wbits - 1)
+    if (M)
     {
-      shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
-    }
+      auto const shl([&]<auto ...I>(auto const e,
+        std::index_sequence<I...>) noexcept
+        {
+          (
+            (
+              r.v_[N - 1 - I] = (r.v_[N - 1 - I] << e) |
+                (r.v_[N - 1 - I - 1] >> (wbits - e))
+            ),
+            ...
+          );
 
-    if (M) shl.template operator()(M, std::make_index_sequence<N - 1>());
+          r.v_.front() <<= e;
+        }
+      );
+
+      for (; std::size_t(M) >= wbits; M -= wbits - 1)
+      {
+        shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+      }
+
+      shl.template operator()(M, std::make_index_sequence<N - 1>());
+    }
 
     return r;
   }
@@ -354,26 +357,29 @@ struct intt
   {
     auto r(*this);
 
-    auto const shr([neg(is_neg(*this)), &r]<auto ...I>(auto const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
-          ),
-          ...
-        );
-
-        r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
-      }
-    );
-
-    for (; std::size_t(M) > wbits - 1; M -= wbits - 1)
+    if (M)
     {
-      shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
-    }
+      auto const shr([neg(is_neg(*this)), &r]<auto ...I>(auto const e,
+        std::index_sequence<I...>) noexcept
+        {
+          (
+            (
+              r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
+            ),
+            ...
+          );
 
-    if (M) shr.template operator()(M, std::make_index_sequence<N - 1>());
+          r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
+        }
+      );
+
+      for (; std::size_t(M) >= wbits; M -= wbits - 1)
+      {
+        shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+      }
+
+      shr.template operator()(M, std::make_index_sequence<N - 1>());
+    }
 
     return r;
   }
