@@ -556,9 +556,7 @@ struct intt
 
       if (is_neg(o)) D.negate();
 
-      std::size_t CR;
-
-      CR = neg ? r.negate(), (-*this).clz() : clz();
+      auto const CR(neg ? r.negate(), (-*this).clz() : clz());
       r <<= CR;
 
       //
@@ -566,7 +564,7 @@ struct intt
       {
         --i;
 
-        if ((r <<= 1) >= D)
+        if (unsigned_compare(r <<= 1, D) >= 0)
         {
           r -= D;
 
@@ -759,7 +757,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
       q.set_bit(i);
 
-      if (auto const Q(q.lshifted()); (r <<= 1) >= Q)
+      if (auto const Q(q.lshifted()); unsigned_compare(r <<= 1, Q) >= 0)
       {
         r -= Q;
       }
