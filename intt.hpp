@@ -682,61 +682,37 @@ constexpr auto clz(intt<T, N> const& a) noexcept
 template <std::size_t I, typename T, std::size_t N>
 constexpr void clear_bit(intt<T, N>& a) noexcept
 {
-  a.v_[I / intt<T, N>::wbits] &= T(~(T{1} << (I % intt<T, N>::wbits)));
+  a.v_[I / intt<T, N>::wbits] &= ~(T{1} << (I % intt<T, N>::wbits));
 }
 
 template <typename T, std::size_t N>
 constexpr void clear_bit(intt<T, N>& a, std::size_t const i) noexcept
 {
-  a.v_[i / intt<T, N>::wbits] &= T(~(T{1} << (i % intt<T, N>::wbits)));
-}
-
-template <std::size_t I, typename T, std::size_t N>
-constexpr bool test_bit(intt<T, N> const& a) noexcept
-{
-  return a.v_[I / intt<T, N>::wbits] & (T{1} << (I % intt<T, N>::wbits));
+  a.v_[i / intt<T, N>::wbits] &= ~(T{1} << i % intt<T, N>::wbits);
 }
 
 template <std::size_t I, typename T, std::size_t N>
 constexpr void set_bit(intt<T, N>& a) noexcept
 {
-  a.v_[I / intt<T, N>::wbits] |= T{1} << (I % intt<T, N>::wbits);
+  a.v_[I / intt<T, N>::wbits] |= T{1} << I % intt<T, N>::wbits;
 }
 
 template <typename T, std::size_t N>
 constexpr void set_bit(intt<T, N>& a, std::size_t const i) noexcept
 {
-  a.v_[i / intt<T, N>::wbits] |= T{1} << (i % intt<T, N>::wbits);
+  a.v_[i / intt<T, N>::wbits] |= T{1} << i % intt<T, N>::wbits;
+}
+
+template <std::size_t I, typename T, std::size_t N>
+constexpr bool test_bit(intt<T, N> const& a) noexcept
+{
+  return a.v_[I / intt<T, N>::wbits] & (T{1} << I % intt<T, N>::wbits);
 }
 
 template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
   return test_bit<N * intt<T, N>::wbits - 1>(a);
-}
-
-template <typename T, std::size_t N>
-constexpr auto unsigned_compare(intt<T, N> const& a,
-  intt<T, N> const& b) noexcept
-{
-  auto i{N};
-
-  do
-  {
-    --i;
-
-    if (auto const c(a[i] <=> b[i]); c < 0)
-    {
-      return std::strong_ordering::less;
-    }
-    else if (c > 0)
-    {
-      return std::strong_ordering::greater;
-    }
-  }
-  while (i);
-
-  return std::strong_ordering::equal;
 }
 
 template <typename T, std::size_t N>
@@ -768,6 +744,30 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 
   //
   return std::pair(q, r.rshifted());
+}
+
+template <typename T, std::size_t N>
+constexpr auto unsigned_compare(intt<T, N> const& a,
+  intt<T, N> const& b) noexcept
+{
+  auto i{N};
+
+  do
+  {
+    --i;
+
+    if (auto const c(a[i] <=> b[i]); c < 0)
+    {
+      return std::strong_ordering::less;
+    }
+    else if (c > 0)
+    {
+      return std::strong_ordering::greater;
+    }
+  }
+  while (i);
+
+  return std::strong_ordering::equal;
 }
 
 //
