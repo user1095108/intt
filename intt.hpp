@@ -10,6 +10,7 @@
 #include <algorithm> // std::max()
 #include <bit>
 #include <iomanip> // std::hex
+#include <iterator>
 #include <ostream> // std::ostream
 #include <sstream> // std::stringstream
 #include <utility> // std::pair
@@ -384,25 +385,6 @@ struct intt
     return r;
   }
 
-  constexpr auto wshl(std::size_t const n) const noexcept
-  {
-    intt<T, N> r;
-
-    for (std::size_t i{n}; i < N; ++i)
-    {
-      r.v_[i] = v_[i - n];
-    }
-
-    auto const e(std::min(N, n));
-
-    for (std::size_t i{}; i != e; ++i)
-    {
-      r.v_[i] = {};
-    }
-
-    return r;
-  }
-
   constexpr auto lshifted() const noexcept
   {
     intt<T, 2 * N> r;
@@ -742,6 +724,98 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
 }
 
 //
+template <typename T>
+constexpr std::pair<T, bool> to_intt(std::input_iterator auto i,
+  decltype(i) const end) noexcept
+{
+  if (T r{}; i == end)
+  {
+    return {r, true};
+  }
+  else
+  {
+    bool neg{};
+
+    switch (*i)
+    {
+      case '-':
+        neg = true;
+        [[fallthrough]];
+
+      case '+':
+        i = std::next(i);
+        break;
+
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+      case '.':
+        break;
+
+      default:
+        return {r, true};
+    }
+
+    auto const scandigit([&](decltype(r) const d) noexcept
+      {
+        if (neg)
+        {
+          if (r >= T::min() / 10)
+          {
+            if (auto const t(10 * r); t >= T::min() + d)
+            {
+              r = t - d;
+
+              return false;
+            }
+          }
+        }
+        else if (r <= T::max() / 10)
+        {
+          if (auto const t(10 * r); t <= T::max() - d)
+          {
+            r = t + d;
+
+            return false;
+          }
+        }
+
+        return true;
+      }
+    );
+
+    for (; end != i; i = std::next(i))
+    {
+      switch (*i)
+      {
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+          if (scandigit(*i - '0')) return {r, true}; else continue;
+
+        case '.':
+          i = std::next(i);
+          break;
+
+        case '\0':
+          break;
+
+        default:
+          return {r, true};
+      }
+
+      break;
+    }
+
+    return {r, false};
+  }
+}
+
+template <typename T, typename S>
+constexpr auto to_intt(S const& s) noexcept ->
+  decltype(std::cbegin(s), std::cend(s), std::pair<T, bool>())
+{
+  return to_intt<T>(std::cbegin(s), std::cend(s));
+}
+
 template <typename T, std::size_t N>
 auto to_raw(intt<T, N> const& a) noexcept
 {

@@ -75,6 +75,10 @@ int main()
     std::cout << sqrt(D(5)).first << " " << sqrt(D(5)).second << std::endl;
   }
 
+  {
+    std::cout << intt::to_intt<D>("12345678901").first + 1 << std::endl;
+  }
+
   //
   return 0;
 }
