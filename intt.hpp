@@ -250,12 +250,6 @@ struct intt
 
   // bit operations
   template <std::size_t I>
-  constexpr bool bit() const noexcept
-  {
-    return v_[I / wbits] & (T{1} << (I % wbits));
-  }
-
-  template <std::size_t I>
   constexpr void clear_bit() noexcept
   {
     v_[I / wbits] &= T(~(T{1} << (I % wbits)));
@@ -275,6 +269,12 @@ struct intt
   constexpr void set_bit(std::size_t const i) noexcept
   {
     v_[i / wbits] |= T{1} << (i % wbits);
+  }
+
+  template <std::size_t I>
+  constexpr bool test_bit() const noexcept
+  {
+    return v_[I / wbits] & (T{1} << (I % wbits));
   }
 
   constexpr auto clz() const noexcept
@@ -536,7 +536,7 @@ struct intt
       (
         [&]() noexcept
         {
-          if (o.bit<I>())
+          if (o.test_bit<I>())
           {
             r += A;
           }
@@ -677,7 +677,7 @@ INTT_RIGHT_CONVERSION(<=>)
 template <typename T, std::size_t N>
 constexpr bool is_neg(intt<T, N> const& a) noexcept
 {
-  return a.template bit<N * intt<T, N>::wbits - 1>();
+  return a.template test_bit<N * intt<T, N>::wbits - 1>();
 }
 
 template <typename T, std::size_t N>
