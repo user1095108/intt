@@ -11,6 +11,7 @@ int main()
 //using D = intt::intt<std::uint32_t, 4>;
   using D = intt::intt<std::uint64_t, 2>;
 
+  std::cout << to_raw(D(10) << 0) << std::endl;
   std::cout << D::min() << std::endl;
   std::cout << D::max() << std::endl;
 
