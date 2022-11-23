@@ -507,10 +507,9 @@ struct intt
     }
 
     //
-    return std::pair(
-      neg ^ is_neg(o) ? -q : q,
-      neg ? -r.rshifted() : r.rshifted()
-    );
+    auto const tmp(r.rshifted());
+
+    return std::pair(neg ^ is_neg(o) ? -q : q, neg ? -tmp : tmp);
   }
 
   constexpr auto mul(intt const& o) const noexcept
