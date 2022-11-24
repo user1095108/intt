@@ -414,7 +414,7 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    return intt(mul(o));
+    return intt(mul(o), direct{});
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -710,6 +710,7 @@ constexpr auto sqrt(intt<T, N> const& a) noexcept
   intt<T, 2 * N> r(a);
   intt<T, N> q{};
 
+  //
   {
     auto const CR(clz(a));
     r <<= CR;
