@@ -383,7 +383,11 @@ struct intt
 
   //
   constexpr auto operator+() const noexcept { return *this; }
-  constexpr auto operator-() const noexcept { return negated(); }
+
+  constexpr auto operator-() const noexcept
+  {
+    auto r(*this); r.negate(); return r;
+  }
 
   //
   constexpr auto operator+(intt const& o) const noexcept
@@ -476,13 +480,13 @@ struct intt
 
     //
     {
-      auto const D((is_neg(o) ? o.negated() : o).lshifted());
+      auto const D((is_neg(o) ? -o : o).lshifted());
 
       std::size_t CR;
 
       if (neg)
       {
-        auto const tmp(negated());
+        auto const tmp(-*this);
 
         r = {tmp, direct{}};
         CR = clz(tmp);
@@ -551,11 +555,6 @@ struct intt
 
       ((v_[I] += c, c = v_[I] < c), ...);
     }(std::make_index_sequence<N>());
-  }
-
-  constexpr auto negated() const noexcept
-  {
-    auto r(*this); r.negate(); return r;
   }
 
   //
