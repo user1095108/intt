@@ -488,13 +488,13 @@ struct intt
       {
         auto const tmp(-*this);
 
-        r = {tmp, direct{}};
         CR = clz(tmp);
+        r = {tmp, direct{}};
       }
       else
       {
-        r = {*this, direct{}};
         CR = clz(*this);
+        r = {*this, direct{}};
       }
 
       r <<= CR;
