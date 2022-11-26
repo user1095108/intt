@@ -473,7 +473,7 @@ struct intt
 
   constexpr auto div(intt const& o) const noexcept
   {
-    intt<T, 2 * N> r(*this);
+    intt<T, 2 * N> r;
     intt q{};
 
     auto const neg(is_neg(*this));
@@ -493,6 +493,7 @@ struct intt
       }
       else
       {
+        r = {*this, direct{}};
         CR = clz(*this);
       }
 
