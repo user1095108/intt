@@ -633,10 +633,10 @@ INTT_RIGHT_CONVERSION(<=>)
 template <typename T, std::size_t N>
 constexpr auto clz(intt<T, N> const& a) noexcept
 {
-  std::size_t n{};
+  decltype(N) n{};
 
   {
-    std::size_t I{N};
+    auto I{N};
 
     int c;
 
