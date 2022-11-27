@@ -575,25 +575,8 @@ struct intt
     }
     else
     {
-      auto i{N};
-
-      do
-      {
-        --i;
-
-        if (auto const c(v_[i] <=> o.v_[i]); c < 0)
-        {
-          return std::strong_ordering::less;
-        }
-        else if (c > 0)
-        {
-          return std::strong_ordering::greater;
-        }
-      }
-      while (i);
+      return unsigned_compare(*this, o);
     }
-
-    return std::strong_ordering::equal;
   }
 
   //
