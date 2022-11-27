@@ -870,11 +870,11 @@ auto to_raw(intt<T, N> const& a) noexcept
 template <typename T, std::size_t N>
 std::string to_string(intt<T, N> a)
 {
-  std::string r(is_neg(a) ? 1 : 0, '-');
+  auto const neg(is_neg(a));
+
+  std::string r(neg ? 1 : 0, '-');
 
   {
-    auto const neg(is_neg(a));
-
     intt<T, N> const k(direct{}, T(10));
 
     do
