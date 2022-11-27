@@ -661,7 +661,7 @@ constexpr auto clz(intt<T, N> const& a) noexcept
 
     do
     {
-      n += (c = std::countl_zero(a.v_[--I]));
+      n += c = std::countl_zero(a.v_[--I]);
     } while (I && (intt<T, N>::wbits == c));
   }
 
