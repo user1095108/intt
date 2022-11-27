@@ -827,10 +827,6 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         case '5': case '6': case '7': case '8': case '9':
           if (scandigit(*i - '0')) return {r, true}; else continue;
 
-        case '.':
-          i = std::next(i);
-          break;
-
         case '\0':
           break;
 
