@@ -6,7 +6,6 @@
 #include <cmath> // std::ldexp()
 #include <concepts> // std::floating_point, std::integral
 
-#include <array> // std::array
 #include <algorithm> // std::max()
 #include <bit>
 #include <iomanip> // std::hex
@@ -45,7 +44,7 @@ struct intt
 
   using value_type = T;
 
-  std::array<T, N> v_;
+  T v_[N];
 
   intt() = default;
 
@@ -260,7 +259,7 @@ struct intt
         }
         else
         {
-          return v_.front();
+          return *v_;
         }
       }(std::make_index_sequence<detail::bit_size_v<U> / wbits>());
   }
@@ -271,7 +270,7 @@ struct intt
   //
   static constexpr auto size() noexcept { return N; }
 
-  constexpr auto data() const noexcept { return v_.data(); }
+  constexpr auto data() const noexcept { return v_; }
 
   // bitwise
   constexpr auto operator~() const noexcept
@@ -314,7 +313,7 @@ struct intt
             ...
           );
 
-          r.v_.front() <<= e;
+          *r.v_ <<= e;
         }
       );
 
@@ -386,7 +385,18 @@ struct intt
 
   constexpr auto operator-() const noexcept
   {
-    auto r(*this); r.negate(); return r;
+    auto r(*this);
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((r.v_[I] = T(~r.v_[I])), ...);
+
+      bool c{true};
+
+      ((r.v_[I] += c, c = r.v_[I] < c), ...);
+    }(std::make_index_sequence<N>());
+
+    return r;
   }
 
   //
@@ -544,18 +554,6 @@ struct intt
     }
 
     return r >> 1;
-  }
-
-  constexpr void negate() noexcept
-  {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((v_[I] = T(~v_[I])), ...);
-
-      bool c{true};
-
-      ((v_[I] += c, c = v_[I] < c), ...);
-    }(std::make_index_sequence<N>());
   }
 
   //
