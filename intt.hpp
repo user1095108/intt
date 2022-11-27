@@ -697,7 +697,7 @@ constexpr bool test_bit(intt<T, N> const& a) noexcept
 }
 
 template <typename T, std::size_t N>
-constexpr bool is_neg(intt<T, N> const& a) noexcept
+constexpr auto is_neg(intt<T, N> const& a) noexcept
 {
   return test_bit<N * intt<T, N>::wbits - 1>(a);
 }
