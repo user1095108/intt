@@ -512,18 +512,36 @@ struct intt
       static_assert(2 * M >= N);
 
       intt<D, M> r{};
-      intt a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
+
+      auto const nega(is_neg(*this)), negb(is_neg(o));
 
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
         for (std::size_t j{}; N != i + j; ++j)
         {
-          r += intt<D, M>(direct{}, D(D(a.v_[i]) * b.v_[j])) <<
-            detail::bit_size_v<T> * (i + j); // word granularity
+          r += intt<D, M>(
+              direct{},
+              D(D(nega ? T(~v_[i]) : v_[i]) * (negb ? T(~o.v_[j]) : o.v_[j]))
+            ) << detail::bit_size_v<T> * (i + j); // word granularity
         }
       }
 
-      return is_neg(*this) ^ is_neg(o) ? -r : r;
+      if (nega && negb)
+      {
+        return r + ~*this + ~o + intt(direct{}, T(1));
+      }
+      else if (nega)
+      {
+        return -(r + o);
+      }
+      else if (negb)
+      {
+        return -(r + *this);
+      }
+      else
+      {
+        return r;
+      }
     }
   }
 
@@ -753,16 +771,16 @@ constexpr auto is_neg(intt<T, N> const& a) noexcept
   return test_bit<N * intt<T, N>::wbits - 1>(a);
 }
 
-constexpr auto wshl(auto const& a, std::size_t const n) const noexcept
+constexpr auto wshl(auto const& a, std::size_t const n) noexcept
 {
   std::remove_cvref_t<decltype(a)> r;
 
-  for (std::size_t i{n}; i < N; ++i)
+  for (std::size_t i{n}; i < a.size(); ++i)
   {
     r.v_[i] = a.v_[i - n];
   }
 
-  auto const e(std::min(N, n));
+  auto const e(std::min(a.size(), n));
 
   for (std::size_t i{}; i != e; ++i)
   {
