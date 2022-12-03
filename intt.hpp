@@ -512,7 +512,6 @@ struct intt
       static_assert(2 * M >= N);
 
       intt<D, M> r{};
-
       auto const nega(is_neg(*this)), negb(is_neg(o));
 
       for (std::size_t i{}; N != i; ++i)
