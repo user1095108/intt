@@ -483,7 +483,7 @@ struct intt
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
-        for (std::size_t j{}; (M != j) && (i + j != M); ++j)
+        for (std::size_t j{}; i + j != M; ++j)
         {
           r += intt<T, N>(direct{}, T(T(a.v_[i]) * b.v_[j])) <<
             detail::bit_size_v<H> * (i + j); // half-word granularity
@@ -516,7 +516,7 @@ struct intt
 
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-        for (std::size_t j{}; (N != j) && (i + j != N); ++j)
+        for (std::size_t j{}; i + j != N; ++j)
         {
           r += intt<D, M>(direct{}, D(D(a.v_[i]) * b.v_[j])) <<
             detail::bit_size_v<T> * (i + j); // word granularity
