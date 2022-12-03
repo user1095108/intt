@@ -753,6 +753,25 @@ constexpr auto is_neg(intt<T, N> const& a) noexcept
   return test_bit<N * intt<T, N>::wbits - 1>(a);
 }
 
+constexpr auto wshl(auto const& a, std::size_t const n) const noexcept
+{
+  std::remove_cvref_t<decltype(a)> r;
+
+  for (std::size_t i{n}; i < N; ++i)
+  {
+    r.v_[i] = a.v_[i - n];
+  }
+
+  auto const e(std::min(N, n));
+
+  for (std::size_t i{}; i != e; ++i)
+  {
+    r.v_[i] = {};
+  }
+
+  return r;
+}
+
 template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
