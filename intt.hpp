@@ -471,10 +471,42 @@ struct intt
   */
 
   constexpr intt operator*(intt const& o) const noexcept
-  { // wbits per iteration
-    if constexpr(std::is_same_v<T, std::uint8_t>)
-    {
-      using D = std::uint16_t;
+  { 
+    if constexpr(std::is_same_v<T, std::uint64_t>)
+    { // wbits per iteration
+      using H = std::uint32_t;
+
+      enum : size_t { M = 2 * N };
+
+      intt r{};
+      intt<H, M> a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
+
+      for (std::size_t i{}; M != i; ++i)
+      { // detail::bit_size_v<H> * (i + j) < wbits * N
+        for (std::size_t j{}; (M != j) && (i + j != M); ++j)
+        {
+          r += intt<T, N>(direct{}, T(T(a.v_[i]) * b.v_[j])) <<
+            detail::bit_size_v<H> * (i + j); // half-word granularity
+        }
+      }
+
+      return is_neg(*this) ^ is_neg(o) ? -r : r;
+    }
+    else
+    { // 2 * wbits per iteration
+      using D = std::conditional_t<
+        std::is_same_v<T, std::uint8_t>,
+        std::uint16_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint16_t>,
+          std::uint32_t,
+          std::conditional_t<
+            std::is_same_v<T, std::uint32_t>,
+            std::uint64_t,
+            void
+          >
+        >
+      >;
 
       enum : size_t { M = N / 2 + N % 2 };
       static_assert(2 * M >= N);
@@ -483,43 +515,11 @@ struct intt
       intt a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
 
       for (std::size_t i{}; N != i; ++i)
-      {
-        for (std::size_t j{}; (N != j) && (i + j < N); ++j)
-        { // half-word granularity
+      { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
+        for (std::size_t j{}; (N != j) && (i + j != N); ++j)
+        {
           r += intt<D, M>(direct{}, D(D(a.v_[i]) * b.v_[j])) <<
-            detail::bit_size_v<T> * (i + j);
-        }
-      }
-
-      return is_neg(*this) ^ is_neg(o) ? -r : r;
-    }
-    else
-    {
-      using H = std::conditional_t<
-        std::is_same_v<T, std::uint64_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint16_t,
-          std::conditional_t<
-            std::is_same_v<T, std::uint16_t>,
-            std::uint8_t,
-            void
-          >
-        >
-      >;
-
-      enum : size_t { M = 2 * N };
-
-      intt r{};
-      intt<H, M> a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
-
-      for (std::size_t i{}; M != i; ++i)
-      {
-        for (std::size_t j{}; (M != j) && (i + j < M); ++j)
-        { // detail::bit_size_v<H> * (i + j) < wbits * N
-          r += intt<T, N>(direct{}, T(T(a.v_[i]) * b.v_[j])) <<
-            detail::bit_size_v<H> * (i + j); // half-word granularity
+            detail::bit_size_v<T> * (i + j); // word granularity
         }
       }
 
