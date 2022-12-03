@@ -2,6 +2,7 @@
 # define INTT_HPP
 # pragma once
 
+#include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::ldexp()
 #include <concepts> // std::floating_point, std::integral
@@ -52,6 +53,19 @@ struct intt
   intt(intt&&) = default;
 
   constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
+
+  constexpr intt(T const v, std::size_t const i, direct) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        (
+          v_[I] = I == i ? v : T{}
+        ),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
 
   template <std::floating_point U>
   constexpr intt(U f) noexcept
@@ -426,9 +440,91 @@ struct intt
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
 
+  /*
   constexpr auto operator*(intt const& o) const noexcept
   {
-    return intt(mul(o), direct{});
+    intt<T, 2 * N> r{}, A{this->lshifted()};
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          if (test_bit<I>(o))
+          {
+            r += A;
+          }
+
+          r >>= 1;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<wbits * N - 1>());
+
+    if (is_neg(o))
+    {
+      r -= A;
+    }
+
+    return intt(r >> 1, direct{});
+  }
+  */
+
+  constexpr intt operator*(intt const& o) const noexcept
+  { // wbits per iteration
+    if constexpr(std::is_same_v<T, std::uint8_t>)
+    {
+      using D = std::uint16_t;
+
+      enum : size_t { M = N / 2 + N % 2 };
+      static_assert(2 * M >= N);
+
+      intt<D, M> r{};
+      intt a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
+
+      for (std::size_t i{}; N != i; ++i)
+      {
+        for (std::size_t j{}; (N != j) && (i + j < N); ++j)
+        { // half-word granularity
+          r += intt<D, M>(direct{}, D(D(a.v_[i]) * b.v_[j])) <<
+            detail::bit_size_v<T> * (i + j);
+        }
+      }
+
+      return is_neg(*this) ^ is_neg(o) ? -r : r;
+    }
+    else
+    {
+      using H = std::conditional_t<
+        std::is_same_v<T, std::uint64_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint16_t,
+          std::conditional_t<
+            std::is_same_v<T, std::uint16_t>,
+            std::uint8_t,
+            void
+          >
+        >
+      >;
+
+      enum : size_t { M = 2 * N };
+
+      intt r{};
+      intt<H, M> a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
+
+      for (std::size_t i{}; M != i; ++i)
+      {
+        for (std::size_t j{}; (M != j) && (i + j < M); ++j)
+        { // detail::bit_size_v<H> * (i + j) < wbits * N
+          r += intt<T, N>(direct{}, T(T(a.v_[i]) * b.v_[j])) <<
+            detail::bit_size_v<H> * (i + j); // half-word granularity
+        }
+      }
+
+      return is_neg(*this) ^ is_neg(o) ? -r : r;
+    }
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -526,34 +622,6 @@ struct intt
     auto const tmp(r.rshifted());
 
     return std::pair(neg ^ is_neg(o) ? -q : q, neg ? -tmp : tmp);
-  }
-
-  constexpr auto mul(intt const& o) const noexcept
-  {
-    intt<T, 2 * N> r{}, A{this->lshifted()};
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          if (test_bit<I>(o))
-          {
-            r += A;
-          }
-
-          r >>= 1;
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<wbits * N - 1>());
-
-    if (is_neg(o))
-    {
-      r -= A;
-    }
-
-    return r >> 1;
   }
 
   //
