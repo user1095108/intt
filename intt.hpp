@@ -471,29 +471,36 @@ struct intt
   */
 
   constexpr intt operator*(intt const& o) const noexcept
-  { 
+  {
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt r{};
+
     if constexpr(std::is_same_v<T, std::uint64_t>)
-    { // wbits per iteration
+    { // multiplying half-words, wbits per iteration
       using H = std::uint32_t;
 
       enum : size_t { M = 2 * N };
-
-      intt r{};
-      intt<H, M> a(is_neg(*this) ? -*this : *this), b(is_neg(o) ? -o : o);
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
         for (std::size_t j{}; M != i + j; ++j)
         {
-          r += intt<T, N>(direct{}, T(T(a.v_[i]) * b.v_[j])) <<
-            detail::bit_size_v<H> * (i + j); // half-word granularity
+          T pp;
+
+          {
+            H const a(v_[i / 2] >> (i % 2 ? detail::bit_size_v<H> : 0));
+            H const b(o.v_[j / 2] >> (j % 2 ? detail::bit_size_v<H> : 0));
+            pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
+          }
+
+          r += wshl(intt(direct{}, pp), (i + j) / 2) <<
+            ((i + j) % 2 ? detail::bit_size_v<H> : 0);
         }
       }
-
-      return is_neg(*this) ^ is_neg(o) ? -r : r;
     }
     else
-    { // 2 * wbits per iteration
+    { // multiplying words, 2 * wbits per iteration
       using D = std::conditional_t<
         std::is_same_v<T, std::uint8_t>,
         std::uint16_t,
@@ -511,36 +518,33 @@ struct intt
       enum : size_t { M = N / 2 + N % 2 };
       static_assert(2 * M >= N);
 
-      intt<D, M> r{};
-      auto const nega(is_neg(*this)), negb(is_neg(o));
-
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
         for (std::size_t j{}; N != i + j; ++j)
         {
-          r += intt<D, M>(
-              direct{},
-              D(D(nega ? T(~v_[i]) : v_[i]) * (negb ? T(~o.v_[j]) : o.v_[j]))
-            ) << detail::bit_size_v<T> * (i + j); // word granularity
+          D const pp(D(nega ? T(~v_[i]) : v_[i]) *
+            (negb ? T(~o.v_[j]) : o.v_[j]));
+
+          r += wshl(intt(direct{}, T(pp), T(pp >> wbits)), i + j);
         }
       }
+    }
 
-      if (nega && negb)
-      {
-        return r + ~*this + ~o + intt(direct{}, T(1));
-      }
-      else if (nega)
-      {
-        return -(r + o);
-      }
-      else if (negb)
-      {
-        return -(r + *this);
-      }
-      else
-      {
-        return r;
-      }
+    if (nega && negb)
+    {
+      return r + ~*this + ~o + intt(direct{}, T(1));
+    }
+    else if (nega)
+    {
+      return -(r + o);
+    }
+    else if (negb)
+    {
+      return -(r + *this);
+    }
+    else
+    {
+      return r;
     }
   }
 
