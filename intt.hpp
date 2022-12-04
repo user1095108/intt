@@ -20,6 +20,7 @@ namespace intt
 {
 
 struct direct{};
+struct direct2{};
 
 namespace detail
 {
@@ -54,13 +55,31 @@ struct intt
 
   constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
 
-  constexpr intt(T const v, std::size_t const i, direct) noexcept
+  constexpr intt(direct2, std::size_t const i, auto&& ...a) noexcept
+    requires(
+      std::conjunction_v<std::is_same<T, std::remove_cvref_t<decltype(a)>>...>
+    )
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
+      auto const select([](std::size_t const i, auto&& ...a) noexcept
+        {
+          return [&]<auto ...J>(std::index_sequence<J...>) noexcept
+          {
+            T r;
+
+            (void)(((J == i) && (r = a, true)) || ...);
+
+            return r;
+          }(std::make_index_sequence<sizeof...(a)>());
+        }
+      );
+
       (
         (
-          v_[I] = I == i ? v : T{}
+          v_[I] = I >= i ?
+            I - i >= sizeof...(a) ? T{} : select(I - i, a...) :
+            T{}
         ),
         ...
       );
@@ -494,7 +513,7 @@ struct intt
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          r += wshl(intt(direct{}, pp), (i + j) / 2) <<
+          r += intt(direct2{}, (i + j) / 2, pp) <<
             ((i + j) % 2 ? detail::bit_size_v<H> : 0);
         }
       }
@@ -522,7 +541,7 @@ struct intt
           D const pp(D(nega ? T(~v_[i]) : v_[i]) *
             (negb ? T(~o.v_[j]) : o.v_[j]));
 
-          r += wshl(intt(direct{}, T(pp), T(pp >> wbits)), i + j);
+          r += intt(direct2{}, i + j, T(pp), T(pp >> wbits));
         }
       }
     }
