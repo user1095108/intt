@@ -515,9 +515,6 @@ struct intt
         >
       >;
 
-      enum : size_t { M = N / 2 + N % 2 };
-      static_assert(2 * M >= N);
-
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
         for (std::size_t j{}; N != i + j; ++j)
