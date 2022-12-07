@@ -552,6 +552,7 @@ struct intt
       }
     }
 
+    //
     if (nega && negb)
     {
       return r + ~*this + ~o + intt(direct{}, T(1));
