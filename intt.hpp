@@ -503,7 +503,9 @@ struct intt
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
-        for (std::size_t j{}; M != i + j; ++j)
+        std::size_t S(i), j{};
+
+        do
         {
           T pp;
 
@@ -513,9 +515,10 @@ struct intt
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          r += intt(direct2{}, (i + j) / 2, pp) <<
-            ((i + j) % 2 ? detail::bit_size_v<H> : 0);
+          r += intt(direct2{}, S / 2, pp) <<
+            (S % 2 ? detail::bit_size_v<H> : 0);
         }
+        while (M != (++j, ++S));
       }
     }
     else
@@ -536,13 +539,16 @@ struct intt
 
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-        for (std::size_t j{}; N != i + j; ++j)
+        std::size_t S(i), j{};
+
+        do
         {
           D const pp(D(nega ? T(~v_[i]) : v_[i]) *
             (negb ? T(~o.v_[j]) : o.v_[j]));
 
-          r += intt(direct2{}, i + j, T(pp), T(pp >> wbits));
+          r += intt(direct2{}, S, T(pp), T(pp >> wbits));
         }
+        while (N != (++j, ++S));
       }
     }
 
