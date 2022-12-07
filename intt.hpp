@@ -518,7 +518,7 @@ struct intt
           r += intt(direct2{}, S / 2, pp) <<
             (S % 2 ? detail::bit_size_v<H> : 0);
         }
-        while (M != (++j, ++S));
+        while (++j, M != ++S);
       }
     }
     else
@@ -548,7 +548,7 @@ struct intt
 
           r += intt(direct2{}, S, T(pp), T(pp >> wbits));
         }
-        while (N != (++j, ++S));
+        while (++j, N != ++S);
       }
     }
 
