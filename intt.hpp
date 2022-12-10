@@ -673,26 +673,7 @@ struct intt
   { // wbits per iteration
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt<T, 2 * N> a{nega ? -*this : *this, direct{}}, b;
-
-    std::size_t C;
-
-    //
-    if (negb)
-    {
-      auto const tmp(-o);
-
-      b = {tmp, direct{}};
-      C = clz(tmp);
-    }
-    else
-    {
-      b = {o, direct{}};
-      C = clz(o);
-    }
-
-    lshl(a, C);
-    lshl(b, C);
+    intt<T, 2 * N> a{nega ? -*this : *this, direct{}};
 
     //
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
@@ -700,43 +681,65 @@ struct intt
 
     intt q{};
 
-    T const B(b.v_[N - 1] >> hwbits);
-
-    auto tmp(wshl(std::as_const(b), N));
-
-    auto k(2 * N);
-
-    do
     {
-      --k;
+      std::size_t C;
 
-      //
-      auto h(
-        std::min(
-          T(dmax),
-          T(a.v_[k] / B)
-        )
-      );
+      intt<T, 2 * N> b;
 
-      for (a -= h * lshr(tmp, hwbits); is_neg(a); --h, a += tmp);
+      if (negb)
+      {
+        auto const tmp(-o);
 
-      auto l(
-        std::min(
-          T(dmax),
-          T((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
-        )
-      );
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
 
-      for (a -= l * lshr(tmp, hwbits); is_neg(a); --l, a += tmp);
+      lshl(a, C);
+      lshl(b, C);
 
-      //
-      q.v_[k - N] = h << hwbits | l;
+      T const B(b.v_[N - 1] >> hwbits);
+
+      auto tmp(wshl(std::as_const(b), N));
+
+      auto k(2 * N);
+
+      do
+      {
+        --k;
+
+        //
+        auto h(
+          std::min(
+            T(dmax),
+            T(a.v_[k] / B)
+          )
+        );
+
+        for (a -= h * lshr(tmp, hwbits); is_neg(a); --h, a += tmp);
+
+        auto l(
+          std::min(
+            T(dmax),
+            T((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+          )
+        );
+
+        for (a -= l * lshr(tmp, hwbits); is_neg(a); --l, a += tmp);
+
+        //
+        q.v_[k - N] = h << hwbits | l;
+      }
+      while (N != k);
+
+      lshr(a, C);
     }
-    while (N != k);
 
     //
-    lshr(a, C);
-
     return std::pair(nega ^ negb ? -q : q, nega ? -intt(a) : intt(a));
   }
 
