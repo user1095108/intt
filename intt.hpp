@@ -725,7 +725,7 @@ struct intt
       }
 
       //auto const tmp(wshl(b, j / 2) << (j % 2 ? wbits / 2 : 0));
-      for (lshr(tmp, hwbits), a -= d * tmp; is_neg(a); a += tmp, --d);
+      for (a -= d * lshr(tmp, hwbits); is_neg(a); a += tmp, --d);
 
       q.v_[j / 2] |= d << (j % 2 ? hwbits : 0);
     }
