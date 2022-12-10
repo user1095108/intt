@@ -499,7 +499,7 @@ struct intt
     { // multiplying half-words, wbits per iteration
       using H = std::uint32_t;
 
-      enum : size_t { M = 2 * N };
+      enum : size_t { M = 2 * N, hwbits = wbits / 2 };
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
@@ -510,13 +510,12 @@ struct intt
           T pp;
 
           {
-            H const a(v_[i / 2] >> (i % 2 ? detail::bit_size_v<H> : 0));
-            H const b(o.v_[j / 2] >> (j % 2 ? detail::bit_size_v<H> : 0));
+            H const a(v_[i / 2] >> (i % 2 ? hwbits : 0));
+            H const b(o.v_[j / 2] >> (j % 2 ? hwbits : 0));
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          r += intt(direct2{}, S / 2, pp) <<
-            (S % 2 ? detail::bit_size_v<H> : 0);
+          r += intt(direct2{}, S / 2, pp) << (S % 2 ? hwbits : 0);
         }
         while (++j, M != ++S);
       }
@@ -621,6 +620,7 @@ struct intt
     return r;
   }
 
+  /*
   constexpr auto div(intt const& o) const noexcept
   {
     intt<T, 2 * N> r;
@@ -666,6 +666,75 @@ struct intt
     auto const tmp(r.rshifted());
 
     return std::pair(neg ^ is_neg(o) ? -q : q, neg ? -tmp : tmp);
+  }
+  */
+
+  constexpr auto div(intt const& o) const noexcept
+  { // wbits per iteration
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt<T, 2 * N> a{nega ? -*this : *this, direct{}}, b;
+
+    std::size_t K;
+
+    //
+    if (negb)
+    {
+      auto const tmp(-o);
+
+      b = {tmp, direct{}};
+      K = clz(tmp);
+    }
+    else
+    {
+      b = {o, direct{}};
+      K = clz(o);
+    }
+
+    lshl(wshl(a, K / wbits), K % wbits);
+    lshl(wshl(b, K / wbits), K % wbits);
+
+    //
+    enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
+    enum : T { dmax = (T(1) << hwbits) - 1 };
+
+    intt q{};
+
+    T const B(b.v_[N - 1] >> hwbits);
+
+    auto tmp(wshl(std::as_const(b), N));
+
+    std::size_t j{M};
+
+    do
+    {
+      --j;
+
+      T d;
+
+      {
+        auto const k(M + j);
+
+        T const A(
+          k % 2 ?
+            a.v_[k / 2] :
+            (a.v_[k / 2] << hwbits) | (a.v_[k / 2 - 1] >> hwbits)
+        );
+
+        d = std::min(T(dmax), T(A / B));
+      }
+
+      //auto const tmp(wshl(b, j / 2) << (j % 2 ? wbits / 2 : 0));
+      for (lshr(tmp, hwbits), a -= d * tmp; is_neg(a); a += tmp, --d);
+
+      q.v_[j / 2] |= d << (j % 2 ? hwbits : 0);
+    }
+    while (j);
+
+    //
+    lshr(wshr(a, K / wbits), K % wbits);
+
+    return std::pair(nega ^ negb ? -q : q, nega ? -intt(a) : intt(a));
   }
 
   //
@@ -797,23 +866,125 @@ constexpr auto is_neg(intt<T, N> const& a) noexcept
   return test_bit<N * intt<T, N>::wbits - 1>(a);
 }
 
+template <typename T, std::size_t N>
+constexpr auto& lshl(intt<T, N>& a, std::size_t M) noexcept
+{
+  if (M)
+  {
+    auto const shl([&]<auto ...I>(auto const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            a.v_[N - 1 - I] = (a.v_[N - 1 - I] << e) |
+              (a.v_[N - 1 - I - 1] >> (intt<T, N>::wbits - e))
+          ),
+          ...
+        );
+
+        *a.v_ <<= e;
+      }
+    );
+
+    for (; std::size_t(M) >= intt<T, N>::wbits; M -= intt<T, N>::wbits - 1)
+    {
+      shl.template operator()(
+        intt<T, N>::wbits - 1,
+        std::make_index_sequence<N - 1>()
+      );
+    }
+
+    shl.template operator()(M, std::make_index_sequence<N - 1>());
+  }
+
+  return a;
+}
+
+template <typename T, std::size_t N>
+constexpr auto& lshr(intt<T, N>& a, std::size_t M) noexcept
+{
+  if (M)
+  {
+    auto const shr([&a]<auto ...I>(auto const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            a.v_[I] = (a.v_[I] >> e) |
+              (a.v_[I + 1] << (intt<T, N>::wbits - e))
+          ),
+          ...
+        );
+
+        a.v_[N - 1] >>= e;
+      }
+    );
+
+    for (; std::size_t(M) >= intt<T, N>::wbits; M -= intt<T, N>::wbits - 1)
+    {
+      shr.template operator()(
+        intt<T, N>::wbits - 1,
+        std::make_index_sequence<N - 1>()
+      );
+    }
+
+    shr.template operator()(M, std::make_index_sequence<N - 1>());
+  }
+
+  return a;
+}
+
+constexpr auto& wshl(auto& a, std::size_t const n) noexcept
+{
+  auto i{a.size()};
+
+  if (n && (a.size() > n))
+  {
+    for (auto j(a.size() - n); j;)
+    {
+      a.v_[--i] = a.v_[--j];
+    }
+  }
+
+  while (i) a.v_[--i] = {};
+
+  return a;
+}
+
 constexpr auto wshl(auto const& a, std::size_t const n) noexcept
 {
   std::remove_cvref_t<decltype(a)> r;
 
-  for (std::size_t i{n}; i < a.size(); ++i)
+  auto i{a.size()};
+
+  if (n && (a.size() > n))
   {
-    r.v_[i] = a.v_[i - n];
+    for (auto j(a.size() - n); j;)
+    {
+      r.v_[--i] = a.v_[--j];
+    }
   }
 
-  auto const e(std::min(a.size(), n));
-
-  for (std::size_t i{}; i != e; ++i)
-  {
-    r.v_[i] = {};
-  }
+  while (i) r.v_[--i] = {};
 
   return r;
+}
+
+constexpr auto& wshr(auto& a, std::size_t const n) noexcept
+{
+  std::size_t i{};
+
+  if (n)
+  {
+    for (auto j(n); j < a.size();)
+    {
+      a.v_[i++] = a.v_[j++];
+    }
+  }
+
+  for (; a.size() != i; ++i) a.v_[i] = {};
+
+  return a;
 }
 
 template <typename T, std::size_t N>
