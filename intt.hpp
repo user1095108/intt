@@ -733,7 +733,7 @@ struct intt
         //
         auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-        for (a -= h * lshr(b, hwbits); is_neg(a); --h, a += b);
+        for (a -= h * lshr(b, hwbits); is_neg(a); a += b, --h);
 
         auto l(
           std::min(
@@ -742,7 +742,7 @@ struct intt
           )
         );
 
-        for (a -= l * lshr(b, hwbits); is_neg(a); --l, a += b);
+        for (a -= l * lshr(b, hwbits); is_neg(a); a += b, --l);
 
         //
         q.v_[k - N] = T(h) << hwbits | l;
