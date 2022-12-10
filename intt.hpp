@@ -704,7 +704,7 @@ struct intt
 
     auto tmp(wshl(std::as_const(b), N));
 
-    auto j(N), k(2 * N);
+    auto k(2 * N);
 
     do
     {
@@ -730,9 +730,9 @@ struct intt
       for (a -= l * lshr(tmp, hwbits); is_neg(a); --l, a += tmp);
 
       //
-      q.v_[--j] = h << hwbits | l;
+      q.v_[k - N] = h << hwbits | l;
     }
-    while (j);
+    while (N != k);
 
     //
     lshr(a, K);
