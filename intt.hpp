@@ -719,7 +719,8 @@ struct intt
       }
 
       lshl(a, C);
-      wshl(lshl(b, C % wbits), N + C / wbits);
+      lshl(b, C);
+      wshl(b, N);
 
       auto k(2 * N);
 
