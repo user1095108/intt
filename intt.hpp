@@ -719,13 +719,11 @@ struct intt
       }
 
       lshl(a, C);
-      lshl(b, C);
-
-      H const B(b.v_[N - 1] >> hwbits);
-
-      wshl(b, N);
+      wshl(lshl(b, C % wbits), N + C / wbits);
 
       auto k(2 * N);
+
+      H const B(b.v_[2 * N - 1] >> hwbits);
 
       do
       {
