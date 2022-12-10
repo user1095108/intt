@@ -510,12 +510,13 @@ struct intt
           T pp;
 
           {
-            H const a(v_[i / 2] >> (i % 2 ? hwbits : 0));
-            H const b(o.v_[j / 2] >> (j % 2 ? hwbits : 0));
+            H const a(v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0));
+            H const b(o.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          r += intt(direct2{}, S / 2, pp) << (S % 2 ? hwbits : 0);
+          r += intt(direct2{}, S / 2, pp) <<
+            (S % 2 ? std::size_t(hwbits) : 0);
         }
         while (++j, M != ++S);
       }
