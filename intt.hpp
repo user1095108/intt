@@ -633,7 +633,7 @@ struct intt
   constexpr auto div(intt const& o) const noexcept
   {
     intt<T, 2 * N> r;
-    intt q;
+    intt q{}; // needed due to clz
 
     auto const neg(is_neg(*this));
 
