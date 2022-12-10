@@ -703,7 +703,7 @@ struct intt
     {
       std::size_t C;
 
-      intt<T, 2 * N> b;
+      intt<T, M> b;
 
       if (negb)
       {
@@ -722,9 +722,9 @@ struct intt
       lshl(b, C);
       wshl(b, N);
 
-      H const B(b.v_[2 * N - 1] >> hwbits);
+      H const B(b.v_[M - 1] >> hwbits);
 
-      auto k(2 * N);
+      std::size_t k(M);
 
       do
       {
