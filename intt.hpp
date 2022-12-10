@@ -722,9 +722,9 @@ struct intt
       lshl(b, C);
       wshl(b, N);
 
-      auto k(2 * N);
-
       H const B(b.v_[2 * N - 1] >> hwbits);
+
+      auto k(2 * N);
 
       do
       {
