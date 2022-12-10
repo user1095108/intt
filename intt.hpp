@@ -497,7 +497,15 @@ struct intt
 
     if constexpr(std::is_same_v<T, std::uint64_t>)
     { // multiplying half-words, wbits per iteration
-      using H = std::uint32_t;
+      using H = std::conditional_t<
+        std::is_same_v<T, std::uint64_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint16_t>,
+          std::uint8_t,
+          std::uint8_t
+        >
+      >;
 
       enum : size_t { M = 2 * N, hwbits = wbits / 2 };
 
