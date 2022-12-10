@@ -675,7 +675,7 @@ struct intt
 
     intt<T, 2 * N> a{nega ? -*this : *this, direct{}}, b;
 
-    std::size_t K;
+    std::size_t C;
 
     //
     if (negb)
@@ -683,16 +683,16 @@ struct intt
       auto const tmp(-o);
 
       b = {tmp, direct{}};
-      K = clz(tmp);
+      C = clz(tmp);
     }
     else
     {
       b = {o, direct{}};
-      K = clz(o);
+      C = clz(o);
     }
 
-    lshl(a, K);
-    lshl(b, K);
+    lshl(a, C);
+    lshl(b, C);
 
     //
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
@@ -735,7 +735,7 @@ struct intt
     while (N != k);
 
     //
-    lshr(a, K);
+    lshr(a, C);
 
     return std::pair(nega ^ negb ? -q : q, nega ? -intt(a) : intt(a));
   }
