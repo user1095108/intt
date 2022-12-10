@@ -624,7 +624,7 @@ struct intt
   constexpr auto div(intt const& o) const noexcept
   {
     intt<T, 2 * N> r;
-    intt q{};
+    intt q;
 
     auto const neg(is_neg(*this));
 
@@ -679,7 +679,7 @@ struct intt
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
     enum : T { dmax = (T(1) << hwbits) - 1 };
 
-    intt q{};
+    intt q;
 
     {
       std::size_t C;
