@@ -691,8 +691,8 @@ struct intt
       K = clz(o);
     }
 
-    lshl(wshl(a, K / wbits), K % wbits);
-    lshl(wshl(b, K / wbits), K % wbits);
+    lshl(a, K);
+    lshl(b, K);
 
     //
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
@@ -704,35 +704,38 @@ struct intt
 
     auto tmp(wshl(std::as_const(b), N));
 
-    std::size_t j{M};
+    auto j(N), k(2 * N);
 
     do
     {
-      --j;
+      --k;
 
-      T d;
+      //
+      auto h(
+        std::min(
+          T(dmax),
+          T(a.v_[k] / B)
+        )
+      );
 
-      {
-        auto const k(M + j);
+      for (a -= h * lshr(tmp, hwbits); is_neg(a); --h, a += tmp);
 
-        T const A(
-          k % 2 ?
-            a.v_[k / 2] :
-            (a.v_[k / 2] << hwbits) | (a.v_[k / 2 - 1] >> hwbits)
-        );
+      auto l(
+        std::min(
+          T(dmax),
+          T((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+        )
+      );
 
-        d = std::min(T(dmax), T(A / B));
-      }
+      for (a -= l * lshr(tmp, hwbits); is_neg(a); --l, a += tmp);
 
-      //auto const tmp(wshl(b, j / 2) << (j % 2 ? wbits / 2 : 0));
-      for (a -= d * lshr(tmp, hwbits); is_neg(a); a += tmp, --d);
-
-      q.v_[j / 2] |= d << (j % 2 ? hwbits : 0);
+      //
+      q.v_[--j] = h << hwbits | l;
     }
     while (j);
 
     //
-    lshr(wshr(a, K / wbits), K % wbits);
+    lshr(a, K);
 
     return std::pair(nega ^ negb ? -q : q, nega ? -intt(a) : intt(a));
   }
