@@ -725,7 +725,7 @@ struct intt
         auto l(
           std::min(
             T(dmax),
-            T(T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits) / B)
+            T((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
           )
         );
 
