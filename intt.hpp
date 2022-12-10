@@ -672,13 +672,23 @@ struct intt
 
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
     intt<T, 2 * N> a{nega ? -*this : *this, direct{}};
 
     //
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-    enum : T { dmax = (T(1) << hwbits) - 1 };
+    enum : H { dmax = (T(1) << hwbits) - 1 };
 
     intt q;
 
@@ -703,7 +713,7 @@ struct intt
       lshl(a, C);
       lshl(b, C);
 
-      T const B(b.v_[N - 1] >> hwbits);
+      H const B(b.v_[N - 1] >> hwbits);
 
       auto tmp(wshl(std::as_const(b), N));
 
@@ -714,26 +724,21 @@ struct intt
         --k;
 
         //
-        auto h(
-          std::min(
-            T(dmax),
-            T(a.v_[k] / B)
-          )
-        );
+        auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
         for (a -= h * lshr(tmp, hwbits); is_neg(a); --h, a += tmp);
 
         auto l(
           std::min(
-            T(dmax),
-            T((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+            H(dmax),
+            H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
           )
         );
 
         for (a -= l * lshr(tmp, hwbits); is_neg(a); --l, a += tmp);
 
         //
-        q.v_[k - N] = h << hwbits | l;
+        q.v_[k - N] = T(h) << hwbits | l;
       }
       while (N != k);
 
