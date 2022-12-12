@@ -462,7 +462,7 @@ struct intt
   /*
   constexpr auto operator*(intt const& o) const noexcept
   {
-    intt<T, 2 * N> r{}, A{this->lshifted()};
+    intt<T, 2 * N> r{}, A{lshifted(*this)};
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -590,45 +590,6 @@ struct intt
   }
 
   //
-  constexpr auto lshifted() const noexcept
-  {
-    intt<T, 2 * N> r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        (
-          [&]() noexcept
-          {
-            if constexpr(I >= N)
-            {
-              r.v_[I] = v_[I - N];
-            }
-            else
-            {
-              r.v_[I] = {};
-            }
-          }()
-        ),
-        ...
-      );
-    }(std::make_index_sequence<2 * N>());
-
-    return r;
-  }
-
-  constexpr auto rshifted() const noexcept
-  {
-    intt<T, N / 2> r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((r.v_[I] = v_[N / 2 + I]), ...);
-    }(std::make_index_sequence<N / 2>());
-
-    return r;
-  }
-
   /*
   constexpr auto div(intt const& o) const noexcept
   {
@@ -639,7 +600,7 @@ struct intt
 
     //
     {
-      auto const D((is_neg(o) ? -o : o).lshifted());
+      auto const D(lshifted(is_neg(o) ? -o : o));
 
       std::size_t CR;
 
@@ -672,7 +633,7 @@ struct intt
     }
 
     //
-    auto const tmp(r.rshifted());
+    auto const tmp(rshifted(r));
 
     return std::pair(neg ^ is_neg(o) ? -q : q, neg ? -tmp : tmp);
   }
@@ -767,16 +728,11 @@ struct intt
 
   constexpr auto operator<=>(intt<T, N> const& o) const noexcept
   {
-    if (auto const nega(is_neg(*this)), negb(is_neg(o)); nega != negb)
-    {
-      return nega && !negb ?
-        std::strong_ordering::less:
-        std::strong_ordering::greater;
-    }
-    else
-    {
-      return unsigned_compare(*this, o);
-    }
+    auto const nega(is_neg(*this));
+
+    return nega == is_neg(o) ?
+      unsigned_compare(*this, o) :
+      nega ? std::strong_ordering::less: std::strong_ordering::greater;
   }
 
   //
@@ -1007,35 +963,44 @@ constexpr auto& wshr(auto& a, std::size_t const n) noexcept
 }
 
 template <typename T, std::size_t N>
-constexpr auto sqrt(intt<T, N> const& a) noexcept
+constexpr auto lshifted(intt<T, N> const& a) noexcept
 {
-  intt<T, 2 * N> r(a);
-  intt<T, N> q{};
+  intt<T, 2 * N> r;
 
-  //
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    auto const CR(clz(a));
-    r <<= CR;
+    (
+      (
+        [&]() noexcept
+        {
+          if constexpr(I >= N)
+          {
+            r.v_[I] = a.v_[I - N];
+          }
+          else
+          {
+            r.v_[I] = {};
+          }
+        }()
+      ),
+      ...
+    );
+  }(std::make_index_sequence<2 * N>());
 
-    for (auto i(N * intt<T, N>::wbits - CR); i;)
-    {
-      --i;
+  return r;
+}
 
-      set_bit(q, i);
+template <typename T, std::size_t N>
+constexpr auto rshifted(intt<T, N> const& a) noexcept
+{
+  intt<T, N / 2> r;
 
-      if (auto const Q(q.lshifted()); unsigned_compare(r <<= 1, Q) >= 0)
-      {
-        r -= Q;
-      }
-      else
-      {
-        clear_bit(q, i);
-      }
-    }
-  }
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    ((r.v_[I] = a.v_[N / 2 + I]), ...);
+  }(std::make_index_sequence<N / 2>());
 
-  //
-  return std::pair(q, r.rshifted());
+  return r;
 }
 
 template <typename T, std::size_t N>
@@ -1060,6 +1025,38 @@ constexpr auto unsigned_compare(intt<T, N> const& a,
   while (i);
 
   return std::strong_ordering::equal;
+}
+
+template <typename T, std::size_t N>
+constexpr auto sqrt(intt<T, N> const& a) noexcept
+{
+  intt<T, 2 * N> r(a);
+  intt<T, N> q{};
+
+  //
+  {
+    auto const CR(clz(a));
+    r <<= CR;
+
+    for (auto i(N * intt<T, N>::wbits - CR); i;)
+    {
+      --i;
+
+      set_bit(q, i);
+
+      if (auto const Q(lshifted(q)); unsigned_compare(r <<= 1, Q) >= 0)
+      {
+        r -= Q;
+      }
+      else
+      {
+        clear_bit(q, i);
+      }
+    }
+  }
+
+  //
+  return std::pair(q, rshifted(r));
 }
 
 //
