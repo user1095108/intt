@@ -933,20 +933,20 @@ constexpr auto& lshr(auto& a, std::size_t M) noexcept
   return a;
 }
 
-template <std::size_t n>
+template <std::size_t N>
 constexpr auto& wshl(auto& a) noexcept
 {
-  static_assert(n);
+  static_assert(N);
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  enum : std::size_t {N = U::words};
+  enum : std::size_t {M = U::words};
 
-  std::size_t i{N};
+  std::size_t i{M};
 
-  if constexpr(N > n)
+  if constexpr(M > N)
   {
-    for (auto j(N - n); j;)
+    for (auto j(M - N); j;)
     {
       a.v_[--i] = a.v_[--j];
     }
