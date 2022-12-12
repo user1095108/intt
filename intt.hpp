@@ -688,7 +688,7 @@ struct intt
 
       lshl(a, C);
       lshl(b, C);
-      wshl(b, N);
+      wshl<N>(b);
 
       H const B(b.v_[M - 1] >> hwbits);
 
@@ -933,8 +933,10 @@ constexpr auto& lshr(auto& a, std::size_t M) noexcept
   return a;
 }
 
-constexpr auto& wshl(auto& a, std::size_t const n) noexcept
+template <std::size_t n>
+constexpr auto& wshl(auto& a) noexcept
 {
+  static_assert(n);
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
@@ -942,7 +944,7 @@ constexpr auto& wshl(auto& a, std::size_t const n) noexcept
 
   std::size_t i{N};
 
-  if (n && (N > n))
+  if constexpr(N > n)
   {
     for (auto j(N - n); j;)
     {
@@ -953,30 +955,6 @@ constexpr auto& wshl(auto& a, std::size_t const n) noexcept
   while (i) a.v_[--i] = {};
 
   return a;
-}
-
-constexpr auto wshl(auto const& a, std::size_t const n) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t {N = U::words};
-
-  U r;
-
-  auto i{N};
-
-  if (n && (N > n))
-  {
-    for (auto j(a.size() - n); j;)
-    {
-      r.v_[--i] = a.v_[--j];
-    }
-  }
-
-  while (i) r.v_[--i] = {};
-
-  return r;
 }
 
 constexpr auto& wshr(auto& a, std::size_t const n) noexcept
