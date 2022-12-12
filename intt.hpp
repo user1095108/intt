@@ -42,9 +42,16 @@ using underlying_type_t = typename underlying_type<T>::type;
 template <std::unsigned_integral T, std::size_t N> requires(N > 0)
 struct intt
 {
-  enum : std::size_t { wbits = sizeof(T) * CHAR_BIT }; // bits per word
+  enum : std::size_t
+  {
+    wbits = sizeof(T) * CHAR_BIT, // bits per word
+    words = N
+  }; 
 
   using value_type = T;
+
+  using doubled_t = intt<T, 2 * N>;
+  using halved_t = intt<T, N / 2>;
 
   T v_[N];
 
@@ -962,10 +969,10 @@ constexpr auto& wshr(auto& a, std::size_t const n) noexcept
   return a;
 }
 
-template <typename T, std::size_t N>
-constexpr auto lshifted(intt<T, N> const& a) noexcept
+constexpr auto lshifted(auto const& a) noexcept
 {
-  intt<T, 2 * N> r;
+  using U = typename std::remove_cvref_t<decltype(a)>;
+  typename U::doubled_t r;
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -973,9 +980,9 @@ constexpr auto lshifted(intt<T, N> const& a) noexcept
       (
         [&]() noexcept
         {
-          if constexpr(I >= N)
+          if constexpr(I >= U::words)
           {
-            r.v_[I] = a.v_[I - N];
+            r.v_[I] = a.v_[I - U::words];
           }
           else
           {
@@ -985,20 +992,20 @@ constexpr auto lshifted(intt<T, N> const& a) noexcept
       ),
       ...
     );
-  }(std::make_index_sequence<2 * N>());
+  }(std::make_index_sequence<decltype(r)::words>());
 
   return r;
 }
 
-template <typename T, std::size_t N>
-constexpr auto rshifted(intt<T, N> const& a) noexcept
+constexpr auto rshifted(auto const& a) noexcept
 {
-  intt<T, N / 2> r;
+  using U = typename std::remove_cvref_t<decltype(a)>;
+  typename U::halved_t r;
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    ((r.v_[I] = a.v_[N / 2 + I]), ...);
-  }(std::make_index_sequence<N / 2>());
+    ((r.v_[I] = a.v_[decltype(r)::words + I]), ...);
+  }(std::make_index_sequence<decltype(r)::words>());
 
   return r;
 }
