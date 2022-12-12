@@ -971,7 +971,7 @@ constexpr auto& wshr(auto& a, std::size_t const n) noexcept
 
 constexpr auto lshifted(auto const& a) noexcept
 {
-  using U = typename std::remove_cvref_t<decltype(a)>;
+  using U = std::remove_cvref_t<decltype(a)>;
   typename U::doubled_t r;
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -999,7 +999,7 @@ constexpr auto lshifted(auto const& a) noexcept
 
 constexpr auto rshifted(auto const& a) noexcept
 {
-  using U = typename std::remove_cvref_t<decltype(a)>;
+  using U = std::remove_cvref_t<decltype(a)>;
   typename U::halved_t r;
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
