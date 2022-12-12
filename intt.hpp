@@ -658,14 +658,14 @@ struct intt
       >
     >;
 
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
-    intt<T, 2 * N> a{nega ? -*this : *this, direct{}};
-
-    //
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
     enum : H { dmax = (T(1) << hwbits) - 1 };
 
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt<T, M> a{nega ? -*this : *this, direct{}};
+
+    //
     intt q;
 
     {
@@ -812,45 +812,58 @@ constexpr auto clz(intt<T, N> const& a) noexcept
   return n;
 }
 
-template <std::size_t I, typename T, std::size_t N>
-constexpr void clear_bit(intt<T, N>& a) noexcept
+template <std::size_t I>
+constexpr void clear_bit(auto& a) noexcept
 {
-  a.v_[I / intt<T, N>::wbits] &= ~(T{1} << (I % intt<T, N>::wbits));
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  a.v_[I / U::words] &= ~(T{1} << (I % U::words));
 }
 
-template <typename T, std::size_t N>
-constexpr void clear_bit(intt<T, N>& a, std::size_t const i) noexcept
+constexpr void clear_bit(auto& a, std::size_t const i) noexcept
 {
-  a.v_[i / intt<T, N>::wbits] &= ~(T{1} << i % intt<T, N>::wbits);
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  a.v_[i / U::words] &= ~(T{1} << i % U::words);
 }
 
-template <std::size_t I, typename T, std::size_t N>
-constexpr void set_bit(intt<T, N>& a) noexcept
+template <std::size_t I>
+constexpr void set_bit(auto& a) noexcept
 {
-  a.v_[I / intt<T, N>::wbits] |= T{1} << I % intt<T, N>::wbits;
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  a.v_[I / U::words] |= T{1} << I % U::words;
 }
 
-template <typename T, std::size_t N>
-constexpr void set_bit(intt<T, N>& a, std::size_t const i) noexcept
+constexpr void set_bit(auto& a, std::size_t const i) noexcept
 {
-  a.v_[i / intt<T, N>::wbits] |= T{1} << i % intt<T, N>::wbits;
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  a.v_[i / U::words] |= T{1} << i % U::words;
 }
 
-template <std::size_t I, typename T, std::size_t N>
-constexpr bool test_bit(intt<T, N> const& a) noexcept
+template <std::size_t I>
+constexpr bool test_bit(auto const& a) noexcept
 {
-  return a.v_[I / intt<T, N>::wbits] & (T{1} << I % intt<T, N>::wbits);
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  return a.v_[I / U::words] & (T{1} << I % U::words);
 }
 
-template <typename T, std::size_t N>
-constexpr auto is_neg(intt<T, N> const& a) noexcept
+constexpr bool is_neg(auto const& a) noexcept
 {
-  return test_bit<N * intt<T, N>::wbits - 1>(a);
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+  return a.v_[U::words - 1] & (T(1) << detail::bit_size_v<T> - 1);
 }
 
-template <typename T, std::size_t N>
-constexpr auto& lshl(intt<T, N>& a, std::size_t M) noexcept
+constexpr auto& lshl(auto& a, std::size_t M) noexcept
 {
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
   if (M)
   {
     auto const shl([&]<auto ...I>(auto const e,
@@ -859,7 +872,7 @@ constexpr auto& lshl(intt<T, N>& a, std::size_t M) noexcept
         (
           (
             a.v_[N - 1 - I] = (a.v_[N - 1 - I] << e) |
-              (a.v_[N - 1 - I - 1] >> (intt<T, N>::wbits - e))
+              (a.v_[N - 1 - I - 1] >> (U::wbits - e))
           ),
           ...
         );
@@ -868,10 +881,10 @@ constexpr auto& lshl(intt<T, N>& a, std::size_t M) noexcept
       }
     );
 
-    for (; std::size_t(M) >= intt<T, N>::wbits; M -= intt<T, N>::wbits - 1)
+    for (; std::size_t(M) >= U::wbits; M -= U::wbits - 1)
     {
       shl.template operator()(
-        intt<T, N>::wbits - 1,
+        U::wbits - 1,
         std::make_index_sequence<N - 1>()
       );
     }
@@ -882,9 +895,13 @@ constexpr auto& lshl(intt<T, N>& a, std::size_t M) noexcept
   return a;
 }
 
-template <typename T, std::size_t N>
-constexpr auto& lshr(intt<T, N>& a, std::size_t M) noexcept
+constexpr auto& lshr(auto& a, std::size_t M) noexcept
 {
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
   if (M)
   {
     auto const shr([&a]<auto ...I>(auto const e,
@@ -918,11 +935,16 @@ constexpr auto& lshr(intt<T, N>& a, std::size_t M) noexcept
 
 constexpr auto& wshl(auto& a, std::size_t const n) noexcept
 {
-  auto i{a.size()};
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
 
-  if (n && (a.size() > n))
+  enum : std::size_t {N = U::words};
+
+  std::size_t i{N};
+
+  if (n && (N > n))
   {
-    for (auto j(a.size() - n); j;)
+    for (auto j(N - n); j;)
     {
       a.v_[--i] = a.v_[--j];
     }
@@ -935,11 +957,16 @@ constexpr auto& wshl(auto& a, std::size_t const n) noexcept
 
 constexpr auto wshl(auto const& a, std::size_t const n) noexcept
 {
-  std::remove_cvref_t<decltype(a)> r;
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
 
-  auto i{a.size()};
+  enum : std::size_t {N = U::words};
 
-  if (n && (a.size() > n))
+  U r;
+
+  auto i{N};
+
+  if (n && (N > n))
   {
     for (auto j(a.size() - n); j;)
     {
@@ -954,17 +981,22 @@ constexpr auto wshl(auto const& a, std::size_t const n) noexcept
 
 constexpr auto& wshr(auto& a, std::size_t const n) noexcept
 {
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
   std::size_t i{};
 
   if (n)
   {
-    for (auto j(n); j < a.size();)
+    for (auto j(n); j < N;)
     {
       a.v_[i++] = a.v_[j++];
     }
   }
 
-  for (; a.size() != i; ++i) a.v_[i] = {};
+  for (; N != i; ++i) a.v_[i] = {};
 
   return a;
 }
@@ -974,15 +1006,17 @@ constexpr auto lshifted(auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   typename U::doubled_t r;
 
+  enum : std::size_t {N = U::words};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
       (
         [&]() noexcept
         {
-          if constexpr(I >= U::words)
+          if constexpr(I >= N)
           {
-            r.v_[I] = a.v_[I - U::words];
+            r.v_[I] = a.v_[I - N];
           }
           else
           {
@@ -1002,19 +1036,21 @@ constexpr auto rshifted(auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   typename U::halved_t r;
 
+  enum : std::size_t {N = decltype(r)::words};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    ((r.v_[I] = a.v_[decltype(r)::words + I]), ...);
-  }(std::make_index_sequence<decltype(r)::words>());
+    ((r.v_[I] = a.v_[N + I]), ...);
+  }(std::make_index_sequence<N>());
 
   return r;
 }
 
-template <typename T, std::size_t N>
-constexpr auto unsigned_compare(intt<T, N> const& a,
-  intt<T, N> const& b) noexcept
+constexpr auto unsigned_compare(auto const& a, decltype(a) b) noexcept
 {
-  auto i{N};
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  std::size_t i{U::words};
 
   do
   {
