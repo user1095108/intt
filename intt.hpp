@@ -642,7 +642,7 @@ struct intt
     //
     auto const tmp(rshifted(r));
 
-    return std::pair(neg ^ is_neg(o) ? -q : q, neg ? -tmp : tmp);
+    return std::pair(neg == is_neg(o) ? q : -q, neg ? -tmp : tmp);
   }
   */
 
@@ -722,7 +722,7 @@ struct intt
 
     //
     return std::pair(
-      nega ^ negb ? -q : q,
+      nega == negb ? q : -q,
       nega ? -intt(a, direct{}) : intt(a, direct{})
     );
   }
