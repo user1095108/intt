@@ -738,11 +738,9 @@ struct intt
 
   constexpr auto operator<=>(intt<T, N> const& o) const noexcept
   {
-    auto const nega(is_neg(*this));
+    auto const c(is_neg(o) <=> is_neg(*this));
 
-    return nega == is_neg(o) ?
-      unsigned_compare(*this, o) :
-      nega ? std::strong_ordering::less: std::strong_ordering::greater;
+    return c == 0 ? unsigned_compare(*this, o) : c;
   }
 
   //
