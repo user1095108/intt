@@ -856,6 +856,9 @@ constexpr bool test_bit(auto const& a) noexcept
 
 constexpr bool is_neg(auto const& a) noexcept
 {
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
   using S = std::conditional_t<
     std::is_same_v<T, std::uint64_t>,
     std::int64_t,
@@ -869,9 +872,6 @@ constexpr bool is_neg(auto const& a) noexcept
       >
     >
   >;
-
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
   return S(a.v_[U::words - 1]) < S{};
   //return a.v_[U::words - 1] & (T(1) << detail::bit_size_v<T> - 1);
