@@ -1074,13 +1074,9 @@ constexpr auto unsigned_compare(auto const& a, decltype(a) b) noexcept
   {
     --i;
 
-    if (auto const c(a[i] <=> b[i]); c < 0)
+    if (auto const c(a[i] <=> b[i]); (c > 0) || (c < 0))
     {
-      return std::strong_ordering::less;
-    }
-    else if (c > 0)
-    {
-      return std::strong_ordering::greater;
+      return c;
     }
   }
   while (i);
