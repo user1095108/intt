@@ -966,9 +966,9 @@ constexpr auto& hwlshr(auto& a) noexcept
       ),
       ...
     );
-
-    a.v_[N - 1] >>= hwbits;
   }(std::make_index_sequence<N - 1>());
+
+  a.v_[N - 1] >>= hwbits;
 
   return a;
 }
