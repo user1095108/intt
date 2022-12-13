@@ -723,7 +723,7 @@ struct intt
     //
     return std::pair(
       nega ^ negb ? -q : q,
-      nega ? -intt(direct{}, a) : intt(direct{}, a)
+      nega ? -intt(a, direct{}) : intt(a, direct{})
     );
   }
 
