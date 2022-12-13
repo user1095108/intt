@@ -646,6 +646,7 @@ struct intt
   }
   */
 
+  //__attribute__((noinline))
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
@@ -857,7 +858,7 @@ constexpr bool is_neg(auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  return a.v_[U::words - 1] & (T(1) << detail::bit_size_v<T> - 1);
+  return a.v_[U::words - 1] < T{};
 }
 
 constexpr auto& lshl(auto& a, std::size_t M) noexcept
