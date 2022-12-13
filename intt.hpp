@@ -702,7 +702,7 @@ struct intt
         //
         auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-        for (a -= h * lshr(b, hwbits); is_neg(a); a += b, --h);
+        for (a -= h * hwlshr(b); is_neg(a); a += b, --h);
 
         auto l(
           std::min(
@@ -711,7 +711,7 @@ struct intt
           )
         );
 
-        for (a -= l * lshr(b, hwbits); is_neg(a); a += b, --l);
+        for (a -= l * hwlshr(b); is_neg(a); a += b, --l);
 
         //
         q.v_[k - N] = T(h) << hwbits | l;
@@ -949,6 +949,28 @@ constexpr auto& lshr(auto& a, std::size_t M) noexcept
 
     shr.template operator()(M, std::make_index_sequence<N - 1>());
   }
+
+  return a;
+}
+
+constexpr auto& hwlshr(auto& a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words, hwbits = U::wbits/2};
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (
+        a.v_[I] = (a.v_[I] >> hwbits) | (a.v_[I + 1] << hwbits)
+      ),
+      ...
+    );
+
+    a.v_[N - 1] >>= hwbits;
+  }(std::make_index_sequence<N - 1>());
 
   return a;
 }
