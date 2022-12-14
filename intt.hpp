@@ -935,10 +935,10 @@ constexpr auto& lshr(auto& a, std::size_t M) noexcept
       }
     );
 
-    for (; std::size_t(M) >= intt<T, N>::wbits; M -= intt<T, N>::wbits - 1)
+    for (; std::size_t(M) >= U::wbits; M -= U::wbits - 1)
     {
       shr.template operator()(
-        intt<T, N>::wbits - 1,
+        U::wbits - 1,
         std::make_index_sequence<N - 1>()
       );
     }
@@ -960,7 +960,7 @@ constexpr auto& hwlshr(auto& a) noexcept
   {
     (
       (
-        a.v_[I] = (a.v_[I] >> hwbits) | (a.v_[I + 1] << hwbits)
+        a.v_[I] = T(a.v_[I] >> hwbits) | T(a.v_[I + 1] << hwbits)
       ),
       ...
     );
@@ -971,26 +971,21 @@ constexpr auto& hwlshr(auto& a) noexcept
   return a;
 }
 
-template <std::size_t N>
-constexpr auto& wshl(auto& a) noexcept
+template <std::size_t M>
+constexpr auto& wshl(auto& a) noexcept requires(bool(M))
 {
-  static_assert(N);
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  enum : std::size_t {M = U::words};
+  enum : std::size_t {N = U::words};
 
-  std::size_t i{M};
-
-  if constexpr(M > N)
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    for (auto j(M - N); j;)
-    {
-      a.v_[--i] = a.v_[--j];
-    }
-  }
-
-  while (i) a.v_[--i] = {};
+    (
+      (a.v_[N - 1 - I] = M + I < N ? a.v_[N - 1 - M - I] : T{}),
+      ...
+    );
+  }(std::make_index_sequence<N>());
 
   return a;
 }
@@ -1012,7 +1007,7 @@ constexpr auto& wshr(auto& a, std::size_t const n) noexcept
     }
   }
 
-  for (; N != i; ++i) a.v_[i] = {};
+  do a.v_[i++] = {}; while (N != i);
 
   return a;
 }
@@ -1020,29 +1015,18 @@ constexpr auto& wshr(auto& a, std::size_t const n) noexcept
 constexpr auto lshifted(auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
   typename U::doubled_t r;
 
-  enum : std::size_t {N = U::words};
+  enum : std::size_t {M = decltype(r)::words, N = U::words};
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
-      (
-        [&]() noexcept
-        {
-          if constexpr(I >= N)
-          {
-            r.v_[I] = a.v_[I - N];
-          }
-          else
-          {
-            r.v_[I] = {};
-          }
-        }()
-      ),
+      (r.v_[I] = I >= N ? a.v_[I - N] : T{}),
       ...
     );
-  }(std::make_index_sequence<decltype(r)::words>());
+  }(std::make_index_sequence<M>());
 
   return r;
 }
@@ -1052,12 +1036,12 @@ constexpr auto rshifted(auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   typename U::halved_t r;
 
-  enum : std::size_t {N = decltype(r)::words};
+  enum : std::size_t {M = decltype(r)::words};
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    ((r.v_[I] = a.v_[N + I]), ...);
-  }(std::make_index_sequence<N>());
+    ((r.v_[I] = a.v_[M + I]), ...);
+  }(std::make_index_sequence<M>());
 
   return r;
 }
