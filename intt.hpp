@@ -469,6 +469,7 @@ struct intt
   /*
   constexpr auto operator*(intt const& o) const noexcept
   {
+    // A is lshifted, so r needs to be as well
     intt<T, 2 * N> r{}, A{lshifted(*this)};
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -481,7 +482,7 @@ struct intt
             r += A;
           }
 
-          r >>= 1;
+          lshr<1>(r); // lshr, since we are not yet in negative territory
         }(),
         ...
       );
@@ -492,7 +493,7 @@ struct intt
       r -= A;
     }
 
-    return intt(r >> 1, direct{});
+    return intt(lshr<1>(r), direct{});
   }
   */
 
@@ -819,14 +820,14 @@ constexpr void clear_bit(auto& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  a.v_[I / U::words] &= ~(T{1} << (I % U::words));
+  a.v_[I / U::wbits] &= ~(T{1} << I % U::wbits);
 }
 
 constexpr void clear_bit(auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  a.v_[i / U::words] &= ~(T{1} << i % U::words);
+  a.v_[i / U::wbits] &= ~(T{1} << i % U::wbits);
 }
 
 template <std::size_t I>
@@ -834,14 +835,14 @@ constexpr void set_bit(auto& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  a.v_[I / U::words] |= T{1} << I % U::words;
+  a.v_[I / U::wbits] |= T{1} << I % U::wbits;
 }
 
 constexpr void set_bit(auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  a.v_[i / U::words] |= T{1} << i % U::words;
+  a.v_[i / U::wbits] |= T{1} << i % U::wbits;
 }
 
 template <std::size_t I>
@@ -849,7 +850,7 @@ constexpr bool test_bit(auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  return a.v_[I / U::words] & (T{1} << I % U::words);
+  return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
 constexpr bool is_neg(auto const& a) noexcept
@@ -912,6 +913,29 @@ constexpr auto& lshl(auto& a, std::size_t M) noexcept
   return a;
 }
 
+template <std::size_t M>
+constexpr auto& lshr(auto& a) noexcept requires(bool(M))
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
+  [&a]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (
+        a.v_[I] = (a.v_[I + 1] << (U::wbits - M)) | (a.v_[I] >> M)
+      ),
+      ...
+    );
+
+    a.v_[N - 1] >>= M;
+  }(std::make_index_sequence<N - 1>());
+
+  return a;
+}
+
 constexpr auto& lshr(auto& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -926,8 +950,7 @@ constexpr auto& lshr(auto& a, std::size_t M) noexcept
       {
         (
           (
-            a.v_[I] = (a.v_[I] >> e) |
-              (a.v_[I + 1] << (intt<T, N>::wbits - e))
+            a.v_[I] = (a.v_[I + 1] << (U::wbits - e)) | (a.v_[I] >> e)
           ),
           ...
         );
