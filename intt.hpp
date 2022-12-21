@@ -648,6 +648,61 @@ struct intt
   }
   */
 
+  /*
+  constexpr auto div(intt const& o) const noexcept
+  {
+    enum : std::size_t { M = 2 * N };
+
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt<T, M> a{nega ? -*this : *this, direct{}};
+    intt<T, M> b;
+
+    intt q;
+
+    {
+      std::size_t C;
+
+      if (negb)
+      {
+        auto const tmp(-o);
+
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
+
+      lshl(b, C);
+
+      auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
+
+      intt<T, M> xn(wshl<N>(intt(direct{}, T(2))) - b);
+  
+      // x_n = x_n(2 - a*x_n)
+      for (intt<T, M> tmp; tmp = wshr<N>(b * xn), tmp.v_[N - 1];)
+      {
+        xn += wshr<N>(xn * (k - tmp));
+      }
+
+      q = wshr<N>(a * lshr(xn, N * wbits - C));
+    }
+
+    //
+    b = {negb ? -o : o, direct{}};
+
+    for (a -= q * b; unsigned_compare(a, b) >= 0; a -= b, ++q);
+
+    return std::pair(
+        nega == negb ? q : -q,
+        nega ? -intt(a, direct{}) : intt(a, direct{})
+      );
+  }
+  */
+
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
@@ -724,13 +779,13 @@ struct intt
 
     //
     return std::pair(
-      nega == negb ? q : -q,
-      nega ? -intt(a, direct{}) : intt(a, direct{})
-    );
+        nega == negb ? q : -q,
+        nega ? -intt(a, direct{}) : intt(a, direct{})
+      );
   }
 
   //
-  constexpr auto operator==(intt<T, N> const& o) const noexcept
+  constexpr bool operator==(intt<T, N> const& o) const noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
@@ -875,7 +930,7 @@ constexpr bool is_neg(auto const& a) noexcept
   return S(a.v_[U::words - 1]) < S{};
 }
 
-constexpr auto& lshl(auto& a, std::size_t M) noexcept
+constexpr auto& lshl(auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -914,7 +969,7 @@ constexpr auto& lshl(auto& a, std::size_t M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshr(auto& a) noexcept requires(bool(M))
+constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -936,7 +991,7 @@ constexpr auto& lshr(auto& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& lshr(auto& a, std::size_t M) noexcept
+constexpr auto& lshr(auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -996,7 +1051,7 @@ constexpr auto& hwlshr(auto& a) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& wshl(auto& a) noexcept requires(bool(M))
+constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1014,24 +1069,21 @@ constexpr auto& wshl(auto& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& wshr(auto& a, std::size_t const n) noexcept
+template <std::size_t M>
+constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
   enum : std::size_t {N = U::words};
 
-  std::size_t i{};
-
-  if (n)
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    for (auto j(n); j < N;)
-    {
-      a.v_[i++] = a.v_[j++];
-    }
-  }
-
-  do a.v_[i++] = {}; while (N != i);
+    (
+      (a.v_[I] = M + I < N ? a.v_[I + M] : T{}),
+      ...
+    );
+  }(std::make_index_sequence<N>());
 
   return a;
 }
