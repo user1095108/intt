@@ -1297,7 +1297,6 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
   return r;
 }
 
-
 template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
 {
