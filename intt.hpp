@@ -763,8 +763,7 @@ struct intt
         //
         auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-        for (a -= unsigned_mul(intt<T, M>(direct{}, T(h)), hwlshr(b));
-          is_neg(a); a += b, --h);
+        for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
 
         auto l(
           std::min(
@@ -773,8 +772,7 @@ struct intt
           )
         );
 
-        for (a -= unsigned_mul(intt<T, M>(direct{}, T(l)), hwlshr(b));
-          is_neg(a); a += b, --l);
+        for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
 
         //
         q.v_[k - N] = T(h) << hwbits | l;
@@ -1228,6 +1226,77 @@ constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
   //
   return r;
 }
+
+constexpr auto hwmul(auto const k, auto const& a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t
+  {
+    M = 2 * U::words,
+    N = U::words,
+    wbits = U::wbits,
+    hwbits = wbits / 2
+  };
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  { // multiplying half-words, wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    std::size_t S{};
+
+    do
+    {
+      T const pp(
+        T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
+      );
+
+      r += U(direct2{}, S / 2, pp) << (S % 2 ? std::size_t(hwbits) : 0);
+    }
+    while (M != ++S);
+  }
+  else
+  { // multiplying words, 2 * wbits per iteration
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    std::size_t S{};
+
+    do
+    {
+      D const pp(D(k) * a.v_[S]);
+
+      r += U(direct2{}, S, T(pp), T(pp >> wbits));
+    }
+    while (N != ++S);
+  }
+
+  //
+  return r;
+}
+
 
 template <typename T, std::size_t N>
 constexpr auto sqrt(intt<T, N> const& a) noexcept
