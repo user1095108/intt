@@ -65,32 +65,13 @@ struct intt
   constexpr intt(direct2, std::size_t const i, auto&& ...a) noexcept
     requires(
       std::conjunction_v<std::is_same<T, std::remove_cvref_t<decltype(a)>>...>
-    )
+    ):
+    v_{}
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      auto const select([](std::size_t const i, auto&& ...a) noexcept
-        {
-          return [&]<auto ...J>(std::index_sequence<J...>) noexcept
-          {
-            T r;
-
-            (void)(((J == i) && (r = a, true)) || ...);
-
-            return r;
-          }(std::make_index_sequence<sizeof...(a)>());
-        }
-      );
-
-      (
-        (
-          v_[I] = I >= i ?
-            I - i >= sizeof...(a) ? T{} : select(I - i, a...) :
-            T{}
-        ),
-        ...
-      );
-    }(std::make_index_sequence<N>());
+      ((i + I < N ? v_[i + I] = a : T{}), ...);
+    }(std::make_index_sequence<sizeof...(a)>());
   }
 
   template <std::floating_point U>
@@ -649,7 +630,6 @@ struct intt
   }
   */
 
-  /*
   constexpr auto div(intt const& o) const noexcept
   {
     enum : std::size_t { M = 2 * N };
@@ -680,7 +660,8 @@ struct intt
 
       auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
 
-      auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
+      //auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
+      auto xn((wshl<N>(intt<T, M>{direct{}, T(42)}) - (b << 5)) >> 4);
   
       // x_n = x_n(2 - a*x_n)
       for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
@@ -707,8 +688,8 @@ struct intt
 
     return std::pair(nega == negb ? q : -q, nega ? -a : a);
   }
-  */
 
+  /*
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
@@ -789,6 +770,7 @@ struct intt
         nega ? -intt(a, direct{}) : intt(a, direct{})
       );
   }
+  */
 
   //
   constexpr bool operator==(intt<T, N> const& o) const noexcept
