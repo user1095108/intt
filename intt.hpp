@@ -519,7 +519,7 @@ struct intt
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
-        std::size_t S(i);
+        auto S(i);
 
         do
         {
@@ -556,7 +556,7 @@ struct intt
 
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-        std::size_t S(i);
+        auto S(i);
 
         do
         {
@@ -655,13 +655,12 @@ struct intt
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt<T, M> a{nega ? -*this : *this, direct{}};
-    intt<T, M> b;
-
     intt q;
 
     {
       std::size_t C;
+
+      intt<T, M> b;
 
       if (negb)
       {
@@ -680,26 +679,32 @@ struct intt
 
       auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
 
-      intt<T, M> xn(wshl<N>(intt(direct{}, T(2))) - b);
+      auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
   
       // x_n = x_n(2 - a*x_n)
-      for (intt<T, M> tmp; tmp = wshr<N>(b * xn), tmp.v_[N - 1];)
+      for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
       {
         xn += wshr<N>(xn * (k - tmp));
       }
 
-      q = wshr<N>(a * lshr(xn, N * wbits - C));
+      q = {
+        wshr<N>(
+          unsigned_mul(
+            intt<T, M>{nega ? -*this : *this, direct{}},
+            lshr(xn, N * wbits - C)
+          )
+        ),
+        direct{}
+      };
     }
 
     //
-    b = {negb ? -o : o, direct{}};
+    intt a{nega ? -*this : *this, direct{}};
+    intt const b{negb ? -o : o, direct{}};
 
-    for (a -= q * b; unsigned_compare(a, b) >= 0; a -= b, ++q);
+    for (a -= unsigned_mul(q, b); unsigned_compare(a, b) >= 0; a -= b, ++q);
 
-    return std::pair(
-        nega == negb ? q : -q,
-        nega ? -intt(a, direct{}) : intt(a, direct{})
-      );
+    return std::pair(nega == negb ? q : -q, nega ? -a : a);
   }
   */
 
@@ -758,7 +763,8 @@ struct intt
         //
         auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-        for (a -= h * hwlshr(b); is_neg(a); a += b, --h);
+        for (a -= unsigned_mul(intt<T, M>(direct{}, T(h)), hwlshr(b));
+          is_neg(a); a += b, --h);
 
         auto l(
           std::min(
@@ -767,7 +773,8 @@ struct intt
           )
         );
 
-        for (a -= l * hwlshr(b); is_neg(a); a += b, --l);
+        for (a -= unsigned_mul(intt<T, M>(direct{}, T(l)), hwlshr(b));
+          is_neg(a); a += b, --l);
 
         //
         q.v_[k - N] = T(h) << hwbits | l;
@@ -1140,6 +1147,86 @@ constexpr auto unsigned_compare(auto const& a, decltype(a) b) noexcept
   while (i);
 
   return std::strong_ordering::equal;
+}
+
+constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t
+  {
+    M = 2 * U::words,
+    N = U::words,
+    wbits = U::wbits,
+    hwbits = wbits / 2
+  };
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  { // multiplying half-words, wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    for (std::size_t i{}; M != i; ++i)
+    { // detail::bit_size_v<H> * (i + j) < wbits * N
+      auto S(i);
+
+      do
+      {
+        T pp;
+
+        {
+          auto const j(S - i);
+          pp = T(H(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+            H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
+        }
+
+        r += U(direct2{}, S / 2, pp) << (S % 2 ? std::size_t(hwbits) : 0);
+      }
+      while (M != ++S);
+    }
+  }
+  else
+  { // multiplying words, 2 * wbits per iteration
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    for (std::size_t i{}; N != i; ++i)
+    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
+      auto S(i);
+
+      do
+      {
+        D const pp(D(a.v_[i]) * b.v_[S - i]);
+
+        r += U(direct2{}, S, T(pp), T(pp >> wbits));
+      }
+      while (N != ++S);
+    }
+  }
+
+  //
+  return r;
 }
 
 template <typename T, std::size_t N>
