@@ -532,7 +532,6 @@ struct intt
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          //
           r += S % 2 ?
             intt(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
             intt(direct2{}, S / 2, pp);
@@ -1191,7 +1190,6 @@ constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
             H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
         }
 
-        //
         r += S % 2 ?
           U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
           U(direct2{}, S / 2, pp);
@@ -1268,7 +1266,6 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
         T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
       );
 
-      //
       r += S % 2 ?
         U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
         U(direct2{}, S / 2, pp);
