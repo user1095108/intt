@@ -70,7 +70,7 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      ((i + I < N ? v_[i + I] = a : T{}), ...);
+      ((v_[i + I] = a), ...);
     }(std::make_index_sequence<sizeof...(a)>());
   }
 
@@ -514,7 +514,9 @@ struct intt
           }
 
           r += S % 2 ?
-            intt(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+            S == M - 1 ?
+              intt(direct2{}, S / 2, pp << hwbits) :
+              intt(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
             intt(direct2{}, S / 2, pp);
         }
         while (M != ++S);
@@ -1173,7 +1175,9 @@ constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
         }
 
         r += S % 2 ?
-          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+          S == M - 1 ?
+            U(direct2{}, S / 2, pp << hwbits) :
+            U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
           U(direct2{}, S / 2, pp);
       }
       while (M != ++S);
@@ -1249,7 +1253,9 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
       );
 
       r += S % 2 ?
-        U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+        S == M - 1 ?
+          U(direct2{}, S / 2, pp << hwbits) :
+          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
         U(direct2{}, S / 2, pp);
     }
     while (M != ++S);
