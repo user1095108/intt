@@ -547,7 +547,9 @@ struct intt
           D const pp(D(nega ? T(~v_[i]) : v_[i]) *
             (negb ? T(~o.v_[S - i]) : o.v_[S - i]));
 
-          r += intt(direct2{}, S, T(pp), T(pp >> wbits));
+          r += S == N - 1 ?
+            intt(direct2{}, S, T(pp)) :
+            intt(direct2{}, S, T(pp), T(pp >> wbits));
         }
         while (N != ++S);
       }
@@ -632,6 +634,7 @@ struct intt
   }
   */
 
+  /*
   constexpr auto div(intt const& o) const noexcept
   {
     enum : std::size_t { M = 2 * N };
@@ -690,16 +693,16 @@ struct intt
 
     return std::pair(nega == negb ? q : -q, nega ? -a : a);
   }
+  */
 
-  /*
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
       std::is_same_v<T, std::uint64_t>,
       std::uint32_t,
       std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
+        std::is_same_v<T, std::uint32_t>,
+        std::uint16_t,
         std::uint8_t
       >
     >;
@@ -772,7 +775,6 @@ struct intt
         nega ? -intt(a, direct{}) : intt(a, direct{})
       );
   }
-  */
 
   //
   constexpr bool operator==(intt<T, N> const& o) const noexcept
@@ -1207,7 +1209,9 @@ constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
       {
         D const pp(D(a.v_[i]) * b.v_[S - i]);
 
-        r += U(direct2{}, S, T(pp), T(pp >> wbits));
+        r += S == N - 1 ?
+          U(direct2{}, S, T(pp)) :
+          U(direct2{}, S, T(pp), T(pp >> wbits));
       }
       while (N != ++S);
     }
@@ -1282,7 +1286,9 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
     {
       D const pp(D(k) * a.v_[S]);
 
-      r += U(direct2{}, S, T(pp), T(pp >> wbits));
+      r += S == N - 1 ?
+        U(direct2{}, S, T(pp)) :
+        U(direct2{}, S, T(pp), T(pp >> wbits));
     }
     while (N != ++S);
   }
