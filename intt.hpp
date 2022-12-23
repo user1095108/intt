@@ -641,49 +641,46 @@ struct intt
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt q;
+    std::size_t C;
 
+    intt<T, M> b;
+
+    if (negb)
     {
-      std::size_t C;
+      auto const tmp(-o);
 
-      intt<T, M> b;
-
-      if (negb)
-      {
-        auto const tmp(-o);
-
-        b = {tmp, direct{}};
-        C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
-      }
-
-      lshl(b, C);
-
-      auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
-
-      //auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
-      auto xn((wshl<N>(intt<T, M>{direct{}, T(42)}) - (b << 5)) >> 4);
-  
-      // x_n = x_n(2 - a*x_n)
-      for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
-      {
-        xn += wshr<N>(xn * (k - tmp));
-      }
-
-      q = {
-        wshr<N>(
-          unsigned_mul(
-            intt<T, M>{nega ? -*this : *this, direct{}},
-            lshr(xn, N * wbits - C)
-          )
-        ),
-        direct{}
-      };
+      b = {tmp, direct{}};
+      C = clz(tmp);
     }
+    else
+    {
+      b = {o, direct{}};
+      C = clz(o);
+    }
+
+    lshl(b, C);
+
+    auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
+
+    //auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
+    auto xn((wshl<N>(intt<T, M>{direct{}, T(42)}) - (b << 5)) >> 4);
+
+    // x_n = x_n(2 - a*x_n)
+    for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
+    {
+      xn += wshr<N>(xn * (k - tmp));
+    }
+
+    //
+    intt const q{
+      wshr<N>(
+        unsigned_mul(
+          intt<T, M>{nega ? -*this : *this, direct{}},
+          lshr(xn, N * wbits - C)
+        )
+      ),
+      direct{}
+    };
 
     //
     intt a{nega ? -*this : *this, direct{}};
@@ -691,6 +688,7 @@ struct intt
 
     for (a -= unsigned_mul(q, b); unsigned_compare(a, b) >= 0; a -= b, ++q);
 
+    //
     return std::pair(nega == negb ? q : -q, nega ? -a : a);
   }
   */
