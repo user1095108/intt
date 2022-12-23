@@ -1248,21 +1248,24 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
       >
     >;
 
-    std::size_t S{};
-
-    do
+    [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
-      T const pp(
-        T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
-      );
+      (
+        [&]() noexcept
+        {
+          T const pp(
+            T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
+          );
 
-      r += S % 2 ?
-        S == M - 1 ?
-          U(direct2{}, S / 2, pp << hwbits) :
-          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-        U(direct2{}, S / 2, pp);
-    }
-    while (M != ++S);
+          r += S % 2 ?
+            S == M - 1 ?
+              U(direct2{}, S / 2, pp << hwbits) :
+              U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+            U(direct2{}, S / 2, pp);
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<M>());
   }
   else
   { // multiplying words, 2 * wbits per iteration
@@ -1280,17 +1283,20 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
       >
     >;
 
-    std::size_t S{};
-
-    do
+    [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
-      D const pp(D(k) * a.v_[S]);
+      (
+        [&]() noexcept
+        {
+          D const pp(D(k) * a.v_[S]);
 
-      r += S == N - 1 ?
-        U(direct2{}, S, T(pp)) :
-        U(direct2{}, S, T(pp), T(pp >> wbits));
-    }
-    while (N != ++S);
+          r += S == N - 1 ?
+            U(direct2{}, S, T(pp)) :
+            U(direct2{}, S, T(pp), T(pp >> wbits));
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
   }
 
   //
