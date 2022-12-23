@@ -585,8 +585,7 @@ struct intt
   }
 
   //
-  /*
-  constexpr auto div(intt const& o) const noexcept
+  constexpr auto seq_div(intt const& o) const noexcept
   {
     intt<T, 2 * N> r;
     intt q{}; // needed due to clz
@@ -632,55 +631,79 @@ struct intt
 
     return std::pair(neg == is_neg(o) ? q : -q, neg ? -tmp : tmp);
   }
-  */
 
   /*
-  constexpr auto div(intt const& o) const noexcept
+  template <auto C>
+  static constexpr auto coeff() noexcept
   {
-    enum : std::size_t { M = 2 * N };
+    return C;
+  }
+
+  static consteval auto make_coeff(int const a, int const b) noexcept
+  {
+    return std::get<0>(wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b));
+  }
+
+  constexpr auto new_div(intt const& o) const noexcept
+  {
+    enum : std::size_t { M = 2 * N + 1 };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    std::size_t C;
+    intt q;
 
-    intt<T, M> b;
-
-    if (negb)
     {
-      auto const tmp(-o);
+      std::size_t C;
 
-      b = {tmp, direct{}};
-      C = clz(tmp);
-    }
-    else
-    {
-      b = {o, direct{}};
-      C = clz(o);
-    }
+      intt<T, M> b;
 
-    lshl(b, C);
+      if (negb)
+      {
+        auto const tmp(-o);
 
-    auto const k(wshl<N>(intt<T, M>(direct{}, T(1))));
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
 
-    //auto xn(wshl<N>(intt<T, M>(direct{}, T(2))) - b);
-    auto xn((wshl<N>(intt<T, M>{direct{}, T(42)}) - (b << 5)) >> 4);
+      lshl(b, C);
 
-    // x_n = x_n(2 - a*x_n)
-    for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
-    {
-      xn += wshr<N>(xn * (k - tmp));
-    }
+      auto const k(coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>());
 
-    //
-    intt const q{
-      wshr<N>(
-        unsigned_mul(
-          intt<T, M>{nega ? -*this : *this, direct{}},
-          lshr(xn, N * wbits - C)
+      //auto xn(coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
+
+      //auto xn(
+      //  coeff<make_coeff(48, 17)>() -
+      //  (wshr<N>(unsigned_mul(b, coeff<make_coeff(32, 17)>())))
+      //);
+
+      auto xn(
+        coeff<make_coeff(140, 33)>() +
+        awshr<N>(
+          b * (
+            coeff<make_coeff(-64, 11)>() +
+            wshr<N>(unsigned_mul(b, coeff<make_coeff(256, 99)>()))
+          )
         )
-      ),
-      direct{}
-    };
+      );
+
+      // x_n = x_n(2 - a*x_n)
+      for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
+      {
+        xn = awshr<N>(xn * (k - tmp));
+      }
+
+      q = wshr<N>(
+          unsigned_mul(
+            intt<T, M>{nega ? -*this : *this, direct{}},
+            lshr(xn, N * wbits - C)
+          )
+        );
+    }
 
     //
     intt a{nega ? -*this : *this, direct{}};
@@ -959,7 +982,7 @@ constexpr auto& lshl(auto&& a, std::size_t M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
+constexpr auto const& lshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1041,7 +1064,7 @@ constexpr auto& hwlshr(auto& a) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
+constexpr auto const& wshl(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1060,7 +1083,7 @@ constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
 }
 
 template <std::size_t M>
-constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
+constexpr auto const& wshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1071,6 +1094,27 @@ constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
   {
     (
       (a.v_[I] = M + I < N ? a.v_[I + M] : T{}),
+      ...
+    );
+  }(std::make_index_sequence<N>());
+
+  return a;
+}
+
+template <std::size_t M>
+constexpr auto const& awshr(auto&& a) noexcept requires(bool(M))
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    auto const neg(is_neg(a));
+
+    (
+      (a.v_[I] = M + I < N ? a.v_[I + M] : neg ? ~T{} : T{}),
       ...
     );
   }(std::make_index_sequence<N>());
@@ -1421,6 +1465,29 @@ constexpr auto to_integral(S const& s) noexcept ->
   decltype(std::cbegin(s), std::cend(s), std::pair<T, bool>())
 {
   return to_integral<T>(std::cbegin(s), std::cend(s));
+}
+
+template <std::size_t M, typename T, std::size_t N>
+auto to_double(intt<T, N> const& a) noexcept
+{
+  using F = double;
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  if (is_neg(a))
+  {
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return -(((T(~a.v_[I]) * std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
+          std::ldexp(F(1), -int(M) * int(U::wbits)));
+      }(std::make_index_sequence<N>());
+  }
+  else
+  {
+    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return ((a.v_[I] * std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
+      }(std::make_index_sequence<N>());
+  }
 }
 
 template <typename T, std::size_t N>
