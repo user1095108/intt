@@ -761,32 +761,35 @@ struct intt
       lshl(b, C);
       wshl<N>(b);
 
-      H const B(b.v_[M - 1] >> hwbits);
-
-      std::size_t k(M);
-
-      do
+      [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        --k;
+        H const B(b.v_[M - 1] >> hwbits);
 
-        //
-        auto h(std::min(H(dmax), H(a.v_[k] / B)));
+        (
+          [&]() noexcept
+          {
+            constexpr auto k(M - I - 1);
 
-        for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+            //
+            auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-        auto l(
-          std::min(
-            H(dmax),
-            H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
-          )
+            for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+
+            auto l(
+              std::min(
+                H(dmax),
+                H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+              )
+            );
+
+            for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+
+            //
+            q.v_[k - N] = T(h) << hwbits | l;
+          }(),
+          ...
         );
-
-        for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
-
-        //
-        q.v_[k - N] = T(h) << hwbits | l;
-      }
-      while (N != k);
+      }(std::make_index_sequence<N>());
 
       lshr(a, C);
     }
