@@ -643,8 +643,7 @@ struct intt
     return std::get<0>(wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b));
   }
 
-  /*
-  constexpr auto div(intt const& o) const noexcept
+  constexpr auto new_div(intt const& o) const noexcept
   {
     enum : std::size_t { M = 2 * N + 1 };
 
@@ -715,7 +714,6 @@ struct intt
     //
     return std::pair(nega == negb ? q : -q, nega ? -r : r);
   }
-  */
 
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
