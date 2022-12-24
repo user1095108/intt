@@ -632,7 +632,6 @@ struct intt
     return std::pair(neg == is_neg(o) ? q : -q, neg ? -tmp : tmp);
   }
 
-  /*
   template <auto C>
   static constexpr auto coeff() noexcept
   {
@@ -644,7 +643,8 @@ struct intt
     return std::get<0>(wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b));
   }
 
-  constexpr auto new_div(intt const& o) const noexcept
+  /*
+  constexpr auto div(intt const& o) const noexcept
   {
     enum : std::size_t { M = 2 * N + 1 };
 
@@ -676,20 +676,20 @@ struct intt
 
       //auto xn(coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
 
-      //auto xn(
-      //  coeff<make_coeff(48, 17)>() -
-      //  (wshr<N>(unsigned_mul(b, coeff<make_coeff(32, 17)>())))
-      //);
-
       auto xn(
-        coeff<make_coeff(140, 33)>() +
-        awshr<N>(
-          b * (
-            coeff<make_coeff(-64, 11)>() +
-            wshr<N>(unsigned_mul(b, coeff<make_coeff(256, 99)>()))
-          )
-        )
+        coeff<make_coeff(48, 17)>() -
+        wshr<N>(unsigned_mul(b, coeff<make_coeff(32, 17)>()))
       );
+
+      //auto xn(
+      //  coeff<make_coeff(140, 33)>() +
+      //  awshr<N>(
+      //    b * (
+      //      coeff<make_coeff(-64, 11)>() +
+      //      wshr<N>(unsigned_mul(b, coeff<make_coeff(256, 99)>()))
+      //    )
+      //  )
+      //);
 
       // x_n = x_n(2 - a*x_n)
       for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
@@ -697,22 +697,23 @@ struct intt
         xn = awshr<N>(xn * (k - tmp));
       }
 
-      q = wshr<N>(
-          unsigned_mul(
-            intt<T, M>{nega ? -*this : *this, direct{}},
-            lshr(xn, N * wbits - C)
-          )
-        );
+      q = lshr(
+            unsigned_mul(
+              intt<T, M>{nega ? -*this : *this, direct{}},
+              xn
+            ),
+            2 * N * wbits - C
+          );
     }
 
     //
-    intt a{nega ? -*this : *this, direct{}};
-    intt const b{negb ? -o : o, direct{}};
-
-    for (a -= unsigned_mul(q, b); unsigned_compare(a, b) >= 0; a -= b, ++q);
+    auto const r{
+      intt{nega ? -*this : *this} -
+      unsigned_mul(q, intt{negb ? -o : o})
+    };
 
     //
-    return std::pair(nega == negb ? q : -q, nega ? -a : a);
+    return std::pair(nega == negb ? q : -q, nega ? -r : r);
   }
   */
 
@@ -982,7 +983,7 @@ constexpr auto& lshl(auto&& a, std::size_t M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto const& lshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1064,7 +1065,7 @@ constexpr auto& hwlshr(auto& a) noexcept
 }
 
 template <std::size_t M>
-constexpr auto const& wshl(auto&& a) noexcept requires(bool(M))
+constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1083,7 +1084,7 @@ constexpr auto const& wshl(auto&& a) noexcept requires(bool(M))
 }
 
 template <std::size_t M>
-constexpr auto const& wshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1102,7 +1103,7 @@ constexpr auto const& wshr(auto&& a) noexcept requires(bool(M))
 }
 
 template <std::size_t M>
-constexpr auto const& awshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& awshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
