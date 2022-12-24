@@ -736,9 +736,10 @@ struct intt
 
     intt<T, M> a{nega ? -*this : *this, direct{}};
 
-    //
     intt q;
 
+    //
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       std::size_t C;
 
@@ -761,38 +762,35 @@ struct intt
       lshl(b, C);
       wshl<N>(b);
 
-      [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        H const B(b.v_[M - 1] >> hwbits);
+      H const B(b.v_[M - 1] >> hwbits);
 
-        (
-          [&]() noexcept
-          {
-            constexpr auto k(M - I - 1);
+      (
+        [&]() noexcept
+        {
+          constexpr auto k(M - I - 1);
 
-            //
-            auto h(std::min(H(dmax), H(a.v_[k] / B)));
+          //
+          auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-            for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+          for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
 
-            auto l(
-              std::min(
-                H(dmax),
-                H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
-              )
-            );
+          auto l(
+            std::min(
+              H(dmax),
+              H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+            )
+          );
 
-            for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+          for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
 
-            //
-            q.v_[k - N] = T(h) << hwbits | l;
-          }(),
-          ...
-        );
-      }(std::make_index_sequence<N>());
+          //
+          q.v_[k - N] = T(h) << hwbits | l;
+        }(),
+        ...
+      );
 
       lshr(a, C);
-    }
+    }(std::make_index_sequence<N>());
 
     //
     return std::pair(
