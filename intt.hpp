@@ -576,21 +576,22 @@ struct intt
 
   constexpr auto operator/(intt const& o) const noexcept
   {
-    return std::get<0>(div(o));
+    return div<false>(o);
   }
 
   constexpr auto operator%(intt const& o) const noexcept
   {
-    return std::get<1>(div(o));
+    return div<true>(o);
   }
 
   //
+  template <bool Rem = false>
   constexpr auto seq_div(intt const& o) const noexcept
   {
     intt<T, 2 * N> r;
     intt q{}; // needed due to clz
 
-    auto const neg(is_neg(*this));
+    auto const nega(is_neg(*this));
 
     //
     {
@@ -598,7 +599,7 @@ struct intt
 
       std::size_t CR;
 
-      if (neg)
+      if (nega)
       {
         auto const tmp(-*this);
 
@@ -627,9 +628,16 @@ struct intt
     }
 
     //
-    auto const tmp(rshifted(r));
+    if constexpr(Rem)
+    {
+      auto const tmp(rshifted(r));
 
-    return std::pair(neg == is_neg(o) ? q : -q, neg ? -tmp : tmp);
+      return nega ? -tmp : tmp;
+    }
+    else
+    {
+      return nega == is_neg(o) ? q : -q;
+    }
   }
 
   template <auto C>
@@ -640,9 +648,10 @@ struct intt
 
   static consteval auto make_coeff(int const a, int const b) noexcept
   {
-    return std::get<0>(wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b));
+    return wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b);
   }
 
+  template <bool Rem = false>
   constexpr auto new_div(intt const& o) const noexcept
   {
     enum : std::size_t { M = 2 * N + 1 };
@@ -706,15 +715,22 @@ struct intt
     }
 
     //
-    auto const r{
-      intt{nega ? -*this : *this} -
-      unsigned_mul(q, intt{negb ? -o : o})
-    };
+    if constexpr(Rem)
+    {
+      auto const r{
+        intt{nega ? -*this : *this} -
+        unsigned_mul(q, intt{negb ? -o : o})
+      };
 
-    //
-    return std::pair(nega == negb ? q : -q, nega ? -r : r);
+      return nega ? -r : r;
+    }
+    else
+    {
+      return nega == negb ? q : -q;
+    }
   }
 
+  template <bool Rem = false>
   constexpr auto div(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
@@ -737,31 +753,31 @@ struct intt
     intt q;
 
     //
+    std::size_t C;
+
+    intt<T, M> b;
+
+    if (negb)
+    {
+      auto const tmp(-o);
+
+      b = {tmp, direct{}};
+      C = clz(tmp);
+    }
+    else
+    {
+      b = {o, direct{}};
+      C = clz(o);
+    }
+
+    lshl(a, C);
+    lshl(b, C);
+    wshl<N>(b);
+
+    H const B(b.v_[M - 1] >> hwbits);
+
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      std::size_t C;
-
-      intt<T, M> b;
-
-      if (negb)
-      {
-        auto const tmp(-o);
-
-        b = {tmp, direct{}};
-        C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
-      }
-
-      lshl(a, C);
-      lshl(b, C);
-      wshl<N>(b);
-
-      H const B(b.v_[M - 1] >> hwbits);
-
       (
         [&]() noexcept
         {
@@ -786,15 +802,19 @@ struct intt
         }(),
         ...
       );
-
-      lshr(a, C);
     }(std::make_index_sequence<N>());
 
     //
-    return std::pair(
-        nega == negb ? q : -q,
-        nega ? -intt(a, direct{}) : intt(a, direct{})
-      );
+    if constexpr(Rem)
+    {
+      lshr(a, C);
+
+      return nega ? -intt(a, direct{}) : intt(a, direct{});
+    }
+    else
+    {
+      return nega == negb ? q : -q;
+    }
   }
 
   //
@@ -1521,7 +1541,7 @@ std::string to_string(intt<T, N> a)
 
     do
     {
-      auto const p(a.div(k));
+      std::pair const p(a / k, a % k);
 
       signed char const d(std::get<1>(p));
 
