@@ -1111,10 +1111,10 @@ constexpr auto& awshr(auto&& a) noexcept requires(bool(M))
 
   enum : std::size_t {N = U::words};
 
+  auto const neg(is_neg(a));
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    auto const neg(is_neg(a));
-
     (
       (a.v_[I] = M + I < N ? a.v_[I + M] : neg ? ~T{} : T{}),
       ...
