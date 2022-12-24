@@ -830,8 +830,12 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept { return -++min(); }
-  static constexpr auto min() noexcept { return intt(1) << N * wbits - 1; }
+  static constexpr auto max() noexcept { return coeff<-++min()>(); }
+
+  static constexpr auto min() noexcept
+  {
+    return coeff<intt(1) << N * wbits - 1>();
+  }
 };
 
 // conversions
