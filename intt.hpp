@@ -948,7 +948,6 @@ constexpr bool is_neg(auto const& a) noexcept
 constexpr auto& lshl(auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
   enum : std::size_t {N = U::words};
 
@@ -987,7 +986,6 @@ template <std::size_t M>
 constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
   enum : std::size_t {N = U::words};
 
@@ -1009,7 +1007,6 @@ constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
 constexpr auto& lshr(auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
   enum : std::size_t {N = U::words};
 
