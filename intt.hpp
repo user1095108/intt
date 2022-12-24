@@ -640,11 +640,7 @@ struct intt
     }
   }
 
-  template <auto C>
-  static constexpr auto coeff() noexcept
-  {
-    return C;
-  }
+  template <auto C> static constexpr auto coeff() noexcept { return C; }
 
   static consteval auto make_coeff(int const a, int const b) noexcept
   {
