@@ -22,6 +22,8 @@ namespace intt
 struct direct{};
 struct direct2{};
 
+template <std::unsigned_integral, std::size_t N> requires(N > 0) struct intt;
+
 namespace detail
 {
 
@@ -36,6 +38,14 @@ struct underlying_type<T, false> { using type = T; };
 
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
+
+template <auto C> static constexpr auto coeff() noexcept { return C; }
+
+template <typename T, std::size_t N>
+static consteval auto make_coeff(int const a, int const b) noexcept
+{
+  return wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b);
+}
 
 }
 
@@ -640,13 +650,6 @@ struct intt
     }
   }
 
-  template <auto C> static constexpr auto coeff() noexcept { return C; }
-
-  static consteval auto make_coeff(int const a, int const b) noexcept
-  {
-    return wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b);
-  }
-
   template <bool Rem = false>
   constexpr auto new_div(intt const& o) const noexcept
   {
@@ -676,21 +679,21 @@ struct intt
 
       lshl(b, C);
 
-      auto const k(coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>());
+      auto const k(detail::coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>());
 
-      //auto xn(coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
+      //auto xn(detail::coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
 
       auto xn(
-        coeff<make_coeff(48, 17)>() -
-        wshr<N>(unsigned_mul(b, coeff<make_coeff(32, 17)>()))
+        detail::coeff<make_coeff<T, N>(48, 17)>() -
+        wshr<N>(unsigned_mul(b, detail::coeff<make_coeff<T, N>(32, 17)>()))
       );
 
       //auto xn(
-      //  coeff<make_coeff(140, 33)>() +
+      //  detail::coeff<make_coeff<T, N>(140, 33)>() +
       //  awshr<N>(
       //    b * (
-      //      coeff<make_coeff(-64, 11)>() +
-      //      wshr<N>(unsigned_mul(b, coeff<make_coeff(256, 99)>()))
+      //      detail::coeff<make_coeff<T, N>(-64, 11)>() +
+      //      wshr<N>(unsigned_mul(b, detail::coeff<make_coeff<T, N>(256, 99)>()))
       //    )
       //  )
       //);
@@ -830,11 +833,11 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept { return coeff<-++min()>(); }
+  static constexpr auto max() noexcept { return detail::coeff<-++min()>(); }
 
   static constexpr auto min() noexcept
   {
-    return coeff<intt(1) << N * wbits - 1>();
+    return detail::coeff<intt(1) << N * wbits - 1>();
   }
 };
 
