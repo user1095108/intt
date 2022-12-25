@@ -1466,8 +1466,8 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   }
 }
 
-template <typename T, typename S>
-constexpr auto to_integral(S const& s) noexcept ->
+template <typename T>
+constexpr auto to_integral(auto const& s) noexcept ->
   decltype(std::cbegin(s), std::cend(s), std::pair<T, bool>())
 {
   return to_integral<T>(std::cbegin(s), std::cend(s));
