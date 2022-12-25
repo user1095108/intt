@@ -684,8 +684,8 @@ struct intt
       //auto xn(detail::coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
 
       auto xn(
-        detail::coeff<make_coeff<T, N>(48, 17)>() -
-        wshr<N>(unsigned_mul(b, detail::coeff<make_coeff<T, N>(32, 17)>()))
+        detail::coeff<detail::make_coeff<T, N>(48, 17)>() -
+        wshr<N>(unsigned_mul(b, detail::coeff<detail::make_coeff<T, N>(32, 17)>()))
       );
 
       //auto xn(
