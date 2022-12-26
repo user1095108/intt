@@ -506,7 +506,7 @@ struct intt
         >
       >;
 
-      enum : size_t { M = 2 * N, hwbits = wbits / 2 };
+      enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
 
       for (std::size_t i{}; M != i; ++i)
       { // detail::bit_size_v<H> * (i + j) < wbits * N
@@ -568,7 +568,7 @@ struct intt
     //
     if (nega && negb)
     {
-      return r + ~*this + ~o + intt(direct{}, T(1));
+      return r + ~(*this + o) + intt(direct{}, T(1));
     }
     else if (nega)
     {
@@ -833,7 +833,10 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept { return detail::coeff<-++min()>(); }
+  static constexpr auto max() noexcept
+  {
+    return detail::coeff<-++min()>();
+  }
 
   static constexpr auto min() noexcept
   {
@@ -1267,6 +1270,110 @@ constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
 
   //
   return r;
+}
+
+template <std::size_t O>
+constexpr auto newmul (auto const& a, decltype(a) b) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  auto const nega(is_neg(a)), negb(is_neg(b));
+
+  auto A{a.v_[O]}, B{b.v_[O]};
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  { // multiplying half-words, wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
+
+    for (std::size_t i{}; M != i; ++i)
+    { // detail::bit_size_v<H> * (i + j) < wbits * N
+      auto S(i);
+
+      do
+      {
+        T pp;
+
+        {
+          H const ai(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0));
+          auto const j(S - i);
+          H const bj(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
+          pp = T(nega ? H(~ai) : ai) * (negb ? H(~bj) : bj);
+        }
+
+        r += S % 2 ?
+          S == O - 1 ?
+            U(direct2{}, S / 2, pp << hwbits) :
+            U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+          U(direct2{}, S / 2, pp);
+      }
+      while (O != ++S);
+    }
+  }
+  else
+  { // multiplying words, 2 * wbits per iteration
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    for (std::size_t i{}; N != i; ++i)
+    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
+      auto S(i);
+
+      do
+      {
+        D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
+          (negb ? T(~b.v_[S - i]) : b.v_[S - i]));
+
+        r += S == O - 1 ?
+          U(direct2{}, S, T(pp)) :
+          U(direct2{}, S, T(pp), T(pp >> U::wbits));
+      }
+      while (O != ++S);
+    }
+  }
+
+  //
+  if (nega && negb)
+  {
+    return r + ~(a + b) + U(direct{}, T(1));
+  }
+  else if (nega)
+  {
+    return -(r + b);
+  }
+  else if (negb)
+  {
+    return -(r + a);
+  }
+  else
+  {
+    return r;
+  }
 }
 
 constexpr auto hwmul(auto const k, auto const& a) noexcept
