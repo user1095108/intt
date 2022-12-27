@@ -766,10 +766,10 @@ struct intt
     lshl(b, C);
     wshl<N>(b);
 
-    H const B(b.v_[M - 1] >> hwbits);
-
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
+      H const B(b.v_[M - 1] >> hwbits);
+
       (
         [&]() noexcept
         {
