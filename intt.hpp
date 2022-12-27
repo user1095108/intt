@@ -44,7 +44,7 @@ template <auto C> static constexpr auto coeff() noexcept { return C; }
 template <typename T, std::size_t N>
 static consteval auto make_coeff(int const a, int const b) noexcept
 {
-  return wshl<N>(intt<T, 2 * N + 1>(a)).seq_div(b);
+  return wshl<N>(intt<T, 2 * N>(a)).seq_div(b);
 }
 
 }
@@ -568,7 +568,8 @@ struct intt
     //
     if (nega && negb)
     {
-      return r + ~(*this + o) + intt(direct{}, T(1));
+      //return r + ~(*this + o) + intt(direct{}, T(1));
+      return r - (*this + o);
     }
     else if (nega)
     {
@@ -653,7 +654,7 @@ struct intt
   template <bool Rem = false>
   constexpr auto new_div(intt const& o) const noexcept
   {
-    enum : std::size_t { M = 2 * N + 1 };
+    enum : std::size_t { M = 2 * N };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
@@ -685,32 +686,22 @@ struct intt
 
       auto xn(
         detail::coeff<detail::make_coeff<T, N>(48, 17)>() -
-        wshr<N>(unsigned_mul(b, detail::coeff<detail::make_coeff<T, N>(32, 17)>()))
+        unewmul<N>(b, detail::coeff<detail::make_coeff<T, N>(32, 17)>())
       );
 
-      //auto xn(
-      //  detail::coeff<make_coeff<T, N>(140, 33)>() +
-      //  awshr<N>(
-      //    b * (
-      //      detail::coeff<make_coeff<T, N>(-64, 11)>() +
-      //      wshr<N>(unsigned_mul(b, detail::coeff<make_coeff<T, N>(256, 99)>()))
-      //    )
-      //  )
-      //);
-
       // x_n = x_n(2 - a*x_n)
-      for (intt<T, M> tmp; tmp = wshr<N>(unsigned_mul(b, xn)), tmp.v_[N - 1];)
+      for (intt<T, M> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
       {
-        xn = awshr<N>(xn * (k - tmp));
+        xn = newmul<N>(xn, (k - tmp));
       }
 
       q = lshr(
-            unsigned_mul(
-              intt<T, M>{nega ? -*this : *this, direct{}},
-              xn
-            ),
-            2 * N * wbits - C
-          );
+          unewmul<N>(
+            intt<T, M>{nega ? -*this : *this, direct{}},
+            xn
+          ),
+          N * wbits - C
+        );
     }
 
     //
@@ -1282,12 +1273,10 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
 
   auto const nega(is_neg(a)), negb(is_neg(b));
 
-  auto A{a.v_[O]}, B{b.v_[O]};
-
   U r{};
 
   if constexpr(std::is_same_v<T, std::uint64_t>)
-  { // multiplying half-words, wbits per iteration
+  {
     using H = std::conditional_t<
       std::is_same_v<T, std::uint64_t>,
       std::uint32_t,
@@ -1301,31 +1290,27 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
     enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
 
     for (std::size_t i{}; M != i; ++i)
-    { // detail::bit_size_v<H> * (i + j) < wbits * N
-      auto S(i);
-
-      do
+    {
+      for (std::size_t j{}; M != j; ++j)
       {
         T pp;
 
         {
           H const ai(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0));
-          auto const j(S - i);
           H const bj(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
           pp = T(nega ? H(~ai) : ai) * (negb ? H(~bj) : bj);
         }
 
+        auto const S(i + j);
+
         r += S % 2 ?
-          S == O - 1 ?
-            U(direct2{}, S / 2, pp << hwbits) :
-            U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
           U(direct2{}, S / 2, pp);
       }
-      while (O != ++S);
     }
   }
   else
-  { // multiplying words, 2 * wbits per iteration
+  {
     using D = std::conditional_t<
       std::is_same_v<T, std::uint8_t>,
       std::uint16_t,
@@ -1340,27 +1325,46 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
       >
     >;
 
-    for (std::size_t i{}; N != i; ++i)
-    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-      auto S(i);
-
-      do
+    for (std::size_t i{}; O != i; ++i)
+    {
+      for (std::size_t j{}; O != j; ++j)
       {
         D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
-          (negb ? T(~b.v_[S - i]) : b.v_[S - i]));
+          (negb ? T(~b.v_[j]) : b.v_[j]));
 
-        r += S == O - 1 ?
-          U(direct2{}, S, T(pp)) :
-          U(direct2{}, S, T(pp), T(pp >> U::wbits));
+        r += U(direct2{}, i + j, T(pp), T(pp >> U::wbits));
       }
-      while (O != ++S);
+    }
+  }
+
+  //
+  wshr<O>(r);
+
+  {
+    auto A{nega ? -a.v_[O] : a.v_[O]};
+    auto B{negb ? -b.v_[O] : b.v_[O]};
+
+    r.v_[O] = A * B;
+
+    {
+      auto bb(negb ? -intt<T, N>(b, direct{}) : intt<T, N>(b, direct{}));
+      bb.v_[O] = {};
+
+      while (A) --A, r += bb;
+    }
+
+    {
+      auto aa(nega ? -intt<T, N>(a, direct{}) : intt<T, N>(a, direct{}));
+      aa.v_[O] = {};
+
+      while (B) --B, r += aa;
     }
   }
 
   //
   if (nega && negb)
   {
-    return r + ~(a + b) + U(direct{}, T(1));
+    return r - (a + b);
   }
   else if (nega)
   {
@@ -1375,6 +1379,109 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
     return r;
   }
 }
+
+template <std::size_t O>
+constexpr auto unewmul (auto const& a, decltype(a) b) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  auto const nega(is_neg(a)), negb(is_neg(b));
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  {
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
+
+    for (std::size_t i{}; M != i; ++i)
+    {
+      for (std::size_t j{}; M != j; ++j)
+      {
+        T pp;
+
+        {
+          H const ai(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0));
+          H const bj(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
+          pp = T(nega ? H(~ai) : ai) * (negb ? H(~bj) : bj);
+        }
+
+        auto const S(i + j);
+
+        r += S % 2 ?
+          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
+          U(direct2{}, S / 2, pp);
+      }
+    }
+  }
+  else
+  {
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    for (std::size_t i{}; O != i; ++i)
+    {
+      for (std::size_t j{}; O != j; ++j)
+      {
+        D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
+          (negb ? T(~b.v_[j]) : b.v_[j]));
+
+        r += U(direct2{}, i + j, T(pp), T(pp >> U::wbits));
+      }
+    }
+  }
+
+  //
+  wshr<O>(r);
+
+  {
+    auto A{nega ? -a.v_[O] : a.v_[O]};
+    auto B{negb ? -b.v_[O] : b.v_[O]};
+
+    r.v_[O] = A * B;
+
+    {
+      auto bb(negb ? -intt<T, N>(b, direct{}) : intt<T, N>(b, direct{}));
+      bb.v_[O] = {};
+
+      while (A) --A, r += bb;
+    }
+
+    {
+      auto aa(nega ? -intt<T, N>(a, direct{}) : intt<T, N>(a, direct{}));
+      aa.v_[O] = {};
+
+      while (B) --B, r += aa;
+    }
+  }
+
+  //
+  return r;
+}
+
 
 constexpr auto hwmul(auto const k, auto const& a) noexcept
 {
