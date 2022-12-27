@@ -431,7 +431,9 @@ struct intt
   }
 
   //
-  constexpr auto operator+(intt const& o) const noexcept
+  template <std::size_t M>
+  constexpr auto operator+(intt<T, M> const& o) const noexcept
+    requires(M <= N)
   {
     intt<T, N> r;
 
@@ -445,7 +447,7 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          s = c + a + o.v_[I];
+          s = c + a + (I < M ? o.v_[I] : T{});
           c = c ? s <= a : s < a;
         }(),
         ...
@@ -692,7 +694,7 @@ struct intt
       // x_n = x_n(2 - a*x_n)
       for (intt<T, M> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
       {
-        xn = newmul<N>(xn, (k - tmp));
+        xn = newmul<N>(xn, k - tmp);
       }
 
       q = lshr(
@@ -1347,15 +1349,13 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
     r.v_[O] = A * B;
 
     {
-      auto bb(negb ? -intt<T, N>(b, direct{}) : intt<T, N>(b, direct{}));
-      bb.v_[O] = {};
+      auto bb(negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{}));
 
       while (A) --A, r += bb;
     }
 
     {
-      auto aa(nega ? -intt<T, N>(a, direct{}) : intt<T, N>(a, direct{}));
-      aa.v_[O] = {};
+      auto aa(nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{}));
 
       while (B) --B, r += aa;
     }
@@ -1464,15 +1464,13 @@ constexpr auto unewmul (auto const& a, decltype(a) b) noexcept
     r.v_[O] = A * B;
 
     {
-      auto bb(negb ? -intt<T, N>(b, direct{}) : intt<T, N>(b, direct{}));
-      bb.v_[O] = {};
+      auto bb(negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{}));
 
       while (A) --A, r += bb;
     }
 
     {
-      auto aa(nega ? -intt<T, N>(a, direct{}) : intt<T, N>(a, direct{}));
-      aa.v_[O] = {};
+      auto aa(nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{}));
 
       while (B) --B, r += aa;
     }
