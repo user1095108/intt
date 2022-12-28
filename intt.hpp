@@ -52,8 +52,8 @@ struct underlying_type<T, false> { using type = T; };
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-template <enum feat... F>
-consteval auto contains(enum feat const f) noexcept
+template <auto ...F>
+consteval auto contains(auto const f) noexcept
 {
   return ((f == F) || ...);
 }
