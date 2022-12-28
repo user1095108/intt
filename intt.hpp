@@ -1552,7 +1552,7 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
   return r;
 }
 
-template <std::size_t I, typename T>
+template <std::size_t, typename T>
 constexpr auto get_word() noexcept
 {
   return T{};
