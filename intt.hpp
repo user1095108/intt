@@ -1240,18 +1240,20 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  std::size_t i{U::words};
-
-  do
   {
-    --i;
+    detail::underlying_type_t<decltype(U::words)> i{U::words};
 
-    if (auto const c(a[i] <=> b[i]); c != 0)
+    do
     {
-      return c;
+      --i;
+
+      if (auto const c(a[i] <=> b[i]); c != 0)
+      {
+        return c;
+      }
     }
+    while (i);
   }
-  while (i);
 
   return std::strong_ordering::equal;
 }
@@ -1344,7 +1346,7 @@ constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t O>
-constexpr auto newmul (intt_type auto const& a, decltype(a) b) noexcept
+constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1459,7 +1461,7 @@ constexpr auto newmul (intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t O>
-constexpr auto unewmul (intt_type auto const& a, decltype(a) b) noexcept
+constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
