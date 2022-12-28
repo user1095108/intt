@@ -60,7 +60,16 @@ consteval auto contains(enum feat const f) noexcept
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
+template <typename>
+struct is_intt : std::false_type {};
+
+template <typename T, std::size_t N, enum feat... F>
+struct is_intt<intt<T, N, F...>> : std::true_type {};
+
 }
+
+template <typename T>
+concept intt_type = detail::is_intt<std::remove_cvref_t<T>>::value;
 
 template <std::unsigned_integral T, std::size_t N, enum feat... F>
   requires(N > 0)
@@ -275,7 +284,7 @@ struct intt
   }
 
   template <std::floating_point U>
-  explicit operator U() const noexcept
+  constexpr explicit operator U() const noexcept
   {
     if (is_neg(*this))
     {
@@ -947,8 +956,8 @@ INTT_RIGHT_CONVERSION(>)
 INTT_RIGHT_CONVERSION(>=)
 INTT_RIGHT_CONVERSION(<=>)
 
-//misc////////////////////////////////////////////////////////////////////////
-constexpr auto clz(auto const& a) noexcept
+//utilities///////////////////////////////////////////////////////////////////
+constexpr auto clz(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -971,14 +980,14 @@ constexpr auto clz(auto const& a) noexcept
 }
 
 template <std::size_t I>
-constexpr void clear_bit(auto& a) noexcept
+constexpr void clear_bit(intt_type auto& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   a.v_[I / U::wbits] &= ~(T{1} << I % U::wbits);
 }
 
-constexpr void clear_bit(auto& a, std::size_t const i) noexcept
+constexpr void clear_bit(intt_type auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -986,14 +995,14 @@ constexpr void clear_bit(auto& a, std::size_t const i) noexcept
 }
 
 template <std::size_t I>
-constexpr void set_bit(auto& a) noexcept
+constexpr void set_bit(intt_type auto& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   a.v_[I / U::wbits] |= T{1} << I % U::wbits;
 }
 
-constexpr void set_bit(auto& a, std::size_t const i) noexcept
+constexpr void set_bit(intt_type auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1001,14 +1010,14 @@ constexpr void set_bit(auto& a, std::size_t const i) noexcept
 }
 
 template <std::size_t I>
-constexpr bool test_bit(auto const& a) noexcept
+constexpr bool test_bit(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
-constexpr bool is_neg(auto const& a) noexcept
+constexpr bool is_neg(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using S = std::make_signed_t<typename U::value_type>;
@@ -1016,7 +1025,7 @@ constexpr bool is_neg(auto const& a) noexcept
   return S(a.v_[U::words - 1]) < S{};
 }
 
-constexpr auto& lshl(auto&& a, std::size_t M) noexcept
+constexpr auto& lshl(intt_type auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1054,7 +1063,7 @@ constexpr auto& lshl(auto&& a, std::size_t M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& lshr(intt_type auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1075,7 +1084,7 @@ constexpr auto& lshr(auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& lshr(auto&& a, std::size_t M) noexcept
+constexpr auto& lshr(intt_type auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1111,7 +1120,7 @@ constexpr auto& lshr(auto&& a, std::size_t M) noexcept
   return a;
 }
 
-constexpr auto& hwlshr(auto& a) noexcept
+constexpr auto& hwlshr(intt_type auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1134,7 +1143,7 @@ constexpr auto& hwlshr(auto& a) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
+constexpr auto& wshl(intt_type auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1153,7 +1162,7 @@ constexpr auto& wshl(auto&& a) noexcept requires(bool(M))
 }
 
 template <std::size_t M>
-constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1172,7 +1181,7 @@ constexpr auto& wshr(auto&& a) noexcept requires(bool(M))
 }
 
 template <std::size_t M>
-constexpr auto& awshr(auto&& a) noexcept requires(bool(M))
+constexpr auto& awshr(intt_type auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1192,7 +1201,7 @@ constexpr auto& awshr(auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto lshifted(auto const& a) noexcept
+constexpr auto lshifted(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1212,7 +1221,7 @@ constexpr auto lshifted(auto const& a) noexcept
   return r;
 }
 
-constexpr auto rshifted(auto const& a) noexcept
+constexpr auto rshifted(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1228,7 +1237,7 @@ constexpr auto rshifted(auto const& a) noexcept
   return r;
 }
 
-constexpr auto ucompare(auto const& a, decltype(a) b) noexcept
+constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1248,7 +1257,7 @@ constexpr auto ucompare(auto const& a, decltype(a) b) noexcept
   return std::strong_ordering::equal;
 }
 
-constexpr auto umul(auto const& a, decltype(a) b) noexcept
+constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1336,7 +1345,7 @@ constexpr auto umul(auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t O>
-constexpr auto newmul (auto const& a, decltype(a) b) noexcept
+constexpr auto newmul (intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1451,7 +1460,7 @@ constexpr auto newmul (auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t O>
-constexpr auto unewmul (auto const& a, decltype(a) b) noexcept
+constexpr auto unewmul (intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1550,7 +1559,7 @@ constexpr auto unewmul (auto const& a, decltype(a) b) noexcept
   return r;
 }
 
-constexpr auto hwmul(auto const k, auto const& a) noexcept
+constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1632,7 +1641,7 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
   return r;
 }
 
-constexpr auto sqrt(auto const& a) noexcept
+constexpr auto sqrt(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1759,7 +1768,7 @@ constexpr auto to_integral(auto const& s) noexcept ->
 }
 
 template <std::size_t M, typename T, std::size_t N, enum feat... FF>
-auto to_double(intt<T, N, FF...> const& a) noexcept
+constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
 {
   using F = double;
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1781,10 +1790,14 @@ auto to_double(intt<T, N, FF...> const& a) noexcept
   }
 }
 
-template <typename T, std::size_t N, enum feat... F>
-auto to_raw(intt<T, N, F...> const& a) noexcept
+auto to_raw(intt_type auto const& a) noexcept
 {
-  using U = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  using V = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
 
   std::stringstream ss;
 
@@ -1792,23 +1805,25 @@ auto to_raw(intt<T, N, F...> const& a) noexcept
 
   for (auto i(N - 1); i; --i)
   {
-    ss << std::setw(2) << U(a[i]) << " ";
+    ss << std::setw(2) << V(a[i]) << " ";
   }
 
-  ss << std::setw(2) << U(a[0]) << '"';
+  ss << std::setw(2) << V(a[0]) << '"';
 
   return ss.str();
 }
 
-template <typename T, std::size_t N, enum feat... F>
-std::string to_string(intt<T, N, F...> a)
+std::string to_string(intt_type auto a)
 {
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
   auto const neg(is_neg(a));
 
   std::string r(neg ? 1 : 0, '-');
 
   {
-    intt<T, N> const k(direct{}, T(10));
+    U const k(direct{}, T(10));
 
     do
     {
@@ -1827,9 +1842,9 @@ std::string to_string(intt<T, N, F...> a)
 }
 
 template <typename T, std::size_t N, enum feat... F>
-inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& p)
+inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
-  return os << to_string(p);
+  return os << to_string(a);
 }
 
 }
