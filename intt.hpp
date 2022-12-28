@@ -11,8 +11,8 @@
 #include <bit>
 #include <iomanip> // std::hex
 #include <iterator>
-#include <ostream> // std::ostream
-#include <sstream> // std::stringstream
+#include <ostream>
+#include <sstream>
 #include <utility> // std::pair
 #include <type_traits>
 
@@ -573,11 +573,9 @@ struct intt
             pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
           }
 
-          r += S % 2 ?
-            S == M - 1 ?
-              intt(direct2{}, S / 2, pp << hwbits) :
-              intt(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-            intt(direct2{}, S / 2, pp);
+          S % 2 ?
+            add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
+            add_words(r, S / 2, pp);
         }
         while (M != ++S);
       }
@@ -607,9 +605,7 @@ struct intt
           D const pp(D(nega ? T(~v_[i]) : v_[i]) *
             (negb ? T(~o.v_[S - i]) : o.v_[S - i]));
 
-          r += S == N - 1 ?
-            intt(direct2{}, S, T(pp)) :
-            intt(direct2{}, S, T(pp), T(pp >> wbits));
+          add_words(r, S, T(pp), T(pp >> wbits));
         }
         while (N != ++S);
       }
@@ -650,7 +646,7 @@ struct intt
             r += A;
           }
 
-          lshr<1>(r); // lshr, since we are not yet in negative territory
+          lshr<1>(r);
         }(),
         ...
       );
@@ -1300,11 +1296,9 @@ constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
             H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
         }
 
-        r += S % 2 ?
-          S == M - 1 ?
-            U(direct2{}, S / 2, pp << hwbits) :
-            U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-          U(direct2{}, S / 2, pp);
+        S % 2 ?
+          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
+          add_words(r, S / 2, pp);
       }
       while (M != ++S);
     }
@@ -1333,9 +1327,7 @@ constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
       {
         D const pp(D(a.v_[i]) * b.v_[S - i]);
 
-        r += S == N - 1 ?
-          U(direct2{}, S, T(pp)) :
-          U(direct2{}, S, T(pp), T(pp >> wbits));
+        add_words(r, S, T(pp), T(pp >> wbits));
       }
       while (N != ++S);
     }
@@ -1385,9 +1377,9 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 
         auto const S(i + j);
 
-        r += S % 2 ?
-          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-          U(direct2{}, S / 2, pp);
+        S % 2 ?
+          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
+          add_words(r, S / 2, pp);
       }
     }
   }
@@ -1414,7 +1406,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
         D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
           (negb ? T(~b.v_[j]) : b.v_[j]));
 
-        r += U(direct2{}, i + j, T(pp), T(pp >> U::wbits));
+        r += add_words(r, i + j, T(pp), T(pp >> U::wbits));
       }
     }
   }
@@ -1500,9 +1492,9 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
 
         auto const S(i + j);
 
-        r += S % 2 ?
-          U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-          U(direct2{}, S / 2, pp);
+        S % 2 ?
+          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
+          add_words(r, S / 2, pp);
       }
     }
   }
@@ -1529,7 +1521,7 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
         D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
           (negb ? T(~b.v_[j]) : b.v_[j]));
 
-        r += U(direct2{}, i + j, T(pp), T(pp >> U::wbits));
+        add_words(r, i + j, T(pp), T(pp >> U::wbits));
       }
     }
   }
@@ -1558,6 +1550,100 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
 
   //
   return r;
+}
+
+template <std::size_t I, typename T>
+constexpr auto get_word() noexcept
+{
+  return T{};
+}
+
+template <std::size_t I, typename T>
+constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
+{
+  if constexpr(I)
+  {
+    return get_word<I - 1, T>(std::forward<decltype(b)>(b)...);
+  }
+  else
+  {
+    return a;
+  }
+}
+
+template <std::size_t S>
+constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  static_assert(S < N);
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+#ifndef __clang__
+    (v, ...);
+#endif // __clang__
+    bool c{};
+
+    (
+      [&]() noexcept
+      {
+        constexpr auto J(I + S);
+
+        if constexpr(auto& s(a.v_[J]); J - S < sizeof...(v))
+        {
+          auto const b(get_word<J - S, T>(v...));
+
+          s += c + b;
+          c = c ? s <= b : s < b;
+        }
+        else
+        {
+          c = (s += c) < c;
+        }
+      }(),
+      ...
+    );
+  }(std::make_index_sequence<N - S>());
+}
+
+template <typename T>
+constexpr auto get_word(std::size_t) noexcept
+{
+  return T{};
+}
+
+template <typename T>
+constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
+  auto&& ...b) noexcept
+{
+  return i ?
+    get_word<T>(i - 1, std::forward<decltype(b)>(b)...) :
+    std::forward<decltype(a)>(a);
+}
+
+constexpr void add_words(intt_type auto& a, std::size_t const I,
+  auto&& ...v) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  bool c{};
+
+  for (auto i{I}; i != N; ++i)
+  {
+    auto& s(a.v_[i]);
+
+    auto const b(get_word<T>(i - I, v...));
+
+    s += c + b;
+    c = c ? s <= b : s < b;
+  }
 }
 
 constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
@@ -1596,11 +1682,9 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
             T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
           );
 
-          r += S % 2 ?
-            S == M - 1 ?
-              U(direct2{}, S / 2, pp << hwbits) :
-              U(direct2{}, S / 2, pp << hwbits, pp >> hwbits) :
-            U(direct2{}, S / 2, pp);
+          S % 2 ?
+            add_words<S / 2>(r, pp << hwbits, pp >> hwbits) :
+            add_words<S / 2>(r, pp);
         }(),
         ...
       );
@@ -1629,9 +1713,7 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
         {
           D const pp(D(k) * a.v_[S]);
 
-          r += S == N - 1 ?
-            U(direct2{}, S, T(pp)) :
-            U(direct2{}, S, T(pp), T(pp >> wbits));
+          add_words<S>(r, T(pp), T(pp >> wbits));
         }(),
         ...
       );
