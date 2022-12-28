@@ -22,7 +22,20 @@ namespace intt
 struct direct{};
 struct direct2{};
 
-template <std::unsigned_integral, std::size_t N> requires(N > 0) struct intt;
+enum feat
+{
+  NAIMUL,
+  SEQMUL,
+  NAIDIV,
+  NEWDIV,
+  SEQDIV,
+};
+
+template <
+  std::unsigned_integral,
+  std::size_t N,
+  enum feat...
+> requires(N > 0) struct intt;
 
 namespace detail
 {
@@ -39,17 +52,18 @@ struct underlying_type<T, false> { using type = T; };
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
+template <enum feat... F>
+consteval auto contains(enum feat const f) noexcept
+{
+  return ((f == F) || ...);
+}
+
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
-template <typename T, std::size_t N>
-static consteval auto make_coeff(int const a, int const b) noexcept
-{
-  return wshl<N>(intt<T, 2 * N>(a)).seq_div(b);
 }
 
-}
-
-template <std::unsigned_integral T, std::size_t N> requires(N > 0)
+template <std::unsigned_integral T, std::size_t N, enum feat... F>
+  requires(N > 0)
 struct intt
 {
   enum : std::size_t
@@ -60,8 +74,8 @@ struct intt
 
   using value_type = T;
 
-  using doubled_t = intt<T, 2 * N>;
-  using halved_t = intt<T, N / 2>;
+  using doubled_t = intt<T, 2 * N, F...>;
+  using halved_t = intt<T, N / 2, F...>;
 
   T v_[N];
 
@@ -157,8 +171,8 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <std::size_t M>
-  constexpr intt(intt<T, M> const& o) noexcept
+  template <std::size_t M, enum feat... FF>
+  constexpr intt(intt<T, M, FF...> const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -181,8 +195,8 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <std::size_t M>
-  constexpr intt(intt<T, M> const& o, direct) noexcept
+  template <std::size_t M, enum feat... FF>
+  constexpr intt(intt<T, M, FF...> const& o, direct) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -203,8 +217,8 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <typename U, std::size_t M>
-  constexpr intt(intt<U, M> const& o) noexcept
+  template <typename U, std::size_t M, enum feat... FF>
+  constexpr intt(intt<U, M, FF...> const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -431,11 +445,11 @@ struct intt
   }
 
   //
-  template <std::size_t M>
-  constexpr auto operator+(intt<T, M> const& o) const noexcept
+  template <std::size_t M, enum feat... FF>
+  constexpr auto operator+(intt<T, M, FF...> const& o) const noexcept
     requires(M <= N)
   {
-    intt<T, N> r;
+    intt r;
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -459,38 +473,64 @@ struct intt
 
   constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
 
-  /*
   constexpr auto operator*(intt const& o) const noexcept
   {
-    // A is lshifted, so r needs to be as well
-    intt<T, 2 * N> r{}, A{lshifted(*this)};
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    if constexpr(detail::contains<F...>(SEQMUL))
     {
-      (
-        [&]() noexcept
-        {
-          if (test_bit<I>(o))
-          {
-            r += A;
-          }
-
-          lshr<1>(r); // lshr, since we are not yet in negative territory
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<wbits * N - 1>());
-
-    if (is_neg(o))
-    {
-      r -= A;
+      return seqmul(o);
     }
-
-    return intt(lshr<1>(r), direct{});
+    else if constexpr(detail::contains<F...>(NAIMUL))
+    {
+      return naimul(o);
+    }
+    else
+    {
+      return naimul(o);
+    }
   }
-  */
 
-  constexpr intt operator*(intt const& o) const noexcept
+  constexpr auto operator/(intt const& o) const noexcept
+  {
+    if constexpr(detail::contains<F...>(NAIDIV))
+    {
+      return naidiv<false>(o);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
+    {
+      return newdiv<false>(o);
+    }
+    else if constexpr(detail::contains<F...>(SEQDIV))
+    {
+      return seqdiv<false>(o);
+    }
+    else
+    {
+      return naidiv<false>(o);
+    }
+  }
+
+  constexpr auto operator%(intt const& o) const noexcept
+  {
+    if constexpr(detail::contains<F...>(NAIDIV))
+    {
+      return naidiv<true>(o);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
+    {
+      return newdiv<true>(o);
+    }
+    else if constexpr(detail::contains<F...>(SEQDIV))
+    {
+      return seqdiv<true>(o);
+    }
+    else
+    {
+      return naidiv<true>(o);
+    }
+  }
+
+  //
+  constexpr auto naimul(intt const& o) const noexcept
   {
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
@@ -587,143 +627,38 @@ struct intt
     }
   }
 
-  constexpr auto operator/(intt const& o) const noexcept
+  constexpr auto seqmul(intt const& o) const noexcept
   {
-    return div<false>(o);
-  }
+    // A is lshifted, so r needs to be as well
+    intt<T, 2 * N> r{}, A{lshifted(*this)};
 
-  constexpr auto operator%(intt const& o) const noexcept
-  {
-    return div<true>(o);
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          if (test_bit<I>(o))
+          {
+            r += A;
+          }
+
+          lshr<1>(r); // lshr, since we are not yet in negative territory
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<wbits * N - 1>());
+
+    if (is_neg(o))
+    {
+      r -= A;
+    }
+
+    return intt(lshr<1>(r), direct{});
   }
 
   //
   template <bool Rem = false>
-  constexpr auto seq_div(intt const& o) const noexcept
-  {
-    intt<T, 2 * N> r;
-    intt q{}; // needed due to clz
-
-    auto const nega(is_neg(*this));
-
-    //
-    {
-      auto const D(lshifted(is_neg(o) ? -o : o));
-
-      std::size_t CR;
-
-      if (nega)
-      {
-        auto const tmp(-*this);
-
-        CR = clz(tmp);
-        r = {tmp, direct{}};
-      }
-      else
-      {
-        CR = clz(*this);
-        r = {*this, direct{}};
-      }
-
-      r <<= CR;
-
-      for (auto i(N * wbits - CR); i;)
-      {
-        --i;
-
-        if (unsigned_compare(r <<= 1, D) >= 0)
-        {
-          r -= D;
-
-          set_bit(q, i);
-        }
-      }
-    }
-
-    //
-    if constexpr(Rem)
-    {
-      auto const tmp(rshifted(r));
-
-      return nega ? -tmp : tmp;
-    }
-    else
-    {
-      return nega == is_neg(o) ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto new_div(intt const& o) const noexcept
-  {
-    enum : std::size_t { M = 2 * N };
-
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
-    intt q;
-
-    {
-      std::size_t C;
-
-      intt<T, M> b;
-
-      if (negb)
-      {
-        auto const tmp(-o);
-
-        b = {tmp, direct{}};
-        C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
-      }
-
-      lshl(b, C);
-
-      auto const k(detail::coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>());
-
-      //auto xn(detail::coeff<wshl<N>(intt<T, M>(direct{}, T(2)))>() - b);
-
-      auto xn(
-        detail::coeff<detail::make_coeff<T, N>(48, 17)>() -
-        unewmul<N>(b, detail::coeff<detail::make_coeff<T, N>(32, 17)>())
-      );
-
-      // x_n = x_n(2 - a*x_n)
-      for (intt<T, M> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
-      {
-        xn = newmul<N>(xn, k - tmp);
-      }
-
-      q = lshr(
-          unewmul<N>(
-            intt<T, M>{nega ? -*this : *this, direct{}},
-            xn
-          ),
-          N * wbits - C
-        );
-    }
-
-    //
-    if constexpr(Rem)
-    {
-      auto const r{
-        intt{nega ? -*this : *this} -
-        unsigned_mul(q, intt{negb ? -o : o})
-      };
-
-      return nega ? -r : r;
-    }
-    else
-    {
-      return nega == negb ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto div(intt const& o) const noexcept
+  constexpr auto naidiv(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
       std::is_same_v<T, std::uint64_t>,
@@ -740,14 +675,14 @@ struct intt
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt<T, M> a{nega ? -*this : *this, direct{}};
+    intt<T, M, F...> a{nega ? -*this : *this, direct{}};
 
     intt q;
 
     //
     std::size_t C;
 
-    intt<T, M> b;
+    intt<T, M, F...> b;
 
     if (negb)
     {
@@ -809,8 +744,138 @@ struct intt
     }
   }
 
+  template <bool Rem = false>
+  constexpr auto newdiv(intt const& o) const noexcept
+  {
+    enum : std::size_t { M = 2 * N };
+
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt q;
+
+    {
+      constexpr auto make_coeff([](int const a, int const b) noexcept
+        {
+          return wshl<N>(intt<T, 2 * N, F...>(a)).seqdiv(b);
+        }
+      );
+
+      std::size_t C;
+
+      intt<T, M, F...> b;
+
+      if (negb)
+      {
+        auto const tmp(-o);
+
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
+
+      lshl(b, C);
+
+      auto const k(detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
+
+      //auto xn(detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
+
+      auto xn(
+        detail::coeff<make_coeff(48, 17)>() -
+        unewmul<N>(b, detail::coeff<make_coeff(32, 17)>())
+      );
+
+      // x_n = x_n(2 - a*x_n)
+      for (intt<T, M, F...> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
+      {
+        xn = newmul<N>(xn, k - tmp);
+      }
+
+      q = lshr(
+          unewmul<N>(
+            intt<T, M, F...>{nega ? -*this : *this, direct{}},
+            xn
+          ),
+          N * wbits - C
+        );
+    }
+
+    //
+    if constexpr(Rem)
+    {
+      auto const r{
+        intt{nega ? -*this : *this} -
+        umul(q, intt{negb ? -o : o})
+      };
+
+      return nega ? -r : r;
+    }
+    else
+    {
+      return nega == negb ? q : -q;
+    }
+  }
+
+  template <bool Rem = false>
+  constexpr auto seqdiv(intt const& o) const noexcept
+  {
+    intt<T, 2 * N, F...> r;
+    intt q{}; // needed due to clz
+
+    auto const nega(is_neg(*this));
+
+    //
+    {
+      auto const D(lshifted(is_neg(o) ? -o : o));
+
+      std::size_t CR;
+
+      if (nega)
+      {
+        auto const tmp(-*this);
+
+        CR = clz(tmp);
+        r = {tmp, direct{}};
+      }
+      else
+      {
+        CR = clz(*this);
+        r = {*this, direct{}};
+      }
+
+      r <<= CR;
+
+      for (auto i(N * wbits - CR); i;)
+      {
+        --i;
+
+        if (ucompare(r <<= 1, D) >= 0)
+        {
+          r -= D;
+
+          set_bit(q, i);
+        }
+      }
+    }
+
+    //
+    if constexpr(Rem)
+    {
+      auto const tmp(rshifted(r));
+
+      return nega ? -tmp : tmp;
+    }
+    else
+    {
+      return nega == is_neg(o) ? q : -q;
+    }
+  }
+
   //
-  constexpr bool operator==(intt<T, N> const& o) const noexcept
+  constexpr bool operator==(intt const& o) const noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
@@ -818,11 +883,11 @@ struct intt
       }(std::make_index_sequence<N>());
   }
 
-  constexpr auto operator<=>(intt<T, N> const& o) const noexcept
+  constexpr auto operator<=>(intt const& o) const noexcept
   {
     auto const c(is_neg(o) <=> is_neg(*this));
 
-    return c == 0 ? unsigned_compare(*this, o) : c;
+    return c == 0 ? ucompare(*this, o) : c;
   }
 
   //
@@ -839,12 +904,12 @@ struct intt
 
 // conversions
 #define INTT_LEFT_CONVERSION(OP)\
-template <typename A, std::size_t B, typename U>\
-constexpr auto operator OP (U&& a, intt<A, B> const& b) noexcept\
+template <typename A, std::size_t B, enum feat... F, typename U>\
+constexpr auto operator OP (U&& a, intt<A, B, F...> const& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
     std::is_integral_v<std::remove_cvref_t<U>>)\
 {\
-  return intt<A, B>(std::forward<U>(a)) OP b;\
+  return intt<A, B, F...>(std::forward<U>(a)) OP b;\
 }
 
 INTT_LEFT_CONVERSION(+)
@@ -861,12 +926,12 @@ INTT_LEFT_CONVERSION(>=)
 INTT_LEFT_CONVERSION(<=>)
 
 #define INTT_RIGHT_CONVERSION(OP)\
-template <typename A, std::size_t B, typename U>\
-constexpr auto operator OP (intt<A, B> const& a, U&& b) noexcept\
+template <typename A, std::size_t B, enum feat...F, typename U>\
+constexpr auto operator OP (intt<A, B, F...> const& a, U&& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
     std::is_integral_v<std::remove_cvref_t<U>>)\
 {\
-  return a OP intt<A, B>(std::forward<U>(b));\
+  return a OP intt<A, B, F...>(std::forward<U>(b));\
 }
 
 INTT_RIGHT_CONVERSION(+)
@@ -883,23 +948,26 @@ INTT_RIGHT_CONVERSION(>=)
 INTT_RIGHT_CONVERSION(<=>)
 
 //misc////////////////////////////////////////////////////////////////////////
-template <typename T, std::size_t N>
-constexpr auto clz(intt<T, N> const& a) noexcept
+constexpr auto clz(auto const& a) noexcept
 {
-  decltype(N) n{};
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  enum : std::size_t { N = U::words };
+
+  detail::underlying_type_t<decltype(N)> r{};
 
   {
-    auto I{N};
+    decltype(r) I{N};
 
     int c;
 
     do
     {
-      n += c = std::countl_zero(a.v_[--I]);
-    } while (I && (intt<T, N>::wbits == c));
+      r += c = std::countl_zero(a.v_[--I]);
+    } while (I && (U::wbits == c));
   }
 
-  return n;
+  return r;
 }
 
 template <std::size_t I>
@@ -1128,6 +1196,7 @@ constexpr auto lshifted(auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
+
   typename U::doubled_t r;
 
   enum : std::size_t {M = decltype(r)::words, N = U::words};
@@ -1146,6 +1215,7 @@ constexpr auto lshifted(auto const& a) noexcept
 constexpr auto rshifted(auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
+
   typename U::halved_t r;
 
   enum : std::size_t {M = decltype(r)::words};
@@ -1158,7 +1228,7 @@ constexpr auto rshifted(auto const& a) noexcept
   return r;
 }
 
-constexpr auto unsigned_compare(auto const& a, decltype(a) b) noexcept
+constexpr auto ucompare(auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1178,7 +1248,7 @@ constexpr auto unsigned_compare(auto const& a, decltype(a) b) noexcept
   return std::strong_ordering::equal;
 }
 
-constexpr auto unsigned_mul(auto const& a, decltype(a) b) noexcept
+constexpr auto umul(auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1480,7 +1550,6 @@ constexpr auto unewmul (auto const& a, decltype(a) b) noexcept
   return r;
 }
 
-
 constexpr auto hwmul(auto const k, auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1563,24 +1632,28 @@ constexpr auto hwmul(auto const k, auto const& a) noexcept
   return r;
 }
 
-template <typename T, std::size_t N>
-constexpr auto sqrt(intt<T, N> const& a) noexcept
+constexpr auto sqrt(auto const& a) noexcept
 {
-  intt<T, 2 * N> r(a);
-  intt<T, N> q{};
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  typename U::doubled_t r(a);
+  U q{};
 
   //
   {
     auto const CR(clz(a));
     r <<= CR;
 
-    for (auto i(N * intt<T, N>::wbits - CR); i;)
+    for (auto i(std::size_t(N) * U::wbits - CR); i;)
     {
       --i;
 
       set_bit(q, i);
 
-      if (auto const Q(lshifted(q)); unsigned_compare(r <<= 1, Q) >= 0)
+      if (auto const Q(lshifted(q)); ucompare(r <<= 1, Q) >= 0)
       {
         r -= Q;
       }
@@ -1685,8 +1758,8 @@ constexpr auto to_integral(auto const& s) noexcept ->
   return to_integral<T>(std::cbegin(s), std::cend(s));
 }
 
-template <std::size_t M, typename T, std::size_t N>
-auto to_double(intt<T, N> const& a) noexcept
+template <std::size_t M, typename T, std::size_t N, enum feat... FF>
+auto to_double(intt<T, N, FF...> const& a) noexcept
 {
   using F = double;
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1708,8 +1781,8 @@ auto to_double(intt<T, N> const& a) noexcept
   }
 }
 
-template <typename T, std::size_t N>
-auto to_raw(intt<T, N> const& a) noexcept
+template <typename T, std::size_t N, enum feat... F>
+auto to_raw(intt<T, N, F...> const& a) noexcept
 {
   using U = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
 
@@ -1727,8 +1800,8 @@ auto to_raw(intt<T, N> const& a) noexcept
   return ss.str();
 }
 
-template <typename T, std::size_t N>
-std::string to_string(intt<T, N> a)
+template <typename T, std::size_t N, enum feat... F>
+std::string to_string(intt<T, N, F...> a)
 {
   auto const neg(is_neg(a));
 
@@ -1753,8 +1826,8 @@ std::string to_string(intt<T, N> a)
   return r;
 }
 
-template <typename T, std::size_t N>
-inline auto& operator<<(std::ostream& os, intt<T, N> const& p)
+template <typename T, std::size_t N, enum feat... F>
+inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& p)
 {
   return os << to_string(p);
 }
@@ -1764,10 +1837,10 @@ inline auto& operator<<(std::ostream& os, intt<T, N> const& p)
 namespace std
 {
 
-template <typename T, std::size_t N>
-struct hash<intt::intt<T, N>>
+template <typename T, std::size_t N, enum intt::feat... F>
+struct hash<intt::intt<T, N, F...>>
 {
-  auto operator()(intt::intt<T, N> const& a) const noexcept
+  auto operator()(intt::intt<T, N, F...> const& a) const noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
