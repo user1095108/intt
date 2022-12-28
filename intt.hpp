@@ -60,8 +60,7 @@ consteval auto contains(enum feat const f) noexcept
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
-template <typename>
-struct is_intt : std::false_type {};
+template <typename> struct is_intt : std::false_type {};
 
 template <typename T, std::size_t N, enum feat... F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
@@ -484,13 +483,13 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(SEQMUL))
-    {
-      return seqmul(o);
-    }
-    else if constexpr(detail::contains<F...>(NAIMUL))
+    if constexpr(detail::contains<F...>(NAIMUL))
     {
       return naimul(o);
+    }
+    else if constexpr(detail::contains<F...>(SEQMUL))
+    {
+      return seqmul(o);
     }
     else
     {
