@@ -850,13 +850,13 @@ struct intt
         r = {*this, direct{}};
       }
 
-      r <<= CR;
+      lshl(r, CR);
 
       for (auto i(N * wbits - CR); i;)
       {
         --i;
 
-        if (ucompare(r <<= 1, D) >= 0)
+        if (ucompare(lshl<1>(r), D) >= 0)
         {
           r -= D;
 
@@ -1018,6 +1018,29 @@ constexpr bool is_neg(intt_type auto const& a) noexcept
   using S = std::make_signed_t<typename U::value_type>;
 
   return S(a.v_[U::words - 1]) < S{};
+}
+
+template <std::size_t M>
+constexpr auto& lshl(intt_type auto&& a) noexcept requires(bool(M))
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  enum : std::size_t {N = U::words};
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (
+        a.v_[N - 1 - I] = (a.v_[N - 1 - I] << M) |
+          (a.v_[N - 1 - I - 1] >> (U::wbits - M))
+      ),
+      ...
+    );
+
+    *a.v_ <<= M;
+  }(std::make_index_sequence<N - 1>());
+
+  return a;
 }
 
 constexpr auto& lshl(intt_type auto&& a, std::size_t M) noexcept
@@ -1637,9 +1660,9 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
 
   for (auto i{I}; i != N; ++i)
   {
-    auto& s(a.v_[i]);
-
     auto const b(get_word<T>(i - I, v...));
+
+    auto& s(a.v_[i]);
 
     s += c + b;
     c = c ? s <= b : s < b;
@@ -1727,37 +1750,32 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 constexpr auto sqrt(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
-  enum : std::size_t { N = U::words };
+  enum : std::size_t { N = U::words, wbits = U::wbits };
 
-  typename U::doubled_t r(a);
-  U q{};
+  typename U::doubled_t r(a, direct{}), Q{};
 
   //
+  auto const CR(clz(a));
+  lshl(r, CR);
+
+  for (auto i(N * wbits - CR); i;)
   {
-    auto const CR(clz(a));
-    r <<= CR;
+    --i;
 
-    for (auto i(std::size_t(N) * U::wbits - CR); i;)
+    auto tmp(Q << 1);
+    set_bit(tmp, N * wbits + i);
+
+    if (ucompare(lshl<1>(r), tmp) >= 0)
     {
-      --i;
+      r -= tmp;
 
-      set_bit(q, i);
-
-      if (auto const Q(lshifted(q)); ucompare(r <<= 1, Q) >= 0)
-      {
-        r -= Q;
-      }
-      else
-      {
-        clear_bit(q, i);
-      }
+      set_bit(Q, N * wbits + i);
     }
   }
 
   //
-  return std::pair(q, rshifted(r));
+  return rshifted(Q);
 }
 
 //

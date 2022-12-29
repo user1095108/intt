@@ -68,11 +68,11 @@ int main()
   std::cout << "sqrt():" << std::endl;
 
   {
-    std::cout << sqrt(D(1)).first << " " << sqrt(D(1)).second << std::endl;
-    std::cout << sqrt(D(2)).first << " " << sqrt(D(2)).second << std::endl;
-    std::cout << sqrt(D(3)).first << " " << sqrt(D(3)).second << std::endl;
-    std::cout << sqrt(D(4)).first << " " << sqrt(D(4)).second << std::endl;
-    std::cout << sqrt(D(5)).first << " " << sqrt(D(5)).second << std::endl;
+    std::cout << sqrt(D(1)) << std::endl;
+    std::cout << sqrt(D(2)) << std::endl;
+    std::cout << sqrt(D(3)) << std::endl;
+    std::cout << sqrt(D(4)) << std::endl;
+    std::cout << sqrt(D(5)) << std::endl;
   }
 
   {
