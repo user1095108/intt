@@ -65,6 +65,11 @@ template <typename> struct is_intt : std::false_type {};
 template <typename T, std::size_t N, enum feat... F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
+template <typename> struct halve;
+
+template <typename T, std::size_t N, enum feat... F>
+struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
+
 }
 
 template <typename T>
@@ -83,7 +88,6 @@ struct intt
   using value_type = T;
 
   using doubled_t = intt<T, 2 * N, F...>;
-  using halved_t = intt<T, N / 2, F...>;
 
   T v_[N];
 
@@ -1197,7 +1201,7 @@ constexpr auto rshifted(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  typename U::halved_t r;
+  typename detail::halve<U>::type r;
 
   enum : std::size_t {M = decltype(r)::words};
 

@@ -11,5 +11,10 @@ int main()
     std::cout << i << std::endl;
   }
 
+  for (D i{D::min()}; i != D::max(); ++i)
+  {
+    std::cout << i << std::endl;
+  }
+
   return 0;
 }
