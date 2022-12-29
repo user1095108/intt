@@ -1763,10 +1763,8 @@ constexpr auto sqrt(intt_type auto const& a) noexcept
   {
     --i;
 
-    auto tmp(Q << 1);
-    set_bit(tmp, N * wbits + i);
-
-    if (ucompare(lshl<1>(r), tmp) >= 0)
+    if (auto tmp(Q << 1); set_bit(tmp, N * wbits + i),
+      ucompare(lshl<1>(r), tmp) >= 0)
     {
       r -= tmp;
 
