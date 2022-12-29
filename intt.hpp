@@ -5,10 +5,10 @@
 #include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::ldexp()
-#include <concepts> // std::floating_point, std::integral
 
+#include <concepts> // std::floating_point, std::integral
 #include <algorithm> // std::max()
-#include <bit>
+#include <bit> // std::countl_zero
 #include <iomanip> // std::hex
 #include <iterator>
 #include <ostream>
