@@ -442,11 +442,13 @@ struct intt
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      ((r.v_[I] = T(~r.v_[I])), ...);
+      auto& s(r.v_);
+
+      ((s[I] = T(~s[I])), ...);
 
       bool c{true};
 
-      ((r.v_[I] += c, c = r.v_[I] < c), ...);
+      ((c = (s[I] += c) < c), ...);
     }(std::make_index_sequence<N>());
 
     return r;
@@ -1143,7 +1145,7 @@ constexpr auto& hwlshr(intt_type auto&& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  enum : std::size_t {N = U::words, hwbits = U::wbits/2};
+  enum : std::size_t {N = U::words, hwbits = U::wbits / 2};
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
