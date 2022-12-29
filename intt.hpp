@@ -209,17 +209,7 @@ struct intt
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       (
-        [&]() noexcept
-        {
-          if constexpr(I < M)
-          {
-            v_[I] = o.v_[I];
-          }
-          else
-          {
-            v_[I] = {};
-          }
-        }(),
+        (v_[I] = I < M ? o.v_[I] : T{}),
         ...
       );
     }(std::make_index_sequence<N>());
