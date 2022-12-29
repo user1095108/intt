@@ -187,17 +187,7 @@ struct intt
       auto const neg(is_neg(o));
 
       (
-        [&]() noexcept
-        {
-          if constexpr(I < M)
-          {
-            v_[I] = o.v_[I];
-          }
-          else
-          {
-            v_[I] = neg ? ~T{} : T{};
-          }
-        }(),
+        (v_[I] = I < M ? o.v_[I] : neg ? ~T{} : T{}),
         ...
       );
     }(std::make_index_sequence<N>());
