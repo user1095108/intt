@@ -395,23 +395,16 @@ struct intt
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
-    return *this += intt(direct{}, T(1));
+    return add_words<0>(*this, T(1)), *this;
   }
 
   constexpr auto& operator--() noexcept
   {
-    return *this -= intt(direct{}, T(1));
+    return sub_words<0>(*this, T(1)), *this;
   }
 
-  constexpr auto operator++(int) const noexcept
-  {
-    auto const r(*this); ++*this; return r;
-  }
-
-  constexpr auto operator--(int) const noexcept
-  {
-    auto const r(*this); --*this; return r;
-  }
+  constexpr auto operator++(int) const noexcept { return +++*this; }
+  constexpr auto operator--(int) const noexcept { return --+*this; }
 
   //
   constexpr auto operator+() const noexcept { return *this; }
@@ -1587,6 +1580,47 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
         else
         {
           c = (s += c) < c;
+        }
+      }(),
+      ...
+    );
+  }(std::make_index_sequence<N - S>());
+}
+
+template <std::size_t S>
+constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  static_assert(S < N);
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+#ifndef __clang__
+    (v, ...);
+#endif // __clang__
+    bool c{};
+
+    (
+      [&]() noexcept
+      {
+        constexpr auto J(I + S);
+
+        if constexpr(auto& d(a.v_[J]); J - S < sizeof...(v))
+        {
+          auto const a(d);
+          auto const b(get_word<J - S, T>(v...));
+
+          d = d - b - c;
+          c = c ? d >= a : d > a;
+        }
+        else
+        {
+          auto const a(d);
+          c = (d -= c) > a;
         }
       }(),
       ...
