@@ -78,7 +78,7 @@ struct intt
   {
     wbits = sizeof(T) * CHAR_BIT, // bits per word
     words = N
-  }; 
+  };
 
   using value_type = T;
 
@@ -811,11 +811,11 @@ struct intt
     intt<T, 2 * N, F...> r;
     intt q{}; // needed due to clz
 
-    auto const nega(is_neg(*this));
+    auto const nega(is_neg(*this)), negb(is_neg(o));
 
     //
     {
-      auto const D(lshifted(is_neg(o) ? -o : o));
+      auto const D(lshifted(negb ? -o : o));
 
       std::size_t CR;
 
@@ -856,7 +856,7 @@ struct intt
     }
     else
     {
-      return nega == is_neg(o) ? q : -q;
+      return nega == negb ? q : -q;
     }
   }
 
@@ -934,6 +934,14 @@ INTT_RIGHT_CONVERSION(>=)
 INTT_RIGHT_CONVERSION(<=>)
 
 //utilities///////////////////////////////////////////////////////////////////
+constexpr bool is_neg(intt_type auto const& a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using S = std::make_signed_t<typename U::value_type>;
+
+  return S(a.v_[U::words - 1]) < S{};
+}
+
 constexpr auto clz(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -992,14 +1000,6 @@ constexpr bool test_bit(intt_type auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
-}
-
-constexpr bool is_neg(intt_type auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using S = std::make_signed_t<typename U::value_type>;
-
-  return S(a.v_[U::words - 1]) < S{};
 }
 
 template <std::size_t M>
@@ -1173,27 +1173,6 @@ constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
   {
     (
       (a.v_[I] = M + I < N ? a.v_[I + M] : T{}),
-      ...
-    );
-  }(std::make_index_sequence<N>());
-
-  return a;
-}
-
-template <std::size_t M>
-constexpr auto& awshr(intt_type auto&& a) noexcept requires(bool(M))
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t {N = U::words};
-
-  auto const neg(is_neg(a));
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (a.v_[I] = M + I < N ? a.v_[I + M] : neg ? ~T{} : T{}),
       ...
     );
   }(std::make_index_sequence<N>());
@@ -1729,7 +1708,7 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
   return r;
 }
 
-constexpr auto sqrt(intt_type auto const& a) noexcept
+constexpr auto seqsqrt(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1858,7 +1837,8 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        return -(((T(~a.v_[I]) * std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
+        return -(((T(~a.v_[I]) *
+          std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
           std::ldexp(F(1), -int(M) * int(U::wbits)));
       }(std::make_index_sequence<N>());
   }
@@ -1866,7 +1846,8 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        return ((a.v_[I] * std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
+        return ((a.v_[I] *
+          std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
       }(std::make_index_sequence<N>());
   }
 }
