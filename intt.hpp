@@ -1387,7 +1387,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
         D const pp(D(nega ? T(~a.v_[i]) : a.v_[i]) *
           (negb ? T(~b.v_[j]) : b.v_[j]));
 
-        r += add_words(r, i + j, T(pp), T(pp >> U::wbits));
+        add_words(r, i + j, T(pp), T(pp >> U::wbits));
       }
     }
   }
