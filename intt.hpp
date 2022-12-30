@@ -399,16 +399,23 @@ struct intt
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
-    return add_words<0>(*this, T(1)), *this;
+    add_words<0>(*this, T(1)); return *this;
   }
 
   constexpr auto& operator--() noexcept
   {
-    return sub_words<0>(*this, T(1)), *this;
+    sub_words<0>(*this, T(1)); return *this;
   }
 
-  constexpr auto operator++(int) const noexcept { return +++*this; }
-  constexpr auto operator--(int) const noexcept { return --+*this; }
+  constexpr auto operator++(int) noexcept
+  {
+    auto const r(*this); ++*this; return r;
+  }
+
+  constexpr auto operator--(int) noexcept
+  {
+    auto const r(*this); --*this; return r;
+  }
 
   //
   constexpr auto operator+() const noexcept { return *this; }
