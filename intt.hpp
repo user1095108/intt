@@ -429,9 +429,7 @@ struct intt
   }
 
   //
-  template <std::size_t M, enum feat... FF>
-  constexpr auto operator+(intt<T, M, FF...> const& o) const noexcept
-    requires(M <= N)
+  constexpr auto operator+(intt const& o) const noexcept
   {
     intt r;
 
@@ -445,7 +443,7 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          s = c + a + (I < M ? o.v_[I] : T{});
+          s = c + a + o.v_[I];
           c = c ? s <= a : s < a;
         }(),
         ...
@@ -455,7 +453,29 @@ struct intt
     return r;
   }
 
-  constexpr auto operator-(intt const& o) const noexcept { return *this +-o; }
+  constexpr auto operator-(intt const& o) const noexcept
+  {
+    intt r;
+
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      bool c{};
+
+      (
+        [&]() noexcept
+        {
+          auto& d(r.v_[I]);
+          auto const& a(v_[I]);
+
+          d = a - o.v_[I] - c;
+          c = c ? d >= a : d > a;
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+
+    return r;
+  }
 
   constexpr auto operator*(intt const& o) const noexcept
   {
