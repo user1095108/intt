@@ -435,7 +435,7 @@ struct intt
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      bool c{};
+      bool c;
 
       (
         [&]() noexcept
@@ -443,8 +443,16 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          s = c + a + o.v_[I];
-          c = c ? s <= a : s < a;
+          if constexpr(I)
+          {
+            s = c + a + o.v_[I];
+            c = c ? s <= a : s < a;
+          }
+          else
+          {
+            c = (s = a + o.v_[I]) < a;
+          }
+
         }(),
         ...
       );
@@ -459,7 +467,7 @@ struct intt
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      bool c{};
+      bool c;
 
       (
         [&]() noexcept
@@ -467,8 +475,15 @@ struct intt
           auto& d(r.v_[I]);
           auto const& a(v_[I]);
 
-          d = a - o.v_[I] - c;
-          c = c ? d >= a : d > a;
+          if constexpr(I)
+          {
+            d = a - o.v_[I] - c;
+            c = c ? d >= a : d > a;
+          }
+          else
+          {
+            c = (d = a - o.v_[I]) > a;
+          }
         }(),
         ...
       );
