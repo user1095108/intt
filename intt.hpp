@@ -1210,111 +1210,6 @@ constexpr auto rshifted(intt_type auto const& a) noexcept
   return r;
 }
 
-constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  {
-    detail::underlying_type_t<decltype(U::words)> i{U::words};
-
-    do
-    {
-      --i;
-
-      if (auto const c(a[i] <=> b[i]); c != 0)
-      {
-        return c;
-      }
-    }
-    while (i);
-  }
-
-  return std::strong_ordering::equal;
-}
-
-constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t
-  {
-    M = 2 * U::words,
-    N = U::words,
-    wbits = U::wbits,
-    hwbits = wbits / 2
-  };
-
-  U r{};
-
-  if constexpr(std::is_same_v<T, std::uint64_t>)
-  { // multiplying half-words, wbits per iteration
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
-        std::uint8_t
-      >
-    >;
-
-    for (std::size_t i{}; M != i; ++i)
-    { // detail::bit_size_v<H> * (i + j) < wbits * N
-      auto S(i);
-
-      do
-      {
-        T pp;
-
-        {
-          auto const j(S - i);
-
-          pp = T(H(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-            H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
-        }
-
-        S % 2 ?
-          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
-          add_words(r, S / 2, pp);
-      }
-      while (M != ++S);
-    }
-  }
-  else
-  { // multiplying words, 2 * wbits per iteration
-    using D = std::conditional_t<
-      std::is_same_v<T, std::uint8_t>,
-      std::uint16_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint64_t,
-          void
-        >
-      >
-    >;
-
-    for (std::size_t i{}; N != i; ++i)
-    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-      auto S(i);
-
-      do
-      {
-        D const pp(D(a.v_[i]) * b.v_[S - i]);
-
-        add_words(r, S, T(pp), T(pp >> wbits));
-      }
-      while (N != ++S);
-    }
-  }
-
-  //
-  return r;
-}
-
 constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1617,6 +1512,111 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
       auto aa(nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{}));
 
       while (B) --B, r += aa;
+    }
+  }
+
+  //
+  return r;
+}
+
+constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  {
+    detail::underlying_type_t<decltype(U::words)> i{U::words};
+
+    do
+    {
+      --i;
+
+      if (auto const c(a[i] <=> b[i]); c != 0)
+      {
+        return c;
+      }
+    }
+    while (i);
+  }
+
+  return std::strong_ordering::equal;
+}
+
+constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t
+  {
+    M = 2 * U::words,
+    N = U::words,
+    wbits = U::wbits,
+    hwbits = wbits / 2
+  };
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  { // multiplying half-words, wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    for (std::size_t i{}; M != i; ++i)
+    { // detail::bit_size_v<H> * (i + j) < wbits * N
+      auto S(i);
+
+      do
+      {
+        T pp;
+
+        {
+          auto const j(S - i);
+
+          pp = T(H(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+            H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
+        }
+
+        S % 2 ?
+          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
+          add_words(r, S / 2, pp);
+      }
+      while (M != ++S);
+    }
+  }
+  else
+  { // multiplying words, 2 * wbits per iteration
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    for (std::size_t i{}; N != i; ++i)
+    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
+      auto S(i);
+
+      do
+      {
+        D const pp(D(a.v_[i]) * b.v_[S - i]);
+
+        add_words(r, S, T(pp), T(pp >> wbits));
+      }
+      while (N != ++S);
     }
   }
 
