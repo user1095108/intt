@@ -1315,6 +1315,100 @@ constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
   return r;
 }
 
+constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t
+  {
+    M = 2 * U::words,
+    N = U::words,
+    wbits = U::wbits,
+    hwbits = wbits / 2
+  };
+
+  U r{};
+
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  { // multiplying half-words, wbits per iteration
+    using H = std::conditional_t<
+      std::is_same_v<T, std::uint64_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint8_t,
+        std::uint8_t
+      >
+    >;
+
+    [&]<auto ...S>(std::index_sequence<S...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          T const pp(
+            T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
+          );
+
+          if constexpr((S % 2) && (M - 1 == S))
+          {
+            add_words<S / 2>(r, pp << hwbits);
+          }
+          else if constexpr(S % 2)
+          {
+            add_words<S / 2>(r, pp << hwbits, pp >> hwbits);
+          }
+          else
+          {
+            add_words<S / 2>(r, pp);
+          }
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<M>());
+  }
+  else
+  { // multiplying words, 2 * wbits per iteration
+    using D = std::conditional_t<
+      std::is_same_v<T, std::uint8_t>,
+      std::uint16_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint16_t>,
+        std::uint32_t,
+        std::conditional_t<
+          std::is_same_v<T, std::uint32_t>,
+          std::uint64_t,
+          void
+        >
+      >
+    >;
+
+    [&]<auto ...S>(std::index_sequence<S...>) noexcept
+    {
+      (
+        [&]() noexcept
+        {
+          D const pp(D(k) * a.v_[S]);
+
+          if constexpr(N - 1 == S)
+          {
+            add_words<S>(r, T(pp));
+          }
+          else
+          {
+            add_words<S>(r, T(pp), T(pp >> wbits));
+          }
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
+
+  //
+  return r;
+}
+
 template <std::size_t O>
 constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 {
@@ -1663,84 +1757,6 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
     s += c + b;
     c = c ? s <= b : s < b;
   }
-}
-
-constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t
-  {
-    M = 2 * U::words,
-    N = U::words,
-    wbits = U::wbits,
-    hwbits = wbits / 2
-  };
-
-  U r{};
-
-  if constexpr(std::is_same_v<T, std::uint64_t>)
-  { // multiplying half-words, wbits per iteration
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
-        std::uint8_t
-      >
-    >;
-
-    [&]<auto ...S>(std::index_sequence<S...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          T const pp(
-            T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
-          );
-
-          S % 2 ?
-            add_words<S / 2>(r, pp << hwbits, pp >> hwbits) :
-            add_words<S / 2>(r, pp);
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<M>());
-  }
-  else
-  { // multiplying words, 2 * wbits per iteration
-    using D = std::conditional_t<
-      std::is_same_v<T, std::uint8_t>,
-      std::uint16_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint64_t,
-          void
-        >
-      >
-    >;
-
-    [&]<auto ...S>(std::index_sequence<S...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          D const pp(D(k) * a.v_[S]);
-
-          add_words<S>(r, T(pp), T(pp >> wbits));
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-  }
-
-  //
-  return r;
 }
 
 constexpr auto seqsqrt(intt_type auto const& a) noexcept
