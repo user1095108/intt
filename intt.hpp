@@ -20,7 +20,6 @@ namespace intt
 {
 
 struct direct{};
-struct direct2{};
 
 enum feat
 {
@@ -96,18 +95,9 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct, auto&& ...a) noexcept: v_{a...} { }
-
-  constexpr intt(direct2, std::size_t const i, auto&& ...a) noexcept
-    requires(
-      std::conjunction_v<std::is_same<T, std::remove_cvref_t<decltype(a)>>...>
-    ):
-    v_{}
+  constexpr intt(direct, auto&& ...a) noexcept:
+    v_{std::forward<decltype(a)>(a)...}
   {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((v_[i + I] = a), ...);
-    }(std::make_index_sequence<sizeof...(a)>());
   }
 
   template <std::floating_point U>
