@@ -662,54 +662,52 @@ struct intt
     //
     std::size_t C;
 
-    intt<T, M, F...> b;
-
-    if (negb)
     {
-      auto const tmp(-o);
+      intt<T, M, F...> b;
 
-      b = {tmp, direct{}};
-      C = clz(tmp);
-    }
-    else
-    {
-      b = {o, direct{}};
-      C = clz(o);
-    }
+      if (negb)
+      {
+        auto const tmp(-o);
 
-    lshl(a, C);
-    lshl(b, C);
-    wshl<N>(b);
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
 
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
+      lshl(a, C);
+      lshl(b, C);
+      wshl<N>(b);
+
       H const B(b.v_[M - 1] >> hwbits);
 
-      (
-        [&]() noexcept
-        {
-          constexpr auto k(M - I - 1);
+      std::size_t k(M);
 
-          //
-          auto h(std::min(H(dmax), H(a.v_[k] / B)));
+      do
+      {
+        --k;
 
-          for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+        auto h(std::min(H(dmax), H(a.v_[k] / B)));
 
-          auto l(
-            std::min(
-              H(dmax),
-              H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
-            )
-          );
+        for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
 
-          for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+        auto l(
+          std::min(
+            H(dmax),
+            H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
+          )
+        );
 
-          //
-          q.v_[k - N] = T(h) << hwbits | l;
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
+        for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+
+        //
+        q.v_[k - N] = T(h) << hwbits | l;
+      }
+      while (N != k);
+    }
 
     //
     if constexpr(Rem)
