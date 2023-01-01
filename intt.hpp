@@ -625,15 +625,15 @@ struct intt
     if (nega && negb)
     {
       //return r + ~(*this + o) + intt(direct{}, T(1));
-      return r - (*this + o);
+      return r - *this - o;
     }
     else if (nega)
     {
-      return -(r + o);
+      return -r - o;
     }
     else if (negb)
     {
-      return -(r + *this);
+      return -r - *this;
     }
     else
     {
@@ -1435,15 +1435,15 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
   //
   if (nega && negb)
   {
-    return r - (a + b);
+    return r - a - b;
   }
   else if (nega)
   {
-    return -(r + b);
+    return -r - b;
   }
   else if (negb)
   {
-    return -(r + a);
+    return -r - a;
   }
   else
   {
