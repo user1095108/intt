@@ -1420,13 +1420,17 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
     r.v_[O] = A * B;
 
     {
-      auto bb(negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{}));
+      auto const bb(
+        negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{})
+      );
 
       while (A) --A, r += bb;
     }
 
     {
-      auto aa(nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{}));
+      auto const aa(
+        nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{})
+      );
 
       while (B) --B, r += aa;
     }
@@ -1535,13 +1539,17 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
     r.v_[O] = A * B;
 
     {
-      auto bb(negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{}));
+      auto const bb(
+        negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{})
+      );
 
       while (A) --A, r += bb;
     }
 
     {
-      auto aa(nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{}));
+      auto const aa(
+        nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{})
+      );
 
       while (B) --B, r += aa;
     }
