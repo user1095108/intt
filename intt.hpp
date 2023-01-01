@@ -416,25 +416,12 @@ struct intt
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      bool c;
+      bool c{true};
 
-      (
-        [&]() noexcept
-        {
-          auto& d(r.v_[I]);
-          auto const& a(v_[I]);
+      auto& s(r.v_);
+      auto const& a(v_);
 
-          if constexpr(I)
-          {
-            c = bool(d = -a - c);
-          }
-          else
-          {
-            c = bool(d = -a);
-          }
-        }(),
-        ...
-      );
+      ((c = (s[I] = T(~a[I]) + c) < c), ...);
     }(std::make_index_sequence<N>());
 
     return r;
