@@ -421,7 +421,7 @@ struct intt
       auto& s(r.v_);
       auto const& a(v_);
 
-      ((c = (s[I] = T(~a[I]) + c) < c), ...);
+      ((c = (s[I] = c + T(~a[I])) < c), ...);
     }(std::make_index_sequence<N>());
 
     return r;
