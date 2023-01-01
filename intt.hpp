@@ -412,17 +412,29 @@ struct intt
 
   constexpr auto operator-() const noexcept
   {
-    auto r(*this);
+    intt r;
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      auto& s(r.v_);
+      bool c;
 
-      ((s[I] = T(~s[I])), ...);
+      (
+        [&]() noexcept
+        {
+          auto& d(r.v_[I]);
+          auto const& a(v_[I]);
 
-      bool c{true};
-
-      ((c = (s[I] += c) < c), ...);
+          if constexpr(I)
+          {
+            c = bool(d = -a - c);
+          }
+          else
+          {
+            c = bool(d = -a);
+          }
+        }(),
+        ...
+      );
     }(std::make_index_sequence<N>());
 
     return r;
