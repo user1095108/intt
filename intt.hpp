@@ -983,7 +983,7 @@ constexpr auto clz(intt_type auto const& a) noexcept
     do
     {
       r += c = std::countl_zero(a.v_[--I]);
-    } while (I && (U::wbits == c));
+    } while ((U::wbits == c) && I);
   }
 
   return r;
