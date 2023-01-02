@@ -5,7 +5,6 @@
 #include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::ldexp()
-#include <cstring>
 
 #include <algorithm> // std::max()
 #include <array>
@@ -1949,7 +1948,7 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
   }
 }
 
-auto to_raw(intt_type auto const& a) noexcept
+auto to_raw(intt_type auto const& a)
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1972,12 +1971,12 @@ auto to_raw(intt_type auto const& a) noexcept
   return ss.str();
 }
 
-auto to_array(intt_type auto a)
+template <typename T, std::size_t N, enum feat... FF>
+constexpr auto to_pair(intt<T, N, FF...> a)
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
-  char data[detail::num_digits(U::words * U::wbits) + 2];
+  char data[detail::num_digits(N * U::wbits) + 2];
 
   auto i(std::size(data));
 
@@ -2004,18 +2003,18 @@ auto to_array(intt_type auto a)
     }
   }
 
-  auto const sz(std::size(data) - i);
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    ((data[I] = I + i < std::size(data) ? data[I + i] : '\0'), ...);
+  }(std::make_index_sequence<std::size(data)>());
 
-  std::memmove(data, &data[i], sz);
-  data[sz] = {};
-
-  return std::pair(std::to_array(std::move(data)), sz);
+  return std::pair(std::to_array(std::move(data)), std::size(data) - i);
 }
 
 template <typename T, std::size_t N, enum feat... F>
 inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
-  auto const& [arr, sz](to_array(a));
+  auto const& [arr, sz](to_pair(a));
 
   return os << std::string_view(arr.data(), sz);
 }
