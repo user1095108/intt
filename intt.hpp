@@ -1988,12 +1988,10 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
     do
     {
       std::pair const p(a / k, a % k);
+      a = std::get<0>(p);
 
       signed char const d(std::get<1>(p));
-
       data[--i] = '0' + (neg ? -d : d);
-
-      a = std::get<0>(p);
     }
     while (a);
 
