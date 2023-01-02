@@ -1972,7 +1972,7 @@ auto to_raw(intt_type auto const& a)
 }
 
 template <typename T, std::size_t N, enum feat... FF>
-constexpr auto to_pair(intt<T, N, FF...> a)
+constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
