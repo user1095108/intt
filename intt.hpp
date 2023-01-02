@@ -1974,16 +1974,14 @@ auto to_raw(intt_type auto const& a)
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  char data[detail::num_digits(N * U::wbits) + 2];
+  char data[detail::num_digits(N * decltype(a)::wbits) + 2];
 
   auto i(std::size(data));
 
   {
     auto const neg(is_neg(a));
 
-    U const k(direct{}, T(10));
+    decltype(a) const k(direct{}, T(10));
 
     do
     {
