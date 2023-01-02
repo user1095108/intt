@@ -434,7 +434,8 @@ struct intt
   }
 
   //
-  constexpr auto operator+(intt const& o) const noexcept
+  template <typename U, std::size_t M, enum feat ...FF>
+  constexpr auto operator+(intt<U, M, FF...> const& o) const noexcept
   {
     intt r;
 
@@ -450,7 +451,7 @@ struct intt
 
           if constexpr(I)
           {
-            s = c + a + o.v_[I];
+            s = c + a + (I < M ? o.v_[I] : T{});
             c = c ? s <= a : s < a;
           }
           else
@@ -465,7 +466,8 @@ struct intt
     return r;
   }
 
-  constexpr auto operator-(intt const& o) const noexcept
+  template <typename U, std::size_t M, enum feat ...FF>
+  constexpr auto operator-(intt<U, M, FF...> const& o) const noexcept
   {
     intt r;
 
@@ -481,7 +483,7 @@ struct intt
 
           if constexpr(I)
           {
-            d = a - o.v_[I] - c;
+            d = a - (I < M ? o.v_[I] : T{}) - c;
             c = c ? d >= a : d > a;
           }
           else
