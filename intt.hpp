@@ -798,8 +798,6 @@ struct intt
 
       lshl(b, C);
 
-      auto const k(detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
-
       //auto xn(detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
 
       auto xn(
@@ -807,10 +805,16 @@ struct intt
         unewmul<N>(b, detail::coeff<make_coeff(32, 17)>())
       );
 
-      // x_n = x_n(2 - a*x_n)
-      for (intt<T, M, F...> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
       {
-        xn = newmul<N>(xn, k - tmp);
+        auto const k(
+          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+        );
+
+        // x_n = x_n(2 - a*x_n)
+        for (intt<T, M, F...> tmp; tmp = unewmul<N>(b, xn), tmp.v_[N - 1];)
+        {
+          xn = newmul<N>(xn, k - tmp);
+        }
       }
 
       q = lshr(
@@ -825,10 +829,7 @@ struct intt
     //
     if constexpr(Rem)
     {
-      auto const r{
-        intt{nega ? -*this : *this} -
-        umul(q, intt{negb ? -o : o})
-      };
+      auto const r{(nega ? -*this : *this) - umul(q, negb ? -o : o)};
 
       return nega ? -r : r;
     }
