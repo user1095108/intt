@@ -5,10 +5,12 @@
 #include <cassert>
 #include <climits> // CHAR_BIT
 #include <cmath> // std::ldexp()
+#include <cstring>
 
-#include <concepts> // std::floating_point, std::integral
 #include <algorithm> // std::max()
+#include <array>
 #include <bit> // std::countl_zero
+#include <concepts> // std::floating_point, std::integral
 #include <iomanip> // std::hex
 #include <iterator>
 #include <ostream>
@@ -58,6 +60,11 @@ consteval auto contains(auto const f) noexcept
 }
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
+
+consteval std::size_t num_digits(std::size_t const N) noexcept
+{
+  return N * .30102999566398119521 + 1.; // 2^N <= 10^J, J >= N * log10(2)
+}
 
 template <typename> struct is_intt : std::false_type {};
 
@@ -1965,16 +1972,18 @@ auto to_raw(intt_type auto const& a) noexcept
   return ss.str();
 }
 
-std::string to_string(intt_type auto a)
+auto to_array(intt_type auto a)
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  auto const neg(is_neg(a));
+  char data[detail::num_digits(U::words * U::wbits) + 2];
 
-  std::string r(neg ? 1 : 0, '-');
+  auto i(std::size(data));
 
   {
+    auto const neg(is_neg(a));
+
     U const k(direct{}, T(10));
 
     do
@@ -1983,20 +1992,32 @@ std::string to_string(intt_type auto a)
 
       signed char const d(std::get<1>(p));
 
-      r.insert(neg, 1, '0' + (neg ? -d : d));
+      data[--i] = '0' + (neg ? -d : d);
 
       a = std::get<0>(p);
     }
     while (a);
+
+    if (neg)
+    {
+      data[--i] = '-';
+    }
   }
 
-  return r;
+  auto const sz(std::size(data) - i);
+
+  std::memmove(data, &data[i], sz);
+  data[sz] = {};
+
+  return std::pair(std::to_array(std::move(data)), sz);
 }
 
 template <typename T, std::size_t N, enum feat... F>
 inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
-  return os << to_string(a);
+  auto const& [arr, sz](to_array(a));
+
+  return os << std::string_view(arr.data(), sz);
 }
 
 }
