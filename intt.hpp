@@ -2003,14 +2003,12 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
     }
   }
 
-  auto const sz(std::size(data) - i);
-
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    ((data[I] = I < sz ? data[I + i] : '\0'), ...);
+    ((data[I] = I + i < std::size(data) ? data[I + i] : '\0'), ...);
   }(std::make_index_sequence<std::size(data)>());
 
-  return std::pair(std::to_array(std::move(data)), sz);
+  return std::pair(std::to_array(std::move(data)), std::size(data) - i);
 }
 
 template <typename T, std::size_t N, enum feat... F>
