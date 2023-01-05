@@ -1815,9 +1815,8 @@ constexpr auto seqsqrt(intt_type auto const& a) noexcept
 
   typename U::doubled_t r(a, direct{}), Q{};
 
-  //
-  auto CR(clz(a));
-  CR += (N * wbits - CR) / 2;
+  //CR = CR + (N * wbits - CR) / 2;
+  auto const CR((N * wbits + clz(a)) / 2);
   lshl(r, CR);
 
   for (auto i(N * wbits - CR); i;)
