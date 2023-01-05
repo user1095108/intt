@@ -2002,20 +2002,16 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
     }
   }
 
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    ((data[I] = I + i < std::size(data) ? data[I + i] : '\0'), ...);
-  }(std::make_index_sequence<std::size(data)>());
-
-  return std::pair(std::to_array(std::move(data)), std::size(data) - i);
+  //
+  return std::pair(std::size(data) - i, std::to_array(std::move(data)));
 }
 
 template <typename T, std::size_t N, enum feat... F>
 inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
-  auto const& [arr, sz](to_pair(a));
+  auto const& [sz, arr](to_pair(a));
 
-  return os << std::string_view(arr.data(), sz);
+  return os << std::string_view(&*std::prev(arr.end(), sz), sz);
 }
 
 }
