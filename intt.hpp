@@ -932,6 +932,9 @@ constexpr auto operator OP (U&& a, intt<A, B, F...> const& b) noexcept\
   return intt<A, B, F...>(std::forward<U>(a)) OP b;\
 }
 
+INTT_LEFT_CONVERSION(&)
+INTT_LEFT_CONVERSION(|)
+INTT_LEFT_CONVERSION(^)
 INTT_LEFT_CONVERSION(+)
 INTT_LEFT_CONVERSION(-)
 INTT_LEFT_CONVERSION(*)
@@ -954,6 +957,9 @@ constexpr auto operator OP (intt<A, B, F...> const& a, U&& b) noexcept\
   return a OP intt<A, B, F...>(std::forward<U>(b));\
 }
 
+INTT_RIGHT_CONVERSION(&)
+INTT_RIGHT_CONVERSION(|)
+INTT_RIGHT_CONVERSION(^)
 INTT_RIGHT_CONVERSION(+)
 INTT_RIGHT_CONVERSION(-)
 INTT_RIGHT_CONVERSION(*)
@@ -1977,7 +1983,7 @@ auto to_raw(intt_type auto const& a)
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
-  char data[detail::num_digits(N * decltype(a)::wbits) + 2];
+  char data[detail::num_digits(N * decltype(a)::wbits) + 1];
 
   auto i(std::size(data));
 
@@ -2003,15 +2009,15 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   }
 
   //
-  return std::pair(std::size(data) - i, std::to_array(std::move(data)));
+  return std::pair(i, std::to_array(std::move(data)));
 }
 
 template <typename T, std::size_t N, enum feat... F>
 inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
-  auto const& [sz, arr](to_pair(a));
+  auto const& [i, arr](to_pair(a));
 
-  return os << std::string_view(&*std::prev(arr.end(), sz), sz);
+  return os << std::string_view(&arr[i], arr.end());
 }
 
 }
