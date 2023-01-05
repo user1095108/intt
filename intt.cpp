@@ -69,10 +69,10 @@ int main()
 
   {
     std::cout << seqsqrt(D(1)) << std::endl;
-    std::cout << seqsqrt(D(2)) << std::endl;
-    std::cout << seqsqrt(D(3)) << std::endl;
     std::cout << seqsqrt(D(4)) << std::endl;
-    std::cout << seqsqrt(D(5)) << std::endl;
+    std::cout << seqsqrt(D(9)) << std::endl;
+    std::cout << seqsqrt(D(16)) << std::endl;
+    std::cout << seqsqrt(D(25)) << std::endl;
   }
 
   {
