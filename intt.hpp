@@ -1984,9 +1984,9 @@ template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
   char data[detail::num_digits(N * decltype(a)::wbits) + 1];
-
   auto i(std::size(data));
 
+  //
   {
     auto const neg(is_neg(a));
 
