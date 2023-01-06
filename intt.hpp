@@ -76,13 +76,13 @@ consteval auto contains(auto const f) noexcept
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 template <std::size_t, typename T>
-static constexpr auto get_word() noexcept
+constexpr auto get_word() noexcept
 {
   return T{};
 }
 
 template <std::size_t I, typename T>
-static constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
+constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
 {
   if constexpr(I)
   {
@@ -95,13 +95,13 @@ static constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
 }
 
 template <typename T>
-static constexpr auto get_word(std::size_t) noexcept
+constexpr auto get_word(std::size_t) noexcept
 {
   return T{};
 }
 
 template <typename T>
-static constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
+constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
   auto&& ...b) noexcept
 {
   return i ?
@@ -2012,6 +2012,13 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 
   //
   return std::pair(i, std::to_array(std::move(data)));
+}
+
+constexpr auto to_string(intt_type auto const& a)
+{
+  auto const& [i, arr](to_pair(a));
+
+  return std::string(std::next(arr.begin(), i), arr.end());
 }
 
 template <typename T, std::size_t N, enum feat... F>
