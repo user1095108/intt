@@ -2027,8 +2027,7 @@ constexpr auto to_string(intt_type auto const& a)
   return std::string(std::next(arr.begin(), i), arr.end());
 }
 
-template <typename T, std::size_t N, enum feat... F>
-inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
+inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
