@@ -1990,19 +1990,16 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 
   //
   {
-    auto const neg(is_neg(a));
-
     decltype(a) const k(direct{}, T(10));
 
-    if (neg)
+    if (is_neg(a))
     {
       do
       {
         std::pair const p(a / k, a % k);
         a = std::get<0>(p);
 
-        signed char const d(std::get<1>(p));
-        data[--i] = '0' - d;
+        data[--i] = '0' - (signed char)(std::get<1>(p));
       }
       while (a);
 
@@ -2015,8 +2012,7 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
         std::pair const p(a / k, a % k);
         a = std::get<0>(p);
 
-        signed char const d(std::get<1>(p));
-        data[--i] = '0' + d;
+        data[--i] = '0' + (signed char)(std::get<1>(p));
       }
       while (a);
     }
