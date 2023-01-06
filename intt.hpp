@@ -70,15 +70,15 @@ template <typename> struct is_intt : std::false_type {};
 template <typename T, std::size_t N, enum feat... F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
-template <typename> struct halve;
-
-template <typename T, std::size_t N, enum feat... F>
-struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
-
 template <typename> struct double_;
 
 template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
+
+template <typename> struct halve;
+
+template <typename T, std::size_t N, enum feat... F>
+struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
 
 }
 
