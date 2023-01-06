@@ -2020,7 +2020,7 @@ inline auto& operator<<(std::ostream& os, intt<T, N, F...> const& a)
 {
   auto const& [i, arr](to_pair(a));
 
-  return os << std::string_view(&arr[i], arr.end());
+  return os << std::string_view(std::next(arr.begin(), i), arr.end());
 }
 
 }
