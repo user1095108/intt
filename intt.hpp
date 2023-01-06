@@ -52,19 +52,6 @@ struct underlying_type<T, false> { using type = T; };
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-template <auto ...F>
-consteval auto contains(auto const f) noexcept
-{
-  return ((f == F) || ...);
-}
-
-template <auto C> static constexpr auto coeff() noexcept { return C; }
-
-consteval std::size_t num_digits(std::size_t const N) noexcept
-{
-  return N * .30102999566398119521 + 1.; // 2^N <= 10^J, J >= N * log10(2)
-}
-
 template <typename> struct is_intt : std::false_type {};
 
 template <typename T, std::size_t N, enum feat... F>
@@ -79,6 +66,53 @@ template <typename> struct halve;
 
 template <typename T, std::size_t N, enum feat... F>
 struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
+
+template <auto ...F>
+consteval auto contains(auto const f) noexcept
+{
+  return ((f == F) || ...);
+}
+
+template <auto C> static constexpr auto coeff() noexcept { return C; }
+
+template <std::size_t, typename T>
+static constexpr auto get_word() noexcept
+{
+  return T{};
+}
+
+template <std::size_t I, typename T>
+static constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
+{
+  if constexpr(I)
+  {
+    return get_word<I - 1, T>(std::forward<decltype(b)>(b)...);
+  }
+  else
+  {
+    return a;
+  }
+}
+
+template <typename T>
+static constexpr auto get_word(std::size_t) noexcept
+{
+  return T{};
+}
+
+template <typename T>
+static constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
+  auto&& ...b) noexcept
+{
+  return i ?
+    get_word<T>(i - 1, std::forward<decltype(b)>(b)...) :
+    std::forward<decltype(a)>(a);
+}
+
+consteval std::size_t num_digits(std::size_t const N) noexcept
+{
+  return N * .30102999566398119521 + 1.; // 2^N <= 10^J, J >= N * log10(2)
+}
 
 }
 
@@ -1681,25 +1715,6 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
   return r;
 }
 
-template <std::size_t, typename T>
-constexpr auto get_word() noexcept
-{
-  return T{};
-}
-
-template <std::size_t I, typename T>
-constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
-{
-  if constexpr(I)
-  {
-    return get_word<I - 1, T>(std::forward<decltype(b)>(b)...);
-  }
-  else
-  {
-    return a;
-  }
-}
-
 template <std::size_t S>
 constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
 {
@@ -1724,7 +1739,7 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
 
         if constexpr(auto& s(a.v_[J]); J - S < sizeof...(v))
         {
-          auto const b(get_word<J - S, T>(v...));
+          auto const b(detail::get_word<J - S, T>(v...));
 
           s += c + b;
           c = c ? s <= b : s < b;
@@ -1764,7 +1779,7 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
         if constexpr(auto& d(a.v_[J]); J - S < sizeof...(v))
         {
           auto const a(d);
-          auto const b(get_word<J - S, T>(v...));
+          auto const b(detail::get_word<J - S, T>(v...));
 
           d = d - b - c;
           c = c ? d >= a : d > a;
@@ -1780,21 +1795,6 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
   }(std::make_index_sequence<N - S>());
 }
 
-template <typename T>
-constexpr auto get_word(std::size_t) noexcept
-{
-  return T{};
-}
-
-template <typename T>
-constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
-  auto&& ...b) noexcept
-{
-  return i ?
-    get_word<T>(i - 1, std::forward<decltype(b)>(b)...) :
-    std::forward<decltype(a)>(a);
-}
-
 constexpr void add_words(intt_type auto& a, std::size_t const I,
   auto&& ...v) noexcept
 {
@@ -1807,7 +1807,7 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
 
   for (auto i{I}; i != N; ++i)
   {
-    auto const b(get_word<T>(i - I, v...));
+    auto const b(detail::get_word<T>(i - I, v...));
 
     auto& s(a.v_[i]);
 
