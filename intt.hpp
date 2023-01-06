@@ -237,14 +237,14 @@ struct intt
       return *this = *this OP std::forward<U>(a);\
     }
 
+  INTT_ASSIGNMENT(&)
+  INTT_ASSIGNMENT(|)
+  INTT_ASSIGNMENT(^)
   INTT_ASSIGNMENT(+)
   INTT_ASSIGNMENT(-)
   INTT_ASSIGNMENT(*)
   INTT_ASSIGNMENT(/)
   INTT_ASSIGNMENT(%)
-  INTT_ASSIGNMENT(&)
-  INTT_ASSIGNMENT(|)
-  INTT_ASSIGNMENT(^)
 
   constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
