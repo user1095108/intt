@@ -75,6 +75,11 @@ template <typename> struct halve;
 template <typename T, std::size_t N, enum feat... F>
 struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
 
+template <typename> struct double_;
+
+template <typename T, std::size_t N, enum feat... F>
+struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
+
 }
 
 template <typename T>
@@ -91,8 +96,6 @@ struct intt
   };
 
   using value_type = T;
-
-  using doubled_t = intt<T, 2 * N, F...>;
 
   T v_[N];
 
@@ -1225,7 +1228,7 @@ constexpr auto lshifted(intt_type auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  typename U::doubled_t r;
+  typename detail::double_<U>::type r;
 
   enum : std::size_t {M = decltype(r)::words, N = U::words};
 
@@ -1819,7 +1822,7 @@ constexpr auto seqsqrt(intt_type auto const& a) noexcept
 
   enum : std::size_t { N = U::words, wbits = U::wbits };
 
-  typename U::doubled_t r(a, direct{}), Q{};
+  typename detail::double_<U>::type r(a, direct{}), Q{};
 
   //CR = CR + (N * wbits - CR) / 2;
   auto const CR((N * wbits + clz(a)) / 2);
