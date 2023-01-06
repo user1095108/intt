@@ -339,7 +339,6 @@ struct intt
 
   //
   static constexpr auto size() noexcept { return N; }
-
   constexpr auto data() const noexcept { return v_; }
 
   // bitwise
