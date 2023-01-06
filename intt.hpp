@@ -1989,33 +1989,31 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   auto i(std::size(data));
 
   //
+  auto const k(detail::coeff<decltype(a)(direct{}, T(10))>());
+
+  if (is_neg(a))
   {
-    decltype(a) const k(direct{}, T(10));
-
-    if (is_neg(a))
+    do
     {
-      do
-      {
-        std::pair const p(a / k, a % k);
-        a = std::get<0>(p);
+      std::pair const p(a / k, a % k);
+      a = std::get<0>(p);
 
-        data[--i] = '0' - (signed char)(std::get<1>(p));
-      }
-      while (a);
-
-      data[--i] = '-';
+      data[--i] = '0' - (signed char)(std::get<1>(p));
     }
-    else
+    while (a);
+
+    data[--i] = '-';
+  }
+  else
+  {
+    do
     {
-      do
-      {
-        std::pair const p(a / k, a % k);
-        a = std::get<0>(p);
+      std::pair const p(a / k, a % k);
+      a = std::get<0>(p);
 
-        data[--i] = '0' + (signed char)(std::get<1>(p));
-      }
-      while (a);
+      data[--i] = '0' + (signed char)(std::get<1>(p));
     }
+    while (a);
   }
 
   //
