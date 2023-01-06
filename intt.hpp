@@ -434,8 +434,8 @@ struct intt
   }
 
   //
-  template <typename U, std::size_t M, enum feat ...FF>
-  constexpr auto operator+(intt<U, M, FF...> const& o) const noexcept
+  template <std::size_t M, enum feat ...FF>
+  constexpr auto operator+(intt<T, M, FF...> const& o) const noexcept
   {
     intt r;
 
@@ -466,8 +466,8 @@ struct intt
     return r;
   }
 
-  template <typename U, std::size_t M, enum feat ...FF>
-  constexpr auto operator-(intt<U, M, FF...> const& o) const noexcept
+  template <std::size_t M, enum feat ...FF>
+  constexpr auto operator-(intt<T, M, FF...> const& o) const noexcept
   {
     intt r;
 
