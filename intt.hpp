@@ -1533,6 +1533,27 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
   }(std::make_index_sequence<N - S>());
 }
 
+constexpr void add_words(intt_type auto& a, std::size_t const I,
+  auto&& ...v) noexcept
+  requires(bool(sizeof...(v)))
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t { N = U::words };
+
+  bool c{};
+
+  for (auto i{I}; i != N; ++i)
+  {
+    auto& s(a.v_[i]);
+    auto const b(detail::get_word<T>(i - I, v...));
+
+    s += c + b;
+    c = c ? s <= b : s < b;
+  }
+}
+
 template <std::size_t S>
 constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
   requires(bool(sizeof...(v)))
@@ -1574,27 +1595,6 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
       ...
     );
   }(std::make_index_sequence<N - S>());
-}
-
-constexpr void add_words(intt_type auto& a, std::size_t const I,
-  auto&& ...v) noexcept
-  requires(bool(sizeof...(v)))
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t { N = U::words };
-
-  bool c{};
-
-  for (auto i{I}; i != N; ++i)
-  {
-    auto& s(a.v_[i]);
-    auto const b(detail::get_word<T>(i - I, v...));
-
-    s += c + b;
-    c = c ? s <= b : s < b;
-  }
 }
 
 constexpr auto seqsqrt(intt_type auto const& a) noexcept
