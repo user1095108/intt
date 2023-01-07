@@ -1735,17 +1735,17 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
     (
       [&]() noexcept
       {
-        constexpr auto J(I + S);
-        auto& s(a.v_[J]);
+        auto& s(a.v_[S + I]);
 
-        if constexpr(J - S == 0)
+        if constexpr(!I)
         {
-          auto const b(detail::get_word<J - S, T>(v...));
+          auto const b(detail::get_word<I, T>(v...));
+
           c = (s += b) < b;
         }
-        else if constexpr(J - S < sizeof...(v))
+        else if constexpr(I < sizeof...(v))
         {
-          auto const b(detail::get_word<J - S, T>(v...));
+          auto const b(detail::get_word<I, T>(v...));
 
           s += c + b;
           c = c ? s <= b : s < b;
@@ -1781,21 +1781,16 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
     (
       [&]() noexcept
       {
-        constexpr auto J(I + S);
-        auto& d(a.v_[J]);
+        auto& d(a.v_[S + I]);
         auto const a(d);
 
-        if constexpr(J - S == 0)
+        if constexpr(!I)
         {
-          auto const b(detail::get_word<J - S, T>(v...));
-
-          c = (d -= b) > a;
+          c = (d -= detail::get_word<I, T>(v...)) > a;
         }
-        else if constexpr(J - S < sizeof...(v))
+        else if constexpr(I < sizeof...(v))
         {
-          auto const b(detail::get_word<J - S, T>(v...));
-
-          d = d - b - c;
+          d = d - detail::get_word<I, T>(v...) - c;
           c = c ? d >= a : d > a;
         }
         else
