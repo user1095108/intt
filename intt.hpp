@@ -1716,6 +1716,7 @@ constexpr auto unewmul(intt_type auto const& a, decltype(a) b) noexcept
 
 template <std::size_t S>
 constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
+  requires(bool(sizeof...(v)))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1729,14 +1730,20 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
 #ifndef __clang__
     (v, ...);
 #endif // __clang__
-    bool c{};
+    bool c;
 
     (
       [&]() noexcept
       {
         constexpr auto J(I + S);
+        auto& s(a.v_[J]);
 
-        if constexpr(auto& s(a.v_[J]); J - S < sizeof...(v))
+        if constexpr(J - S == 0)
+        {
+          auto const b(detail::get_word<J - S, T>(v...));
+          c = (s += b) < b;
+        }
+        else if constexpr(J - S < sizeof...(v))
         {
           auto const b(detail::get_word<J - S, T>(v...));
 
@@ -1755,6 +1762,7 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
 
 template <std::size_t S>
 constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
+  requires(bool(sizeof...(v)))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1768,16 +1776,23 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
 #ifndef __clang__
     (v, ...);
 #endif // __clang__
-    bool c{};
+    bool c;
 
     (
       [&]() noexcept
       {
         constexpr auto J(I + S);
+        auto& d(a.v_[J]);
+        auto const a(d);
 
-        if constexpr(auto& d(a.v_[J]); J - S < sizeof...(v))
+        if constexpr(J - S == 0)
         {
-          auto const a(d);
+          auto const b(detail::get_word<J - S, T>(v...));
+
+          c = (d -= b) > a;
+        }
+        else if constexpr(J - S < sizeof...(v))
+        {
           auto const b(detail::get_word<J - S, T>(v...));
 
           d = d - b - c;
@@ -1785,7 +1800,6 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
         }
         else
         {
-          auto const a(d);
           c = (d -= c) > a;
         }
       }(),
@@ -1796,6 +1810,7 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
 
 constexpr void add_words(intt_type auto& a, std::size_t const I,
   auto&& ...v) noexcept
+  requires(bool(sizeof...(v)))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
