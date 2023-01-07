@@ -593,8 +593,6 @@ struct intt
   //
   constexpr auto naimul(intt const& o) const noexcept
   {
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
     intt r{};
 
     if constexpr(std::is_same_v<T, std::uint64_t>)
@@ -620,10 +618,10 @@ struct intt
           T pp;
 
           {
-            H const a(v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0));
             auto const j(S - i);
-            H const b(o.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
-            pp = T(nega ? H(~a) : a) * (negb ? H(~b) : b);
+
+            pp = T(H(v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+              H(o.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
           }
 
           S % 2 ?
@@ -655,8 +653,7 @@ struct intt
 
         do
         {
-          D const pp(D(nega ? T(~v_[i]) : v_[i]) *
-            (negb ? T(~o.v_[S - i]) : o.v_[S - i]));
+          D const pp(D(v_[i]) * o.v_[S - i]);
 
           add_words(r, S, T(pp), T(pp >> wbits));
         }
@@ -665,23 +662,7 @@ struct intt
     }
 
     //
-    if (nega && negb)
-    {
-      //return r + ~(*this + o) + intt(direct{}, T(1));
-      return r - *this - o;
-    }
-    else if (nega)
-    {
-      return -r - o;
-    }
-    else if (negb)
-    {
-      return -r - *this;
-    }
-    else
-    {
-      return r;
-    }
+    return r;
   }
 
   constexpr auto seqmul(intt const& o) const noexcept
@@ -865,7 +846,7 @@ struct intt
     //
     if constexpr(Rem)
     {
-      auto const r{(nega ? -*this : *this) - umul(q, negb ? -o : o)};
+      auto const r{(nega ? -*this : *this) - naimul(q, negb ? -o : o)};
 
       return nega ? -r : r;
     }
@@ -1521,89 +1502,6 @@ constexpr auto uhwmul(auto const k, intt_type auto const& a) noexcept
         ...
       );
     }(std::make_index_sequence<N>());
-  }
-
-  //
-  return r;
-}
-
-constexpr auto umul(intt_type auto const& a, decltype(a) b) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t
-  {
-    M = 2 * U::words,
-    N = U::words,
-    wbits = U::wbits,
-    hwbits = wbits / 2
-  };
-
-  U r{};
-
-  if constexpr(std::is_same_v<T, std::uint64_t>)
-  { // multiplying half-words, wbits per iteration
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
-        std::uint8_t
-      >
-    >;
-
-    for (std::size_t i{}; M != i; ++i)
-    { // detail::bit_size_v<H> * (i + j) < wbits * N
-      auto S(i);
-
-      do
-      {
-        T pp;
-
-        {
-          auto const j(S - i);
-
-          pp = T(H(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-            H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
-        }
-
-        S % 2 ?
-          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
-          add_words(r, S / 2, pp);
-      }
-      while (M != ++S);
-    }
-  }
-  else
-  { // multiplying words, 2 * wbits per iteration
-    using D = std::conditional_t<
-      std::is_same_v<T, std::uint8_t>,
-      std::uint16_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint64_t,
-          void
-        >
-      >
-    >;
-
-    for (std::size_t i{}; N != i; ++i)
-    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-      auto S(i);
-
-      do
-      {
-        D const pp(D(a.v_[i]) * b.v_[S - i]);
-
-        add_words(r, S, T(pp), T(pp >> wbits));
-      }
-      while (N != ++S);
-    }
   }
 
   //
