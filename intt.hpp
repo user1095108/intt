@@ -1816,9 +1816,8 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
 
   for (auto i{I}; i != N; ++i)
   {
-    auto const b(detail::get_word<T>(i - I, v...));
-
     auto& s(a.v_[i]);
+    auto const b(detail::get_word<T>(i - I, v...));
 
     s += c + b;
     c = c ? s <= b : s < b;
