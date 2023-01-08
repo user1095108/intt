@@ -792,7 +792,7 @@ struct intt
     {
       constexpr auto make_coeff([](int const a, int const b) noexcept
         {
-          return wshl<N>(intt<T, 2 * N, F...>(a)).seqdiv(b);
+          return wshl<N>(intt<T, 2 * N, F...>(a)).naidiv(b);
         }
       );
 
