@@ -1231,16 +1231,32 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
     for (auto i{O + 1}; N != i; r.v_[i++] = ~T{});
   }
 
+  if (a.v_[O])
   {
-    intt<T, O> const bb(b, direct{});
-
-    for (auto A{nega ? -a.v_[O] : a.v_[O]}; A; --A, nega ? r -= bb : r += bb);
+    if (intt<T, O> const bb(b); nega)
+    {
+      auto A{-a.v_[O]};
+      do r -= bb; while (--A);
+    }
+    else
+    {
+      auto A{a.v_[O]};
+      do r += bb; while (--A);
+    }
   }
 
+  if (b.v_[O])
   {
-    intt<T, O> const aa(a, direct{});
-
-    for (auto B{negb ? -b.v_[O] : b.v_[O]}; B; --B, negb ? r -= aa : r += aa);
+    if (intt<T, O> const aa(a); negb)
+    {
+      auto B{-b.v_[O]};
+      do r -= aa; while (--B);
+    }
+    else
+    {
+      auto B{b.v_[O]};
+      do r += aa; while (--B);
+    }
   }
 
   //
