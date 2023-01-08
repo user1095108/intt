@@ -1783,9 +1783,7 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   auto i(std::size(data));
 
   //
-  auto const k(detail::coeff<decltype(a)(direct{}, T(10))>());
-
-  if (is_neg(a))
+  if (auto const k(detail::coeff<decltype(a)(direct{}, T(10))>()); is_neg(a))
   {
     do
     {
