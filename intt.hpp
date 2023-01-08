@@ -1224,27 +1224,23 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
   //
   wshr<O>(r);
 
+  r.v_[O] = a.v_[O] * b.v_[O];
+
+  if (nega ^ negb)
   {
-    auto A{nega ? -a.v_[O] : a.v_[O]};
-    auto B{negb ? -b.v_[O] : b.v_[O]};
+    for (auto i{O + 1}; i != N; r.v_[i++] = ~T{});
+  }
 
-    r.v_[O] = A * B;
+  {
+    intt<T, O> const bb(b, direct{});
 
-    {
-      auto const bb(
-        negb ? -intt<T, O>(b, direct{}) : intt<T, O>(b, direct{})
-      );
+    for (auto A{nega ? -a.v_[O] : a.v_[O]}; A; --A, nega ? r -= bb : r += bb);
+  }
 
-      while (A) --A, r += bb;
-    }
+  {
+    intt<T, O> const aa(a, direct{});
 
-    {
-      auto const aa(
-        nega ? -intt<T, O>(a, direct{}) : intt<T, O>(a, direct{})
-      );
-
-      while (B) --B, r += aa;
-    }
+    for (auto B{negb ? -b.v_[O] : b.v_[O]}; B; --B, negb ? r -= aa : r += aa);
   }
 
   //
