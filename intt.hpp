@@ -1228,7 +1228,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 
   if (nega ^ negb)
   {
-    for (auto i{O + 1}; i != N; r.v_[i++] = ~T{});
+    for (auto i{O + 1}; N != i; r.v_[i++] = ~T{});
   }
 
   {
