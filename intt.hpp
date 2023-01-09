@@ -1747,8 +1747,8 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        return ((a.v_[I] *
-          std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
+        return ((a.v_[I] * std::ldexp(F(1),
+          (int(I) - int(M)) * int(U::wbits))) + ...);
       }(std::make_index_sequence<N>());
   }
 }
