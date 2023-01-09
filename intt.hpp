@@ -1837,7 +1837,6 @@ struct hash<U>
   auto operator()(auto const& a) const noexcept
   {
     using T = typename U::value_type;
-    enum : std::size_t { N = U::words };
 
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
@@ -1849,7 +1848,7 @@ struct hash<U>
           ),
           ...
         );
-      }(std::make_index_sequence<N>());
+      }(std::make_index_sequence<U::words>());
   }
 };
 
