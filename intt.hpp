@@ -264,21 +264,21 @@ struct intt
   intt& operator=(intt const&) = default;
   intt& operator=(intt&&) = default;
 
-  #define INTT_ASSIGNMENT(OP)\
+  #define INTT_ASSIGNMENT__(OP)\
     template <typename U>\
     constexpr auto& operator OP ## =(U&& a) noexcept\
     {\
       return *this = *this OP std::forward<U>(a);\
     }
 
-  INTT_ASSIGNMENT(&)
-  INTT_ASSIGNMENT(|)
-  INTT_ASSIGNMENT(^)
-  INTT_ASSIGNMENT(+)
-  INTT_ASSIGNMENT(-)
-  INTT_ASSIGNMENT(*)
-  INTT_ASSIGNMENT(/)
-  INTT_ASSIGNMENT(%)
+  INTT_ASSIGNMENT__(&)
+  INTT_ASSIGNMENT__(|)
+  INTT_ASSIGNMENT__(^)
+  INTT_ASSIGNMENT__(+)
+  INTT_ASSIGNMENT__(-)
+  INTT_ASSIGNMENT__(*)
+  INTT_ASSIGNMENT__(/)
+  INTT_ASSIGNMENT__(%)
 
   constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
@@ -351,7 +351,7 @@ struct intt
     )(std::make_index_sequence<N>());
   }
 
-  #define INTT_BITWISE(OP)\
+  #define INTT_BITWISE__(OP)\
   constexpr auto operator OP(intt const& o) const noexcept\
   {\
     return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
@@ -361,9 +361,9 @@ struct intt
     )(std::make_index_sequence<N>());\
   }
 
-  INTT_BITWISE(&)
-  INTT_BITWISE(|)
-  INTT_BITWISE(^)
+  INTT_BITWISE__(&)
+  INTT_BITWISE__(|)
+  INTT_BITWISE__(^)
 
   constexpr auto operator<<(std::integral auto M) const noexcept
   {
@@ -940,7 +940,7 @@ struct intt
 };
 
 // conversions
-#define INTT_LEFT_CONVERSION(OP)\
+#define INTT_LEFT_CONVERSION__(OP)\
 template <typename A, std::size_t B, enum feat... F, typename U>\
 constexpr auto operator OP (U&& a, intt<A, B, F...> const& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
@@ -949,23 +949,23 @@ constexpr auto operator OP (U&& a, intt<A, B, F...> const& b) noexcept\
   return intt<A, B, F...>(std::forward<U>(a)) OP b;\
 }
 
-INTT_LEFT_CONVERSION(&)
-INTT_LEFT_CONVERSION(|)
-INTT_LEFT_CONVERSION(^)
-INTT_LEFT_CONVERSION(+)
-INTT_LEFT_CONVERSION(-)
-INTT_LEFT_CONVERSION(*)
-INTT_LEFT_CONVERSION(/)
-INTT_LEFT_CONVERSION(%)
-INTT_LEFT_CONVERSION(==)
-INTT_LEFT_CONVERSION(!=)
-INTT_LEFT_CONVERSION(<)
-INTT_LEFT_CONVERSION(<=)
-INTT_LEFT_CONVERSION(>)
-INTT_LEFT_CONVERSION(>=)
-INTT_LEFT_CONVERSION(<=>)
+INTT_LEFT_CONVERSION__(&)
+INTT_LEFT_CONVERSION__(|)
+INTT_LEFT_CONVERSION__(^)
+INTT_LEFT_CONVERSION__(+)
+INTT_LEFT_CONVERSION__(-)
+INTT_LEFT_CONVERSION__(*)
+INTT_LEFT_CONVERSION__(/)
+INTT_LEFT_CONVERSION__(%)
+INTT_LEFT_CONVERSION__(==)
+INTT_LEFT_CONVERSION__(!=)
+INTT_LEFT_CONVERSION__(<)
+INTT_LEFT_CONVERSION__(<=)
+INTT_LEFT_CONVERSION__(>)
+INTT_LEFT_CONVERSION__(>=)
+INTT_LEFT_CONVERSION__(<=>)
 
-#define INTT_RIGHT_CONVERSION(OP)\
+#define INTT_RIGHT_CONVERSION__(OP)\
 template <typename A, std::size_t B, enum feat...F, typename U>\
 constexpr auto operator OP (intt<A, B, F...> const& a, U&& b) noexcept\
   requires(std::is_enum_v<std::remove_cvref_t<U>> ||\
@@ -974,21 +974,21 @@ constexpr auto operator OP (intt<A, B, F...> const& a, U&& b) noexcept\
   return a OP intt<A, B, F...>(std::forward<U>(b));\
 }
 
-INTT_RIGHT_CONVERSION(&)
-INTT_RIGHT_CONVERSION(|)
-INTT_RIGHT_CONVERSION(^)
-INTT_RIGHT_CONVERSION(+)
-INTT_RIGHT_CONVERSION(-)
-INTT_RIGHT_CONVERSION(*)
-INTT_RIGHT_CONVERSION(/)
-INTT_RIGHT_CONVERSION(%)
-INTT_RIGHT_CONVERSION(==)
-INTT_RIGHT_CONVERSION(!=)
-INTT_RIGHT_CONVERSION(<)
-INTT_RIGHT_CONVERSION(<=)
-INTT_RIGHT_CONVERSION(>)
-INTT_RIGHT_CONVERSION(>=)
-INTT_RIGHT_CONVERSION(<=>)
+INTT_RIGHT_CONVERSION__(&)
+INTT_RIGHT_CONVERSION__(|)
+INTT_RIGHT_CONVERSION__(^)
+INTT_RIGHT_CONVERSION__(+)
+INTT_RIGHT_CONVERSION__(-)
+INTT_RIGHT_CONVERSION__(*)
+INTT_RIGHT_CONVERSION__(/)
+INTT_RIGHT_CONVERSION__(%)
+INTT_RIGHT_CONVERSION__(==)
+INTT_RIGHT_CONVERSION__(!=)
+INTT_RIGHT_CONVERSION__(<)
+INTT_RIGHT_CONVERSION__(<=)
+INTT_RIGHT_CONVERSION__(>)
+INTT_RIGHT_CONVERSION__(>=)
+INTT_RIGHT_CONVERSION__(<=>)
 
 //utilities///////////////////////////////////////////////////////////////////
 constexpr bool is_neg(intt_type auto const& a) noexcept
