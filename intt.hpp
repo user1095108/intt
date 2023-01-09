@@ -1831,11 +1831,14 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 namespace std
 {
 
-template <typename T, std::size_t N, enum intt::feat... F>
-struct hash<intt::intt<T, N, F...>>
+template <typename U> requires(intt::intt_type<U>)
+struct hash<U> 
 {
-  auto operator()(intt::intt<T, N, F...> const& a) const noexcept
+  auto operator()(auto const& a) const noexcept
   {
+    using T = typename U::value_type;
+    enum : std::size_t { N = U::words };
+
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
         std::size_t seed{672807365};
