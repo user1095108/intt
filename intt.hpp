@@ -1480,21 +1480,18 @@ constexpr auto rshifted(intt_type auto const& a) noexcept
 constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
+  detail::underlying_type_t<decltype(U::words)> i{U::words};
 
+  do
   {
-    detail::underlying_type_t<decltype(U::words)> i{U::words};
+    --i;
 
-    do
+    if (auto const c(a[i] <=> b[i]); c != 0)
     {
-      --i;
-
-      if (auto const c(a[i] <=> b[i]); c != 0)
-      {
-        return c;
-      }
+      return c;
     }
-    while (i);
   }
+  while (i);
 
   return std::strong_ordering::equal;
 }
