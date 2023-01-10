@@ -536,11 +536,7 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(NAIMUL))
-    {
-      return naimul(o);
-    }
-    else if constexpr(detail::contains<F...>(SEQMUL))
+    if constexpr(detail::contains<F...>(SEQMUL))
     {
       return seqmul(o);
     }
@@ -552,11 +548,7 @@ struct intt
 
   constexpr auto operator/(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(NAIDIV))
-    {
-      return naidiv<false>(o);
-    }
-    else if constexpr(detail::contains<F...>(NEWDIV))
+    if constexpr(detail::contains<F...>(NEWDIV))
     {
       return newdiv<false>(o);
     }
@@ -572,11 +564,7 @@ struct intt
 
   constexpr auto operator%(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(NAIDIV))
-    {
-      return naidiv<true>(o);
-    }
-    else if constexpr(detail::contains<F...>(NEWDIV))
+    if constexpr(detail::contains<F...>(NEWDIV))
     {
       return newdiv<true>(o);
     }
