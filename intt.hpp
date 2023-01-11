@@ -701,6 +701,77 @@ struct intt
 
   //
   template <bool Rem = false>
+  constexpr auto glddiv(intt const& o) const noexcept
+  {
+    enum : std::size_t { M = 2 * N };
+
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt q;
+
+    {
+      intt<T, M, F...> a{nega ? -*this : *this, direct{}};
+      intt<T, M, F...> b;
+
+      std::size_t C;
+
+      if (negb)
+      {
+        auto const tmp(-o);
+
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
+
+      lshl(b, C);
+
+      {
+        auto const k(
+          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+        );
+
+        for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
+          end != b;)
+        {
+          auto const l(k - b);
+
+          b = newmul<N>(b, l);
+          a = newmul<N>(a, l);
+        }
+      }
+
+      q = lshr(a, N * wbits - C);
+    }
+
+    //
+    auto const b(negb ? -o : o);
+
+    if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
+    {
+      if (ucompare(r, b) >= 0)
+      {
+        r -= b;
+      }
+
+      return nega ? -r : r;
+    }
+    else
+    {
+      if (ucompare(r, b) >= 0)
+      {
+        ++q;
+      }
+
+      return nega == negb ? q : -q;
+    }
+  }
+
+  template <bool Rem = false>
   constexpr auto naidiv(intt const& o) const noexcept
   { // wbits per iteration
     using H = std::conditional_t<
@@ -780,77 +851,6 @@ struct intt
     }
     else
     {
-      return nega == negb ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto glddiv(intt const& o) const noexcept
-  {
-    enum : std::size_t { M = 2 * N };
-
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
-    intt q;
-
-    {
-      intt<T, M, F...> a{nega ? -*this : *this, direct{}};
-      intt<T, M, F...> b;
-
-      std::size_t C;
-
-      if (negb)
-      {
-        auto const tmp(-o);
-
-        b = {tmp, direct{}};
-        C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
-      }
-
-      lshl(b, C);
-
-      {
-        auto const k(
-          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-        );
-
-        for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
-          end != b;)
-        {
-          auto const l(k - b);
-
-          b = newmul<N>(b, l);
-          a = newmul<N>(a, l);
-        }
-      }
-
-      q = lshr(a, N * wbits - C);
-    }
-
-    //
-    auto const b(negb ? -o : o);
-
-    if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
-    {
-      if (ucompare(r, b) >= 0)
-      {
-        r -= b;
-      }
-
-      return nega ? -r : r;
-    }
-    else
-    {
-      if (ucompare(r, b) >= 0)
-      {
-        ++q;
-      }
-
       return nega == negb ? q : -q;
     }
   }
