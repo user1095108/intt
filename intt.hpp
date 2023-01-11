@@ -813,9 +813,7 @@ struct intt
 
       lshl(b, C);
 
-      auto a(
-        detail::coeff<lshl(intt<T, M, F...>{direct{}, T{1}}, wbits * N)>()
-      );
+      auto a(detail::coeff<wshl<N>(intt<T, M, F...>{direct{}, T{1}})>());
 
       {
         auto const k(
