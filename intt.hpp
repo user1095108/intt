@@ -746,13 +746,13 @@ struct intt
 
         //
         T h(a.v_[k] / B);
-        if (h > dmax) h = dmax;
+        if (h >> hwbits) h = dmax;
 
         for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
 
         //
         T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
-        if (l > dmax) l = dmax;
+        if (l >> hwbits) l = dmax;
 
         for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
 
