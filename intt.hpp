@@ -814,40 +814,52 @@ struct intt
       lshl(b, C);
 
       auto a(
-        detail::coeff<lshl(intt<T, M, F...>{direct{}, T{1}}, wbits * N + 1)>()
+        detail::coeff<lshl(intt<T, M, F...>{direct{}, T{1}}, wbits * N)>()
       );
 
-      auto const k(
-        detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-      );
-
-      for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
-        end != b;)
       {
-        auto const l(k - b);
+        auto const k(
+          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+        );
 
-        b = newmul<N>(b, l);
-        a = newmul<N>(a, l);
+        for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
+          end != b;)
+        {
+          auto const l(k - b);
+
+          b = newmul<N>(b, l);
+          a = newmul<N>(a, l);
+        }
       }
 
       q = lshr(
           newmul<N>(
             intt<T, M, F...>{nega ? -*this : *this, direct{}},
-            ++newmul<N>(a, k - b)
+            a
           ),
-          N * wbits - C + 1
+          N * wbits - C
         );
     }
 
     //
-    if constexpr(Rem)
+    auto const b(negb ? -o : o);
+
+    if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
     {
-      auto const r((nega ? -*this : *this) - q * (negb ? -o : o));
+      if (ucompare(r, b) >= 0)
+      {
+        r -= b;
+      }
 
       return nega ? -r : r;
     }
     else
     {
+      if (ucompare(r, b) >= 0)
+      {
+        ++q;
+      }
+
       return nega == negb ? q : -q;
     }
   }
