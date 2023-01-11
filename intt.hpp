@@ -485,10 +485,14 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          if constexpr(I)
+          if constexpr(I && (I < M))
           {
-            s = c + a + (I < M ? o.v_[I] : T{});
+            s = c + a + o.v_[I];
             c = c ? s <= a : s < a;
+          }
+          else if constexpr(I >= M)
+          {
+            c = (s = c + a) < c;
           }
           else
           {
@@ -517,10 +521,14 @@ struct intt
           auto& d(r.v_[I]);
           auto const& a(v_[I]);
 
-          if constexpr(I)
+          if constexpr(I && (I < M))
           {
-            d = a - (I < M ? o.v_[I] : T{}) - c;
+            d = a - o.v_[I] - c;
             c = c ? d >= a : d > a;
+          }
+          else if constexpr(I >= M)
+          {
+            c = (d = a - c) > a;
           }
           else
           {
@@ -1497,9 +1505,6 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-#ifndef __clang__
-    (v, ...);
-#endif // __clang__
     bool c;
 
     (
@@ -1539,9 +1544,16 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
 
   enum : std::size_t { N = U::words };
 
-  bool c{};
+  bool c;
 
-  for (auto i{I}; i != N; ++i)
+  {
+    auto& s(a.v_[I]);
+    auto const b(detail::get_word<T>(0, v...));
+
+    c = (s += b) < b;
+  }
+
+  for (auto i{I + 1}; i != N; ++i)
   {
     auto& s(a.v_[i]);
     auto const b(detail::get_word<T>(i - I, v...));
@@ -1564,9 +1576,6 @@ constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-#ifndef __clang__
-    (v, ...);
-#endif // __clang__
     bool c;
 
     (
