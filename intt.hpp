@@ -26,6 +26,7 @@ enum feat
 {
   NAIMUL,
   SEQMUL,
+  GLDDIV,
   NAIDIV,
   NEWDIV,
   SEQDIV,
@@ -556,7 +557,11 @@ struct intt
 
   constexpr auto operator/(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(NEWDIV))
+    if constexpr(detail::contains<F...>(GLDDIV))
+    {
+      return glddiv<false>(o);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
     {
       return newdiv<false>(o);
     }
@@ -572,7 +577,11 @@ struct intt
 
   constexpr auto operator%(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(NEWDIV))
+    if constexpr(detail::contains<F...>(GLDDIV))
+    {
+      return glddiv<true>(o);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
     {
       return newdiv<true>(o);
     }
@@ -768,6 +777,86 @@ struct intt
       lshr(a, C);
 
       return nega ? -intt(a, direct{}) : intt(a, direct{});
+    }
+    else
+    {
+      return nega == negb ? q : -q;
+    }
+  }
+
+  template <bool Rem = false>
+  constexpr auto glddiv(intt const& o) const noexcept
+  {
+    enum : std::size_t { M = 2 * N };
+
+    auto const nega(is_neg(*this)), negb(is_neg(o));
+
+    intt<T, M, F...> a{nega ? -*this : *this, direct{}};
+
+    {
+      intt<T, M, F...> b;
+
+      std::size_t C;
+
+      if (negb)
+      {
+        auto const tmp(-o);
+
+        b = {tmp, direct{}};
+        C = clz(tmp);
+      }
+      else
+      {
+        b = {o, direct{}};
+        C = clz(o);
+      }
+
+      lshl(b, C);
+
+      auto const k(
+        detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+      );
+
+      while (
+        std::any_of(
+          std::make_reverse_iterator(&b.v_[N]),
+          std::make_reverse_iterator(&b.v_[0]),
+          [](auto&& a) noexcept { return a != ~T{}; }
+        )
+      )
+      {
+        auto const l(k - b);
+
+        b = newmul<N>(b, l);
+        a = newmul<N>(a, l);
+      }
+
+      lshr(a, N * wbits - C);
+    }
+
+    //
+    intt const a0{nega ? -*this : *this, direct{}};
+    intt const b0{negb ? -o : o, direct{}};
+
+    intt q(a, direct{});
+    auto r(q * b0);
+
+    if (r <= a0 - b0)
+    {
+      ++q;
+
+      if constexpr(Rem)
+      {
+        r += b0;
+      }
+    }
+
+    //
+    if constexpr(Rem)
+    {
+      r = a0 - r;
+
+      return nega ? -r : r;
     }
     else
     {
