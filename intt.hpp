@@ -794,6 +794,7 @@ struct intt
     intt q;
 
     {
+      intt<T, M, F...> a{nega ? -*this : *this, direct{}};
       intt<T, M, F...> b;
 
       std::size_t C;
@@ -813,8 +814,6 @@ struct intt
 
       lshl(b, C);
 
-      auto a(detail::coeff<wshl<N>(intt<T, M, F...>{direct{}, T{1}})>());
-
       {
         auto const k(
           detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
@@ -830,13 +829,7 @@ struct intt
         }
       }
 
-      q = lshr(
-          newmul<N>(
-            intt<T, M, F...>{nega ? -*this : *this, direct{}},
-            a
-          ),
-          N * wbits - C
-        );
+      q = lshr(a, N * wbits - C);
     }
 
     //
