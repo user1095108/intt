@@ -9,7 +9,7 @@ int main()
 //using D = intt::intt<std::uint8_t, 16>;
 //using D = intt::intt<std::uint16_t, 8>;
 //using D = intt::intt<std::uint32_t, 4>;
-  using D = intt::intt<std::uint64_t, 2, intt::NEWDIV>;
+  using D = intt::intt<std::uint64_t, 2>;
 
   std::cout << D::min() << std::endl;
   std::cout << D::max() << std::endl;
