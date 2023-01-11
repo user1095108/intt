@@ -705,7 +705,7 @@ struct intt
     >;
 
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-    enum : H { dmax = (T(1) << hwbits) - 1 };
+    enum : T { dmax = (T(1) << hwbits) - 1 };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
@@ -744,21 +744,20 @@ struct intt
       {
         --k;
 
-        auto h(std::min(H(dmax), H(a.v_[k] / B)));
+        //
+        T h(a.v_[k] / B);
+        if (h > dmax) h = dmax;
 
         for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
 
-        auto l(
-          std::min(
-            H(dmax),
-            H((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B)
-          )
-        );
+        //
+        T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
+        if (l > dmax) l = dmax;
 
         for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
 
         //
-        q.v_[k - N] = T(h) << hwbits | l;
+        q.v_[k - N] = l | h << hwbits;
       }
       while (N != k);
     }
