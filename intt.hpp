@@ -813,16 +813,15 @@ struct intt
 
       lshl(b, C);
 
-      auto const k(
-        detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-      );
-
-      while (
+      for (
+        auto const k(
+          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+        );
         std::any_of(
           std::make_reverse_iterator(&b.v_[N]),
           std::make_reverse_iterator(&b.v_[0]),
           [](auto&& a) noexcept { return a != T(~T{}); }
-        )
+        );
       )
       {
         auto const l(k - b);
