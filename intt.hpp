@@ -794,7 +794,7 @@ struct intt
     intt q;
 
     {
-      intt<T, M, F...> a{nega ? -*this : *this, direct{}}, b;
+      intt<T, M, F...> b;
 
       std::size_t C;
 
@@ -813,16 +813,16 @@ struct intt
 
       lshl(b, C);
 
-      for (
-        auto const k(
-          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-        );
-        std::any_of(
-          std::make_reverse_iterator(&b.v_[N]),
-          std::make_reverse_iterator(&b.v_[0]),
-          [](auto&& a) noexcept { return a != T(~T{}); }
-        );
-      )
+      auto a(
+        detail::coeff<lshl(intt<T, M, F...>{direct{}, T{1}}, wbits * N + 1)>()
+      );
+
+      auto const k(
+        detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
+      );
+
+      for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
+        end != b;)
       {
         auto const l(k - b);
 
@@ -830,29 +830,19 @@ struct intt
         a = newmul<N>(a, l);
       }
 
-      q = lshr(a, N * wbits - C);
-    }
-
-    //
-    intt const a0{nega ? -*this : *this, direct{}};
-    intt const b0{negb ? -o : o, direct{}};
-
-    auto r(q * b0);
-
-    if (r <= a0 - b0)
-    {
-      ++q;
-
-      if constexpr(Rem)
-      {
-        r += b0;
-      }
+      q = lshr(
+          newmul<N>(
+            intt<T, M, F...>{nega ? -*this : *this, direct{}},
+            ++newmul<N>(a, k - b)
+          ),
+          N * wbits - C + 1
+        );
     }
 
     //
     if constexpr(Rem)
     {
-      r = a0 - r;
+      auto const r((nega ? -*this : *this) - q * (negb ? -o : o));
 
       return nega ? -r : r;
     }
@@ -998,7 +988,7 @@ struct intt
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        return ((v_[N - 1 - I] == o.v_[N - 1 - I]) && ...);
+        return ((v_[I] == o.v_[I]) && ...);
       }(std::make_index_sequence<N>());
   }
 
@@ -1579,7 +1569,7 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t S>
-constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
+constexpr void add_words(intt_type auto&& a, auto&& ...v) noexcept
   requires(bool(sizeof...(v)))
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1621,7 +1611,7 @@ constexpr void add_words(intt_type auto& a, auto&& ...v) noexcept
   }(std::make_index_sequence<N - S>());
 }
 
-constexpr void add_words(intt_type auto& a, std::size_t const I,
+constexpr void add_words(intt_type auto&& a, std::size_t const I,
   auto&& ...v) noexcept
   requires(bool(sizeof...(v)))
 {
@@ -1650,7 +1640,7 @@ constexpr void add_words(intt_type auto& a, std::size_t const I,
 }
 
 template <std::size_t S>
-constexpr void sub_words(intt_type auto& a, auto&& ...v) noexcept
+constexpr void sub_words(intt_type auto&& a, auto&& ...v) noexcept
   requires(bool(sizeof...(v)))
 {
   using U = std::remove_cvref_t<decltype(a)>;
