@@ -791,10 +791,10 @@ struct intt
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt<T, M, F...> a{nega ? -*this : *this, direct{}};
+    intt q;
 
     {
-      intt<T, M, F...> b;
+      intt<T, M, F...> a{nega ? -*this : *this, direct{}}, b;
 
       std::size_t C;
 
@@ -821,7 +821,7 @@ struct intt
         std::any_of(
           std::make_reverse_iterator(&b.v_[N]),
           std::make_reverse_iterator(&b.v_[0]),
-          [](auto&& a) noexcept { return a != ~T{}; }
+          [](auto&& a) noexcept { return a != T(~T{}); }
         )
       )
       {
@@ -831,14 +831,13 @@ struct intt
         a = newmul<N>(a, l);
       }
 
-      lshr(a, N * wbits - C);
+      q = lshr(a, N * wbits - C);
     }
 
     //
     intt const a0{nega ? -*this : *this, direct{}};
     intt const b0{negb ? -o : o, direct{}};
 
-    intt q(a, direct{});
     auto r(q * b0);
 
     if (r <= a0 - b0)
