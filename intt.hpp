@@ -689,14 +689,9 @@ struct intt
         }(),
         ...
       );
-    }(std::make_index_sequence<wbits * N - 1>());
+    }(std::make_index_sequence<wbits * N>());
 
-    if (is_neg(o))
-    {
-      r -= A;
-    }
-
-    return intt(lshr<1>(r), direct{});
+    return intt(r, direct{});
   }
 
   //
