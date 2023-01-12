@@ -1706,6 +1706,19 @@ constexpr auto seqsqrt(intt_type auto const& a) noexcept
   return rshifted(Q);
 }
 
+constexpr auto slwsqrt(intt_type auto a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  //
+  U i{};
+
+  for (U n(1); a >= n; a -= n, n += 2, ++i);
+
+  //
+  return i;
+}
+
 //
 template <typename T>
 constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
