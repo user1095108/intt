@@ -71,7 +71,7 @@ struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
 template <auto ...F>
 consteval auto contains(auto const f) noexcept
 {
-  return ((f == F) || ...);
+  return void(f), ((f == F) || ...);
 }
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
