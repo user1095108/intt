@@ -780,7 +780,7 @@ struct intt
     >;
 
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-    enum : T { dmax = H(~H{}) };
+    enum : T { dmax = (T(1) << hwbits) - 1 };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
