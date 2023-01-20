@@ -903,6 +903,10 @@ struct intt
         }
         while (N != k);
       }
+      else
+      {
+        if constexpr(Rem) return *this;
+      }
     }
 
     //
@@ -1040,7 +1044,7 @@ struct intt
       }
       else
       {
-        if constexpr(Rem) wshl<N>(r);
+        if constexpr(Rem) return *this;
       }
     }
 
