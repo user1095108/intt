@@ -749,10 +749,7 @@ struct intt
       (
         [&]() noexcept
         {
-          if (test_bit<I>(o))
-          {
-            r += A;
-          }
+          if (test_bit<I>(o)) r += A;
 
           lshr<1>(r);
         }(),
