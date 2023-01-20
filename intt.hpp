@@ -1598,7 +1598,7 @@ constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
 
   std::size_t I{};
 
-  for (auto const k(N - M); I != k; ++I) a.v_[I] = a.v_[I + M];
+  for (auto const J(N - M); I != J; ++I) a.v_[I] = a.v_[I + M];
   for (; I != N; ++I) a.v_[I] = {};
 
   return a;
