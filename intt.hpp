@@ -275,8 +275,6 @@ struct intt
   INTT_ASSIGNMENT__(&)
   INTT_ASSIGNMENT__(|)
   INTT_ASSIGNMENT__(^)
-  INTT_ASSIGNMENT__(+)
-  INTT_ASSIGNMENT__(-)
   INTT_ASSIGNMENT__(*)
   INTT_ASSIGNMENT__(/)
   INTT_ASSIGNMENT__(%)
@@ -289,6 +287,74 @@ struct intt
   constexpr auto& operator>>=(std::integral auto const i) noexcept
   {
     return *this = *this >> i;
+  }
+
+  template <std::size_t M, enum feat ...FF>
+  constexpr auto& operator+=(intt<T, M, FF...> const& o) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      bool c;
+
+      (
+        [&]() noexcept
+        {
+          auto& s(v_[I]);
+          auto const& b(o.v_[I]);
+
+          if constexpr(I && (I < M))
+          {
+            s += c + b;
+            c = c ? s <= b : s < b;
+          }
+          else if constexpr(I >= M)
+          {
+            c = (s += c) < c;
+          }
+          else
+          {
+            c = (s += b) < b;
+          }
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+
+    return *this;
+  }
+
+  template <std::size_t M, enum feat ...FF>
+  constexpr auto& operator-=(intt<T, M, FF...> const& o) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      bool c;
+
+      (
+        [&]() noexcept
+        {
+          auto& d(v_[I]);
+          auto const a(d);
+
+          if constexpr(I && (I < M))
+          {
+            d = a - o.v_[I] - c;
+            c = c ? d >= a : d > a;
+          }
+          else if constexpr(I >= M)
+          {
+            c = (d -= c) > a;
+          }
+          else
+          {
+            c = (d -= o.v_[I]) > a;
+          }
+        }(),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+
+    return *this;
   }
 
   //
@@ -457,12 +523,12 @@ struct intt
   {
     intt r;
 
+    auto& s(r.v_);
+    auto const& a(v_);
+
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       bool c{true};
-
-      auto& s(r.v_);
-      auto const& a(v_);
 
       ((c = (s[I] = c + T(~a[I])) < c), ...);
     }(std::make_index_sequence<N>());
