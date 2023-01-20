@@ -1604,7 +1604,6 @@ constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
   return a;
 }
 
-
 constexpr auto lshifted(intt_type auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
