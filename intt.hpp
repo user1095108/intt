@@ -843,13 +843,11 @@ struct intt
     enum : T { dmax = (T(1) << hwbits) - 1 };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
-
     intt q{};
 
     //
-    intt<T, M, F...> a;
-
     std::size_t CB;
+    intt<T, M, F...> a;
 
     {
       std::size_t CA;
@@ -874,8 +872,7 @@ struct intt
 
       if (CB >= CA)
       {
-        lshl(b, CB);
-        wshl<N>(b);
+        wshl<N>(lshl(b, CB));
 
         H const B(b.v_[M - 1] >> hwbits);
 
@@ -902,10 +899,6 @@ struct intt
           q.v_[k - N] = l | h << hwbits;
         }
         while (N != k);
-      }
-      else
-      {
-        if constexpr(Rem) return *this;
       }
     }
 
@@ -995,12 +988,12 @@ struct intt
   template <bool Rem = false>
   constexpr auto seqdiv(intt const& o) const noexcept
   {
-    intt<T, 2 * N, F...> r;
+    auto const nega(is_neg(*this)), negb(is_neg(o));
     intt q{}; // needed due to clz bit skipping
 
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
     //
+    intt<T, 2 * N, F...> r;
+
     {
       decltype(r) D;
 
@@ -1044,7 +1037,7 @@ struct intt
       }
       else
       {
-        if constexpr(Rem) return *this;
+        wshl<N>(r);
       }
     }
 
@@ -1568,6 +1561,20 @@ constexpr auto& wshl(intt_type auto&& a) noexcept requires(bool(M))
       ...
     );
   }(std::make_index_sequence<N>());
+
+  return a;
+}
+
+constexpr auto& wshl(intt_type auto&& a, std::size_t const M) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+
+  enum : std::size_t {N = U::words};
+
+  std::size_t I{};
+
+  for (auto const J(N - M); I != J; ++I) a.v_[I + M] = a.v_[I];
+  for (; I != N; ++I) a.v_[N - 1 - I] = {};
 
   return a;
 }
