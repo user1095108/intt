@@ -1001,22 +1001,30 @@ struct intt
 
     //
     {
-      auto D(lshifted(negb ? -o : o));
-      auto const CB(clz(D));
+      decltype(r) D;
 
-      std::size_t CR;
+      std::size_t CB;
+
+      {
+        auto const tmp(negb ? -o : o);
+
+        CB = clz(tmp);
+        D = lshifted(tmp);
+      }
+
+      std::size_t CA;
 
       {
         auto const tmp(nega ? -*this : *this);
 
-        CR = clz(tmp);
+        CA = clz(tmp);
         r = {tmp, direct{}};
       }
 
       // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
-      if (CB >= CR)
+      if (CB >= CA)
       {
-        auto i(CB - CR + 1);
+        auto i(CB - CA + 1);
 
         lshl(r, N * wbits - i);
 
@@ -1035,7 +1043,7 @@ struct intt
       }
       else
       {
-        wshl<N>(r);
+        if constexpr(Rem) wshl<N>(r);
       }
     }
 
@@ -1585,7 +1593,6 @@ constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
 constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
 
   enum : std::size_t {N = U::words};
 
