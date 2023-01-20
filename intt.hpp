@@ -300,10 +300,11 @@ struct intt
         [&]() noexcept
         {
           auto& s(v_[I]);
-          auto const& b(o.v_[I]);
 
           if constexpr(I && (I < M))
           {
+            auto const& b(o.v_[I]);
+
             s += c + b;
             c = c ? s <= b : s < b;
           }
@@ -313,6 +314,8 @@ struct intt
           }
           else
           {
+            auto const& b(o.v_[I]);
+
             c = (s += b) < b;
           }
         }(),
@@ -776,17 +779,11 @@ struct intt
 
       std::size_t C;
 
-      if (negb)
       {
-        auto const tmp(-o);
+        auto const tmp(negb ? -o : o);
 
-        b = {tmp, direct{}};
         C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
+        b = {tmp, direct{}};
       }
 
       lshl(b, C);
@@ -850,63 +847,71 @@ struct intt
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
-    intt<T, M, F...> a{nega ? -*this : *this, direct{}};
-
-    intt q;
+    intt q{};
 
     //
-    std::size_t C;
+    intt<T, M, F...> a;
+
+    std::size_t CB;
 
     {
+      std::size_t CA;
+
+      {
+        auto const tmp(nega ? -*this : *this);
+
+        CA = clz(tmp);
+        a = {tmp, direct{}};
+      }
+
       intt<T, M, F...> b;
 
-      if (negb)
       {
-        auto const tmp(-o);
+        auto const tmp(negb ? -o : o);
 
+        CB = clz(tmp);
         b = {tmp, direct{}};
-        C = clz(tmp);
       }
-      else
+
+      lshl(a, CB);
+
+      if (CB >= CA)
       {
-        b = {o, direct{}};
-        C = clz(o);
+        lshl(b, CB);
+        wshl<N>(b);
+
+        H const B(b.v_[M - 1] >> hwbits);
+
+        auto k(N + (CB - CA) / wbits + 1);
+        wshr(b, M - k);
+
+        do
+        {
+          --k;
+
+          //
+          T h(a.v_[k] / B);
+          if (h >> hwbits) h = dmax;
+
+          for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+
+          //
+          T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
+          if (l >> hwbits) l = dmax;
+
+          for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+
+          //
+          q.v_[k - N] = l | h << hwbits;
+        }
+        while (N != k);
       }
-
-      lshl(a, C);
-      lshl(b, C);
-      wshl<N>(b);
-
-      H const B(b.v_[M - 1] >> hwbits);
-
-      std::size_t k(M);
-
-      do
-      {
-        --k;
-
-        //
-        T h(a.v_[k] / B);
-        if (h >> hwbits) h = dmax;
-
-        for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
-
-        //
-        T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
-        if (l >> hwbits) l = dmax;
-
-        for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
-
-        //
-        q.v_[k - N] = l | h << hwbits;
-      }
-      while (N != k);
     }
 
     //
     if constexpr(Rem)
     {
-      lshr(a, C);
+      lshr(a, CB);
 
       return nega ? -intt(a, direct{}) : intt(a, direct{});
     }
@@ -936,17 +941,11 @@ struct intt
 
       intt<T, M, F...> b;
 
-      if (negb)
       {
-        auto const tmp(-o);
+        auto const tmp(negb ? -o : o);
 
-        b = {tmp, direct{}};
         C = clz(tmp);
-      }
-      else
-      {
-        b = {o, direct{}};
-        C = clz(o);
+        b = {tmp, direct{}};
       }
 
       lshl(b, C);
@@ -996,41 +995,47 @@ struct intt
   constexpr auto seqdiv(intt const& o) const noexcept
   {
     intt<T, 2 * N, F...> r;
-    intt q{}; // needed due to clz
+    intt q{}; // needed due to clz bit skipping
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
 
     //
     {
-      auto const D(lshifted(negb ? -o : o));
+      auto D(lshifted(negb ? -o : o));
+      auto const CB(clz(D));
 
       std::size_t CR;
 
-      if (nega)
       {
-        auto const tmp(-*this);
+        auto const tmp(nega ? -*this : *this);
 
         CR = clz(tmp);
         r = {tmp, direct{}};
       }
+
+      // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
+      if (CB >= CR)
+      {
+        auto i(CB - CR + 1);
+
+        lshl(r, N * wbits - i);
+
+        do
+        {
+          --i;
+
+          if (ucompare(lshl<1>(r), D) >= 0)
+          {
+            r -= D;
+
+            set_bit(q, i);
+          }
+        }
+        while (i);
+      }
       else
       {
-        CR = clz(*this);
-        r = {*this, direct{}};
-      }
-
-      lshl(r, CR);
-
-      for (auto i(N * wbits - CR); i;)
-      {
-        --i;
-
-        if (ucompare(lshl<1>(r), D) >= 0)
-        {
-          r -= D;
-
-          set_bit(q, i);
-        }
+        wshl<N>(r);
       }
     }
 
@@ -1576,6 +1581,22 @@ constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
 
   return a;
 }
+
+constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  using T = typename U::value_type;
+
+  enum : std::size_t {N = U::words};
+
+  std::size_t I{};
+
+  for (auto const k(N - M); I != k; ++I) a.v_[I] = a.v_[I + M];
+  for (; I != N; ++I) a.v_[I] = {};
+
+  return a;
+}
+
 
 constexpr auto lshifted(intt_type auto const& a) noexcept
 {
