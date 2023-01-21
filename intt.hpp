@@ -1037,7 +1037,7 @@ struct intt
       }
       else if constexpr(Rem)
       {
-        wshl<N>(r);
+        return *this;
       }
     }
 
