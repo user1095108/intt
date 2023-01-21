@@ -1073,7 +1073,7 @@ struct intt
   //
   static constexpr auto max() noexcept
   {
-    return detail::coeff<-++min()>();
+    return detail::coeff<lshr<1>(~intt{})>();
   }
 
   static constexpr auto min() noexcept
