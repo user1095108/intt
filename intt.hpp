@@ -1035,7 +1035,7 @@ struct intt
         }
         while (i);
       }
-      else
+      else if constexpr(Rem)
       {
         wshl<N>(r);
       }
