@@ -1952,20 +1952,12 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 
   //
   {
-    auto const f{
-      is_neg(a) ?
-        [](signed char const a) noexcept -> signed char { return -a; } :
-        [](signed char const a) noexcept -> signed char { return a; }
-    };
-
     auto const k(detail::coeff<decltype(a)(10)>());
 
     do
     {
-      std::pair const p(a / k, a % k);
-      a = std::get<0>(p);
-
-      data[--i] = '0' + f(std::get<1>(p));
+      data[--i] = '0' + std::abs((signed char)(a % k));
+      a /= k;
     }
     while (a);
 
