@@ -845,10 +845,10 @@ struct intt
     auto const nega(is_neg(*this)), negb(is_neg(o));
     intt q{};
 
-    //
     std::size_t CB;
     intt<T, M, F...> a;
 
+    //
     {
       std::size_t CA;
 
@@ -989,11 +989,11 @@ struct intt
   constexpr auto seqdiv(intt const& o) const noexcept
   {
     auto const nega(is_neg(*this)), negb(is_neg(o));
-    intt q{}; // needed due to clz bit skipping
+    intt q{};
 
-    //
     intt<T, 2 * N, F...> r;
 
+    //
     {
       decltype(r) D;
 
@@ -1951,29 +1951,31 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   auto i(std::size(data));
 
   //
-  if (auto const k(detail::coeff<decltype(a)(direct{}, T(10))>()); is_neg(a))
   {
+    auto const f{
+      is_neg(a) ?
+        [](decltype(a) const& a) noexcept -> signed char
+        {
+          return -(signed char)(a);
+        } :
+        [](decltype(a) const& a) noexcept -> signed char
+        {
+          return (signed char)(a);
+        }
+    };
+
+    auto const k(detail::coeff<decltype(a)(10)>());
+
     do
     {
       std::pair const p(a / k, a % k);
       a = std::get<0>(p);
 
-      data[--i] = '0' - (signed char)(std::get<1>(p));
+      data[--i] = '0' + f(std::get<1>(p));
     }
     while (a);
 
-    data[--i] = '-';
-  }
-  else
-  {
-    do
-    {
-      std::pair const p(a / k, a % k);
-      a = std::get<0>(p);
-
-      data[--i] = '0' + (signed char)(std::get<1>(p));
-    }
-    while (a);
+    if (is_neg(a)) { data[--i] = '-'; }
   }
 
   //
