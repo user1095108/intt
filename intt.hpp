@@ -1940,10 +1940,10 @@ auto to_raw(intt_type auto const& a)
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
-  auto const nega(is_neg(a));
+  auto const posa(!is_neg(a));
 
   char data[detail::num_digits(N * decltype(a)::wbits - 1) + 1];
-  auto i(std::size(data));
+  auto i(std::size(data) - 1);
 
   //
   {
@@ -1951,13 +1951,13 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 
     do
     {
-      data[--i] = '0' + std::abs((signed char)(a % k));
+      data[i--] = '0' + std::abs((signed char)(a % k));
       a /= k;
     }
     while (a);
 
-    data[i - 1] = '-';
-    i -= nega;
+    data[i] = '-';
+    i += posa;
   }
 
   //
