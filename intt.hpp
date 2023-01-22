@@ -1947,6 +1947,8 @@ auto to_raw(intt_type auto const& a)
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 {
+  auto const nega(is_neg(a));
+
   char data[detail::num_digits(N * decltype(a)::wbits - 1) + 1];
   auto i(std::size(data));
 
@@ -1961,7 +1963,8 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
     }
     while (a);
 
-    if (is_neg(a)) { data[--i] = '-'; }
+    data[i - 1] = '-';
+    i -= nega;
   }
 
   //
