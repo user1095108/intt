@@ -808,19 +808,13 @@ struct intt
 
     if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
     {
-      if (ucompare(r, b) >= 0)
-      {
-        r -= b;
-      }
+      if (ucompare(r, b) >= 0) r -= b;
 
       return nega ? -r : r;
     }
     else
     {
-      if (ucompare(r, b) >= 0)
-      {
-        ++q;
-      }
+      if (ucompare(r, b) >= 0) ++q;
 
       return nega == negb ? q : -q;
     }
