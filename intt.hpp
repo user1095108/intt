@@ -1954,14 +1954,8 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   {
     auto const f{
       is_neg(a) ?
-        [](decltype(a) const& a) noexcept -> signed char
-        {
-          return -(signed char)(a);
-        } :
-        [](decltype(a) const& a) noexcept -> signed char
-        {
-          return (signed char)(a);
-        }
+        [](signed char const a) noexcept -> signed char { return -a; } :
+        [](signed char const a) noexcept -> signed char { return a; }
     };
 
     auto const k(detail::coeff<decltype(a)(10)>());
