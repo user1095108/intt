@@ -82,40 +82,6 @@ consteval auto contains(auto const f) noexcept
   return void(f), ((f == F) || ...);
 }
 
-template <std::size_t, typename T>
-constexpr auto get_word() noexcept
-{
-  return T{};
-}
-
-template <std::size_t I, typename T>
-constexpr decltype(auto) get_word(auto&& a, auto&& ...b) noexcept
-{
-  if constexpr(I)
-  {
-    return get_word<I - 1, T>(std::forward<decltype(b)>(b)...);
-  }
-  else
-  {
-    return a;
-  }
-}
-
-template <typename T>
-constexpr auto get_word(std::size_t) noexcept
-{
-  return T{};
-}
-
-template <typename T>
-constexpr decltype(auto) get_word(std::size_t const i, auto&& a,
-  auto&& ...b) noexcept
-{
-  return i ?
-    get_word<T>(i - 1, std::forward<decltype(b)>(b)...) :
-    std::forward<decltype(a)>(a);
-}
-
 consteval std::size_t num_digits(std::size_t const N) noexcept
 {
   return N * .30102999566398119521 + 1.; // 2^N <= 10^J, J >= N * log10(2)
@@ -504,12 +470,12 @@ struct intt
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
-    add_words<0>(*this, T(1)); return *this;
+    add_words<0>(*this, {T(1)}); return *this;
   }
 
   constexpr auto& operator--() noexcept
   {
-    sub_words<0>(*this, T(1)); return *this;
+    sub_words<0>(*this, {T(1)}); return *this;
   }
 
   constexpr auto operator++(int) noexcept
@@ -702,8 +668,8 @@ struct intt
           }
 
           S % 2 ?
-            add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
-            add_words(r, S / 2, pp);
+            add_words(r, S / 2, {pp << hwbits, pp >> hwbits}) :
+            add_words(r, S / 2, {pp});
         }
         while (M != ++S);
       }
@@ -732,7 +698,7 @@ struct intt
         {
           D const pp(D(v_[i]) * o.v_[S - i]);
 
-          add_words(r, S, T(pp), T(pp >> wbits));
+          add_words(r, S, {T(pp), T(pp >> wbits)});
         }
         while (N != ++S);
       }
@@ -1251,15 +1217,15 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 
           if constexpr((S % 2) && (M - 1 == S))
           {
-            add_words<S / 2>(r, pp << hwbits);
+            add_words<S / 2>(r, {pp << hwbits});
           }
           else if constexpr(S % 2)
           {
-            add_words<S / 2>(r, pp << hwbits, pp >> hwbits);
+            add_words<S / 2>(r, {pp << hwbits, pp >> hwbits});
           }
           else
           {
-            add_words<S / 2>(r, pp);
+            add_words<S / 2>(r, {pp});
           }
         }(),
         ...
@@ -1291,11 +1257,11 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 
           if constexpr(N - 1 == S)
           {
-            add_words<S>(r, T(pp));
+            add_words<S>(r, {T(pp)});
           }
           else
           {
-            add_words<S>(r, T(pp), T(pp >> wbits));
+            add_words<S>(r, {T(pp), T(pp >> wbits)});
           }
         }(),
         ...
@@ -1343,8 +1309,8 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
         auto const S(i + j);
 
         S % 2 ?
-          add_words(r, S / 2, pp << hwbits, pp >> hwbits) :
-          add_words(r, S / 2, pp);
+          add_words(r, S / 2, {pp << hwbits, pp >> hwbits}) :
+          add_words(r, S / 2, {pp});
       }
     }
   }
@@ -1370,7 +1336,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
       {
         D const pp(D(a.v_[i]) * b.v_[j]);
 
-        add_words(r, i + j, T(pp), T(pp >> U::wbits));
+        add_words(r, i + j, {T(pp), T(pp >> U::wbits)});
       }
     }
   }
@@ -1678,15 +1644,14 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
   return std::strong_ordering::equal;
 }
 
-template <std::size_t S>
-constexpr void add_words(intt_type auto&& a, auto&& ...v) noexcept
-  requires(bool(sizeof...(v)))
+template <std::size_t S, typename T, std::size_t M>
+constexpr void add_words(intt_type auto&& a, T const (&&w)[M]) noexcept
+  requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
+  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
-
   static_assert(S < N);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -1700,13 +1665,13 @@ constexpr void add_words(intt_type auto&& a, auto&& ...v) noexcept
 
         if constexpr(!I)
         {
-          auto const b(detail::get_word<I, T>(v...));
+          auto const b(*w);
 
           c = (s += b) < b;
         }
-        else if constexpr(I < sizeof...(v))
+        else if constexpr(I < M)
         {
-          auto const b(detail::get_word<I, T>(v...));
+          auto const b(w[I]);
 
           s += c + b;
           c = c ? s <= b : s < b;
@@ -1721,42 +1686,46 @@ constexpr void add_words(intt_type auto&& a, auto&& ...v) noexcept
   }(std::make_index_sequence<N - S>());
 }
 
+template <typename T, std::size_t M>
 constexpr void add_words(intt_type auto&& a, std::size_t const I,
-  auto&& ...v) noexcept
-  requires(bool(sizeof...(v)))
+  T const (&&w)[M]) noexcept
+  requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
+  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
 
   bool c;
 
   {
-    auto const b(detail::get_word<0, T>(v...));
+    auto const b(*w);
 
     c = (a.v_[I] += b) < b;
   }
 
-  for (auto i{I + 1}; i != N; ++i)
+  auto i(I + 1);
+
+  for (std::size_t j{1}; (M != j) && (N != i); ++i, ++j)
   {
     auto& s(a.v_[i]);
-    auto const b(detail::get_word<T>(i - I, v...));
+    auto const b(w[j]);
 
     s += c + b;
     c = c ? s <= b : s < b;
   }
+
+  for (; i != N; ++i) c = (a.v_[i] += c) < c;
 }
 
-template <std::size_t S>
-constexpr void sub_words(intt_type auto&& a, auto&& ...v) noexcept
-  requires(bool(sizeof...(v)))
+template <std::size_t S, typename T, std::size_t M>
+constexpr void sub_words(intt_type auto&& a, T const (&&w)[M]) noexcept
+  requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
+  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
-
   static_assert(S < N);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -1771,11 +1740,11 @@ constexpr void sub_words(intt_type auto&& a, auto&& ...v) noexcept
 
         if constexpr(!I)
         {
-          c = (d -= detail::get_word<I, T>(v...)) > a;
+          c = (d -= *w) > a;
         }
-        else if constexpr(I < sizeof...(v))
+        else if constexpr(I < M)
         {
-          d = d - detail::get_word<I, T>(v...) - c;
+          d = d - w[I] - c;
           c = c ? d >= a : d > a;
         }
         else
