@@ -49,6 +49,8 @@ static constexpr auto is_intt_v{is_intt<T>::value};
 template <typename T>
 concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
 
+template <auto C> static constexpr auto coeff() noexcept { return C; }
+
 namespace detail
 {
 
@@ -79,8 +81,6 @@ consteval auto contains(auto const f) noexcept
 {
   return void(f), ((f == F) || ...);
 }
-
-template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 template <std::size_t, typename T>
 constexpr auto get_word() noexcept
@@ -789,12 +789,9 @@ struct intt
       lshl(b, C);
 
       {
-        auto const k(
-          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-        );
+        auto const k(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
 
-        for (auto const end(detail::coeff<wshr<N>(~intt<T, M, F...>{})>());
-          end != b;)
+        for (auto const end(coeff<wshr<N>(~intt<T, M, F...>{})>()); end != b;)
         {
           auto const l(k - b);
 
@@ -941,17 +938,15 @@ struct intt
 
       lshl(b, C);
 
-      //auto xn(detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
+      //auto xn(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
 
       auto xn(
-        detail::coeff<make_coeff(48, 17)>() -
-        newmul<N>(b, detail::coeff<make_coeff(32, 17)>())
+        coeff<make_coeff(48, 17)>() -
+        newmul<N>(b, coeff<make_coeff(32, 17)>())
       );
 
       {
-        auto const k(
-          detail::coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>()
-        );
+        auto const k(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
 
         // x_n = x_n(2 - a*x_n)
         for (intt<T, M, F...> tmp; tmp = newmul<N>(b, xn), tmp.v_[N - 1];)
@@ -1070,12 +1065,12 @@ struct intt
   //
   static constexpr auto max() noexcept
   {
-    return detail::coeff<lshr<1>(~intt{})>();
+    return coeff<lshr<1>(~intt{})>();
   }
 
   static constexpr auto min() noexcept
   {
-    return detail::coeff<intt(1) << N * wbits - 1>();
+    return coeff<intt(1) << N * wbits - 1>();
   }
 };
 
@@ -1969,7 +1964,7 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
 
   //
   {
-    auto const k(detail::coeff<decltype(a)(10)>());
+    auto const k(coeff<decltype(a)(10)>());
 
     do
     {
