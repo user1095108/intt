@@ -1706,16 +1706,16 @@ constexpr void add_words(intt_type auto&& a, std::size_t const I,
 
   auto i(I + 1);
 
-  for (std::size_t j{1}; (M != j) && (N != i); ++i, ++j)
+  for (std::size_t j(1); (M != j) && (N != i);)
   {
-    auto& s(a.v_[i]);
-    auto const b(w[j]);
+    auto& s(a.v_[i++]);
+    auto const b(w[j++]);
 
     s += c + b;
     c = c ? s <= b : s < b;
   }
 
-  for (; i != N; ++i) c = (a.v_[i] += c) < c;
+  while (N != i) c = (a.v_[i++] += c) < c;
 }
 
 template <std::size_t S, typename T, std::size_t M>
