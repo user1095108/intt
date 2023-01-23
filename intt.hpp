@@ -1644,12 +1644,12 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
   return std::strong_ordering::equal;
 }
 
-template <std::size_t S, typename T, std::size_t M>
-constexpr void add_words(intt_type auto&& a, T const (&&w)[M]) noexcept
-  requires(bool(M))
+template <std::size_t S, std::size_t M>
+constexpr void add_words(intt_type auto&& a,
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+  noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
   static_assert(S < N);
@@ -1686,13 +1686,12 @@ constexpr void add_words(intt_type auto&& a, T const (&&w)[M]) noexcept
   }(std::make_index_sequence<N - S>());
 }
 
-template <typename T, std::size_t M>
+template <std::size_t M>
 constexpr void add_words(intt_type auto&& a, std::size_t i,
-  T const (&&w)[M]) noexcept
-  requires(bool(M))
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+  noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
 
@@ -1716,12 +1715,12 @@ constexpr void add_words(intt_type auto&& a, std::size_t i,
   while (N != i) c = (a.v_[i++] += c) < c;
 }
 
-template <std::size_t S, typename T, std::size_t M>
-constexpr void sub_words(intt_type auto&& a, T const (&&w)[M]) noexcept
-  requires(bool(M))
+template <std::size_t S, std::size_t M>
+constexpr void sub_words(intt_type auto&& a,
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+  noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  static_assert(std::is_same_v<T, typename U::value_type>);
 
   enum : std::size_t { N = U::words };
   static_assert(S < N);
