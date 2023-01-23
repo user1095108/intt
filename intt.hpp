@@ -1079,6 +1079,25 @@ struct intt
   }
 };
 
+// type promotions
+#define INTT_TYPE_PROMOTION__(OP)\
+template <typename A, std::size_t N, typename B,\
+  std::size_t M, enum feat ...F, enum feat ...G>\
+constexpr auto operator OP (intt<A, N, F...> const& a,\
+  intt<B, M, G...> const& b) noexcept\
+{\
+  if constexpr(N * detail::bit_size_v<A> < M * detail::bit_size_v<B>)\
+    return intt<B, M, G...>(a) OP b;\
+  else\
+    return a OP intt<A, N, F...>(b);\
+}
+
+INTT_TYPE_PROMOTION__(+)
+INTT_TYPE_PROMOTION__(-)
+INTT_TYPE_PROMOTION__(*)
+INTT_TYPE_PROMOTION__(/)
+INTT_TYPE_PROMOTION__(<=>)
+
 // conversions
 #define INTT_LEFT_CONVERSION__(OP)\
 template <typename A, std::size_t B, enum feat... F, typename U>\
