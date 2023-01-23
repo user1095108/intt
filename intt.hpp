@@ -38,6 +38,17 @@ template <
   enum feat...
 > requires(N > 0) struct intt;
 
+template <typename> struct is_intt : std::false_type {};
+
+template <typename T, std::size_t N, enum feat... F>
+struct is_intt<intt<T, N, F...>> : std::true_type {};
+
+template <typename T>
+static constexpr auto is_intt_v{is_intt<T>::value};
+
+template <typename T>
+concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
+
 namespace detail
 {
 
@@ -53,17 +64,12 @@ struct underlying_type<T, false> { using type = T; };
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-template <typename> struct is_intt : std::false_type {};
-
-template <typename T, std::size_t N, enum feat... F>
-struct is_intt<intt<T, N, F...>> : std::true_type {};
-
-template <typename> struct double_;
+template <typename> struct double_ { using type = void; };
 
 template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
 
-template <typename> struct halve;
+template <typename> struct halve { using type = void; };
 
 template <typename T, std::size_t N, enum feat... F>
 struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
@@ -116,9 +122,6 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
 }
 
 }
-
-template <typename T>
-concept intt_type = detail::is_intt<std::remove_cvref_t<T>>::value;
 
 template <std::unsigned_integral T, std::size_t N, enum feat... F>
   requires(N > 0)
