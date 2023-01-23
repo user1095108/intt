@@ -1687,7 +1687,7 @@ constexpr void add_words(intt_type auto&& a, T const (&&w)[M]) noexcept
 }
 
 template <typename T, std::size_t M>
-constexpr void add_words(intt_type auto&& a, std::size_t const I,
+constexpr void add_words(intt_type auto&& a, std::size_t i,
   T const (&&w)[M]) noexcept
   requires(bool(M))
 {
@@ -1701,10 +1701,8 @@ constexpr void add_words(intt_type auto&& a, std::size_t const I,
   {
     auto const b(*w);
 
-    c = (a.v_[I] += b) < b;
+    c = (a.v_[i++] += b) < b;
   }
-
-  auto i(I + 1);
 
   for (std::size_t j(1); (M != j) && (N != i);)
   {
