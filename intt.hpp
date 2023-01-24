@@ -356,11 +356,9 @@ struct intt
         { // words shifted to the left
           if constexpr(detail::bit_size_v<U> > N * wbits)
           {
-            auto const neg(is_neg(*this));
-
-            return (
-                ((I < N ? U(v_[I]) : neg ? U(~U{}) : U{}) << I * wbits) | ...
-              );
+            return is_neg(*this) ?
+              (((I < N ? U(v_[I]) : U(~U{})) << I * wbits) | ...) :
+              (((I < N ? U(v_[I]) : U{}) << I * wbits) | ...);
           }
           else
           {
