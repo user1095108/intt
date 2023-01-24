@@ -1039,6 +1039,14 @@ INTT_TYPE_PROMOTION__(*)
 INTT_TYPE_PROMOTION__(/)
 INTT_TYPE_PROMOTION__(<=>)
 
+template <typename A, std::size_t M, typename B,
+  std::size_t N, enum feat ...F, enum feat ...G>
+constexpr auto operator==(intt<A, M, F...> const& a,
+  intt<B, N, G...> const& b) noexcept
+{
+  return a <=> b == 0;
+}
+
 // conversions
 #define INTT_LEFT_CONVERSION__(OP)\
 template <typename A, std::size_t B, enum feat... F, typename U>\
