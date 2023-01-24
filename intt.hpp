@@ -1027,10 +1027,10 @@ template <typename A, std::size_t M, typename B,\
 constexpr auto operator OP (intt<A, M, F...> const& a,\
   intt<B, N, G...> const& b) noexcept\
 {\
-  if constexpr(N * detail::bit_size_v<A> < M * detail::bit_size_v<B>)\
-    return intt<B, M, G...>(a) OP b;\
+  if constexpr(M * detail::bit_size_v<A> < N * detail::bit_size_v<B>)\
+    return intt<B, N, G...>(a) OP b;\
   else\
-    return a OP intt<A, N, F...>(b);\
+    return a OP intt<A, M, F...>(b);\
 }
 
 INTT_TYPE_PROMOTION__(+)
