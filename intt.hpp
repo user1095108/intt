@@ -359,7 +359,7 @@ struct intt
             auto const neg(is_neg(*this));
 
             return (
-                ((I < N ? U(v_[I]) : neg ? ~U{} : U{}) << I * wbits) | ...
+                ((I < N ? U(v_[I]) : neg ? U(~U{}) : U{}) << I * wbits) | ...
               );
           }
           else
