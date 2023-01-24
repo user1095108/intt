@@ -258,8 +258,7 @@ struct intt
     return *this = *this >> i;
   }
 
-  template <std::size_t M, enum feat ...FF>
-  constexpr auto& operator+=(intt<T, M, FF...> const& o) noexcept
+  constexpr auto& operator+=(intt const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -270,16 +269,12 @@ struct intt
         {
           auto& s(v_[I]);
 
-          if constexpr(I && (I < M))
+          if constexpr(I)
           {
             auto const& b(o.v_[I]);
 
             s += c + b;
             c = c ? s <= b : s < b;
-          }
-          else if constexpr(I >= M)
-          {
-            c = (s += c) < c;
           }
           else
           {
@@ -295,8 +290,7 @@ struct intt
     return *this;
   }
 
-  template <std::size_t M, enum feat ...FF>
-  constexpr auto& operator-=(intt<T, M, FF...> const& o) noexcept
+  constexpr auto& operator-=(intt const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -308,14 +302,10 @@ struct intt
           auto& d(v_[I]);
           auto const a(d);
 
-          if constexpr(I && (I < M))
+          if constexpr(I)
           {
             d = a - o.v_[I] - c;
             c = c ? d >= a : d > a;
-          }
-          else if constexpr(I >= M)
-          {
-            c = (d -= c) > a;
           }
           else
           {
@@ -509,8 +499,7 @@ struct intt
   }
 
   //
-  template <std::size_t M, enum feat ...FF>
-  constexpr auto operator+(intt<T, M, FF...> const& o) const noexcept
+  constexpr auto operator+(intt const& o) const noexcept
   {
     intt r;
 
@@ -524,14 +513,10 @@ struct intt
           auto& s(r.v_[I]);
           auto const& a(v_[I]);
 
-          if constexpr(I && (I < M))
+          if constexpr(I)
           {
             s = c + a + o.v_[I];
             c = c ? s <= a : s < a;
-          }
-          else if constexpr(I >= M)
-          {
-            c = (s = c + a) < c;
           }
           else
           {
@@ -545,8 +530,7 @@ struct intt
     return r;
   }
 
-  template <std::size_t M, enum feat ...FF>
-  constexpr auto operator-(intt<T, M, FF...> const& o) const noexcept
+  constexpr auto operator-(intt const& o) const noexcept
   {
     intt r;
 
@@ -560,14 +544,10 @@ struct intt
           auto& d(r.v_[I]);
           auto const& a(v_[I]);
 
-          if constexpr(I && (I < M))
+          if constexpr(I)
           {
             d = a - o.v_[I] - c;
             c = c ? d >= a : d > a;
-          }
-          else if constexpr(I >= M)
-          {
-            c = (d = a - c) > a;
           }
           else
           {
@@ -1042,10 +1022,10 @@ struct intt
 
 // type promotions
 #define INTT_TYPE_PROMOTION__(OP)\
-template <typename A, std::size_t N, typename B,\
-  std::size_t M, enum feat ...F, enum feat ...G>\
-constexpr auto operator OP (intt<A, N, F...> const& a,\
-  intt<B, M, G...> const& b) noexcept\
+template <typename A, std::size_t M, typename B,\
+  std::size_t N, enum feat ...F, enum feat ...G>\
+constexpr auto operator OP (intt<A, M, F...> const& a,\
+  intt<B, N, G...> const& b) noexcept\
 {\
   if constexpr(N * detail::bit_size_v<A> < M * detail::bit_size_v<B>)\
     return intt<B, M, G...>(a) OP b;\
@@ -1353,29 +1333,29 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 
   if (a.v_[O])
   {
-    if (intt<T, O> const bb(b); nega)
+    if (intt<T, O> const bb(b, direct{}); nega)
     {
       auto A{-a.v_[O]};
-      do r -= bb; while (--A);
+      do sub_words<0>(r, bb.v_); while (--A);
     }
     else
     {
       auto A{a.v_[O]};
-      do r += bb; while (--A);
+      do add_words<0>(r, bb.v_); while (--A);
     }
   }
 
   if (b.v_[O])
   {
-    if (intt<T, O> const aa(a); negb)
+    if (intt<T, O> const aa(a, direct{}); negb)
     {
       auto B{-b.v_[O]};
-      do r -= aa; while (--B);
+      do sub_words<0>(r, aa.v_); while (--B);
     }
     else
     {
       auto B{b.v_[O]};
-      do r += aa; while (--B);
+      do add_words<0>(r, aa.v_); while (--B);
     }
   }
 
@@ -1645,8 +1625,8 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t S, std::size_t M>
-constexpr void add_words(intt_type auto&& a,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+constexpr void add_words(intt_type auto& a,
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1687,8 +1667,8 @@ constexpr void add_words(intt_type auto&& a,
 }
 
 template <std::size_t M>
-constexpr void add_words(intt_type auto&& a, std::size_t i,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+constexpr void add_words(intt_type auto& a, std::size_t i,
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1716,8 +1696,8 @@ constexpr void add_words(intt_type auto&& a, std::size_t i,
 }
 
 template <std::size_t S, std::size_t M>
-constexpr void sub_words(intt_type auto&& a,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&&w)[M])
+constexpr void sub_words(intt_type auto& a,
+  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1967,7 +1947,7 @@ namespace std
 {
 
 template <typename U> requires(intt::intt_type<U>)
-struct hash<U> 
+struct hash<U>
 {
   auto operator()(auto const& a) const noexcept
   {
