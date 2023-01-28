@@ -1132,21 +1132,6 @@ constexpr auto clz(intt_type auto const& a) noexcept
 }
 
 template <std::size_t I>
-constexpr void clear_bit(intt_type auto& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  a.v_[I / U::wbits] &= ~(T{1} << I % U::wbits);
-}
-
-constexpr void clear_bit(intt_type auto& a, std::size_t const i) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  a.v_[i / U::wbits] &= ~(T{1} << i % U::wbits);
-}
-
-template <std::size_t I>
 constexpr void set_bit(intt_type auto& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
