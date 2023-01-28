@@ -71,11 +71,6 @@ template <typename> struct double_ { using type = void; };
 template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
 
-template <typename> struct halve { using type = void; };
-
-template <typename T, std::size_t N, enum feat... F>
-struct halve<intt<T, N, F...>> { using type = intt<T, N / 2, F...>; };
-
 template <auto ...F>
 consteval auto contains(auto const f) noexcept
 {
@@ -991,7 +986,7 @@ struct intt
     //
     if constexpr(Rem)
     {
-      auto const tmp(rshifted(r));
+      intt const tmp(wshr<N>(r), direct{});
 
       return nega ? -tmp : tmp;
     }
@@ -1584,22 +1579,6 @@ constexpr auto lshifted(intt_type auto const& a) noexcept
   return r;
 }
 
-constexpr auto rshifted(intt_type auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  typename detail::halve<U>::type r;
-
-  enum : std::size_t {M = decltype(r)::words};
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    ((r.v_[I] = a.v_[M + I]), ...);
-  }(std::make_index_sequence<M>());
-
-  return r;
-}
-
 constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1755,7 +1734,7 @@ constexpr auto seqsqrt(intt_type auto const& a) noexcept
   }
 
   //
-  return rshifted(Q);
+  return U{wshr<N>(Q), direct{}};
 }
 
 //
