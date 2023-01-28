@@ -694,8 +694,8 @@ struct intt
 
   constexpr auto seqmul(intt const& o) const noexcept
   {
-    // A is lshifted, so r needs to be as well
-    intt<T, 2 * N> r{}, A{lshifted(*this)};
+    intt<T, 2 * N> r{}, A{*this, direct{}};
+    wshl<N>(A);
 
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -945,7 +945,7 @@ struct intt
         auto const tmp(negb ? -o : o);
 
         CB = clz(tmp);
-        D = lshifted(tmp);
+        wshl<N>(D = {tmp, direct{}});
       }
 
       std::size_t CA;
@@ -1557,26 +1557,6 @@ constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
   for (; I != N; ++I) a.v_[I] = {};
 
   return a;
-}
-
-constexpr auto lshifted(intt_type auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  typename detail::double_<U>::type r;
-
-  enum : std::size_t {M = decltype(r)::words, N = U::words};
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (r.v_[I] = I >= N ? a.v_[I - N] : T{}),
-      ...
-    );
-  }(std::make_index_sequence<M>());
-
-  return r;
 }
 
 constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
