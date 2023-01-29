@@ -1751,23 +1751,11 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
 
     auto const scandigit([&](decltype(r) const d) noexcept
       {
-        if (neg)
+        if (r >= coeff<T::min() / 10>())
         {
-          if (r >= coeff<T::min() / 10>())
+          if (auto const t(10 * r); t >= T::min() + d)
           {
-            if (auto const t(10 * r); t >= T::min() + d)
-            {
-              r = t - d;
-
-              return false;
-            }
-          }
-        }
-        else if (r <= coeff<T::max() / 10>())
-        {
-          if (auto const t(10 * r); t <= T::max() - d)
-          {
-            r = t + d;
+            r = t - d;
 
             return false;
           }
@@ -1795,7 +1783,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
       break;
     }
 
-    return {r, false};
+    return {neg ? r : T::min() == r ? -(r / 10) : -r, false};
   }
 }
 
