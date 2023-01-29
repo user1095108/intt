@@ -1562,6 +1562,7 @@ constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
 constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
+
   detail::underlying_type_t<decltype(U::words)> i{U::words};
 
   do
