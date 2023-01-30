@@ -1893,17 +1893,16 @@ struct hash<U>
   {
     using T = typename U::value_type;
 
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
-        std::size_t seed{672807365};
-
         return (
           (
-            seed ^= hash<T>()(a[I]) + 0x9e3779b9 + (seed << 6) + (seed >> 2)
+            seed ^= hash<T>()(a[I + 1]) + 0x9e3779b9 +
+              (seed << 6) + (seed >> 2)
           ),
           ...
         );
-      }(std::make_index_sequence<U::words>());
+      }(hash<T>()(a[0]), std::make_index_sequence<U::words>() - 1);
   }
 };
 
