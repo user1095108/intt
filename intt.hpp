@@ -1851,19 +1851,17 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   auto i(std::size(data) - 1);
 
   //
+  auto const k(coeff<decltype(a)(10)>());
+
+  do
   {
-    auto const k(coeff<decltype(a)(10)>());
-
-    do
-    {
-      data[i--] = '0' + std::abs((signed char)(a % k));
-      a /= k;
-    }
-    while (a);
-
-    data[i] = '-';
-    i += posa;
+    data[i--] = '0' + std::abs((signed char)(a % k));
+    a /= k;
   }
+  while (a);
+
+  data[i] = '-';
+  i += posa;
 
   //
   return std::pair(i, std::to_array(std::move(data)));
