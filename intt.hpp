@@ -1889,7 +1889,7 @@ namespace std
 template <typename U> requires(intt::intt_type<U>)
 struct hash<U>
 {
-  auto operator()(auto const& a) const noexcept
+  constexpr auto operator()(auto const& a) const noexcept
   {
     using T = typename U::value_type;
 
