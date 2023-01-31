@@ -1857,7 +1857,7 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   auto i(std::size(data) - 1);
 
   //
-  char const A[]{"0123456789abcdef"};
+  decltype(auto) A{"0123456789abcdef"};
 
   decltype(a) const k(base);
 
