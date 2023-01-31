@@ -82,6 +82,11 @@ consteval auto contains(auto const f) noexcept
   return void(f), ((f == F) || ...);
 }
 
+static constexpr char const A[]{
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  'a', 'b', 'c', 'd', 'e', 'f'
+};
+
 consteval std::size_t num_digits(std::size_t const N) noexcept
 {
   return N / 3 + bool(N % 3); // 2^N <= 8^J, J >= N * log8(2) = N / 3
@@ -1857,16 +1862,11 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   auto i(std::size(data) - 1);
 
   //
-  char const A[]{
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'a', 'b', 'c', 'd', 'e', 'f'
-  };
-
   decltype(a) const k(base);
 
   do
   {
-    data[i--] = A[std::abs((signed char)(a % k))];
+    data[i--] = detail::A[std::abs((signed char)(a % k))];
     a /= k;
   }
   while (a);
