@@ -1890,8 +1890,7 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
       a,
       f & std::ios_base::dec ? 10u :
       f & std::ios_base::hex ? 16u :
-      f & std::ios_base::oct ? 8u :
-      10u
+      f & std::ios_base::oct ? 8u : 10u
     )
   );
 
