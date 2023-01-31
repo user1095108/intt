@@ -53,7 +53,7 @@ template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 enum : std::size_t
 {
-  IGR = sizeof(std::size_t) >= 8 ? 0x517cc1b727220a95 : 0x9e3779b9
+  IGR = sizeof(std::size_t) >= 8 ? 0x9e3779b97f4a7c15 : 0x9e3779b9
 };
 
 namespace detail
@@ -84,7 +84,7 @@ consteval auto contains(auto const f) noexcept
 
 consteval std::size_t num_digits(std::size_t const N) noexcept
 {
-  return N * .30102999566398119521 + 1.; // 2^N <= 10^J, J >= N * log10(2)
+  return N / 3 + 1.; // 2^N <= 8^J, J >= N * log8(2) = N / 3
 }
 
 }
@@ -1848,7 +1848,7 @@ auto to_raw(intt_type auto const& a)
 }
 
 template <typename T, std::size_t N, enum feat... FF>
-constexpr auto to_pair(intt<T, N, FF...> a) noexcept
+constexpr auto to_pair(intt<T, N, FF...> a, unsigned base = 10u) noexcept
 {
   auto const posa(!is_neg(a));
 
@@ -1856,11 +1856,13 @@ constexpr auto to_pair(intt<T, N, FF...> a) noexcept
   auto i(std::size(data) - 1);
 
   //
-  auto const k(coeff<decltype(a)(10)>());
+  auto const A{"0123456789abcdef"};
+
+  decltype(a) const k(base);
 
   do
   {
-    data[i--] = '0' + std::abs((signed char)(a % k));
+    data[i--] = A[std::abs((signed char)(a % k))];
     a /= k;
   }
   while (a);
@@ -1881,7 +1883,17 @@ constexpr auto to_string(intt_type auto const& a)
 
 inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 {
-  auto const& [i, arr](to_pair(a));
+  auto const f(os.flags());
+
+  auto const& [i, arr](
+      to_pair(
+        a,
+        f & std::ios_base::dec ? 10u :
+        f & std::ios_base::hex ? 16u :
+        f & std::ios_base::oct ? 8u :
+        10u
+      )
+    );
 
   return os << std::string_view(std::next(arr.begin(), i), arr.end());
 }
