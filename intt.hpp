@@ -1849,7 +1849,7 @@ auto to_raw(intt_type auto const& a)
 
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
-  unsigned const base = 10u) noexcept
+  unsigned char const base = 10u) noexcept
 {
   auto const posa(!is_neg(a));
 
@@ -1857,7 +1857,10 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   auto i(std::size(data) - 1);
 
   //
-  auto const A{"0123456789abcdef"};
+  char const A[]{
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f'
+  };
 
   decltype(a) const k(base);
 
@@ -1886,15 +1889,14 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 {
   auto const f(os.flags());
 
-  auto const& [i, arr](
-      to_pair(
-        a,
-        f & std::ios_base::dec ? 10u :
-        f & std::ios_base::hex ? 16u :
-        f & std::ios_base::oct ? 8u :
-        10u
-      )
-    );
+  auto const& [i, arr](to_pair(
+      a,
+      f & std::ios_base::dec ? 10u :
+      f & std::ios_base::hex ? 16u :
+      f & std::ios_base::oct ? 8u :
+      10u
+    )
+  );
 
   return os << std::string_view(std::next(arr.begin(), i), arr.end());
 }
