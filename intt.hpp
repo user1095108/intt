@@ -1894,10 +1894,11 @@ namespace std
 template <typename U> requires(intt::intt_type<U>)
 struct hash<U>
 {
-  constexpr auto operator()(auto const& a) const noexcept
-  {
-    using T = typename U::value_type;
+  using T = typename U::value_type;
 
+  constexpr auto operator()(auto const& a) const
+    noexcept(noexcept(std::declval<std::hash<T>>()(std::declval<T>())))
+  {
     return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
         return ((seed ^= std::hash<T>()(a[I + 1]) + intt::IGR +
