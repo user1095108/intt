@@ -1848,7 +1848,8 @@ auto to_raw(intt_type auto const& a)
 }
 
 template <typename T, std::size_t N, enum feat... FF>
-constexpr auto to_pair(intt<T, N, FF...> a, unsigned base = 10u) noexcept
+constexpr auto to_pair(intt<T, N, FF...> a,
+  unsigned const base = 10u) noexcept
 {
   auto const posa(!is_neg(a));
 
