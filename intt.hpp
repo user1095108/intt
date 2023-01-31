@@ -51,6 +51,11 @@ concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
+enum : std::size_t
+{
+  IGR = sizeof(std::size_t) >= 8 ? 0x517cc1b727220a95 : 0x9e3779b9
+};
+
 namespace detail
 {
 
@@ -1895,7 +1900,7 @@ struct hash<U>
 
     return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
-        return ((seed ^= std::hash<T>()(a[I + 1]) + 0x9e3779b9 +
+        return ((seed ^= std::hash<T>()(a[I + 1]) + intt::IGR +
           (seed << 6) + (seed >> 2)), ...), seed;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
