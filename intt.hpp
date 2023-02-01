@@ -3,7 +3,6 @@
 # pragma once
 
 #include <cassert>
-#include <climits> // CHAR_BIT
 #include <cmath> // std::ldexp()
 
 #include <algorithm> // std::max()
@@ -14,7 +13,6 @@
 #include <iterator>
 #include <ostream>
 #include <sstream>
-#include <utility> // std::pair
 #include <type_traits>
 
 #include "magic.hpp"
@@ -1896,9 +1894,8 @@ struct hash<U>
   {
     return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
-        return ((seed ^= std::hash<T>()(a[I + 1]) +
-          intt::coeff<intt::magic::igr()>() + (seed << 6) +
-          (seed >> 2)), ...), seed;
+        return ((seed ^= std::hash<T>()(a[I + 1]) + intt::magic::IGR +
+          (seed << 6) + (seed >> 2)), ...), seed;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };

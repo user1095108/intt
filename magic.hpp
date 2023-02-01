@@ -1,7 +1,7 @@
-#include <climits>
-#include <cstddef>
-#include <cstdint>
-#include <utility>
+#include <climits> // CHAR_BIT
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint8_t
+#include <utility> // std::make_index_sequence()
 
 namespace intt::magic
 {
@@ -44,14 +44,10 @@ consteval T generate_constant() noexcept
 
 }
 
-constexpr auto igr() noexcept
+enum : std::size_t
 {
-  return detail::generate_constant<std::size_t, detail::igr_c>();
-}
-
-constexpr auto ipi() noexcept
-{
-  return detail::generate_constant<std::size_t, detail::ipi_c>();
-}
+  IGR = detail::generate_constant<std::size_t, detail::igr_c>(),
+  IPI = detail::generate_constant<std::size_t, detail::ipi_c>()
+};
 
 }
