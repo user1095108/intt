@@ -17,6 +17,8 @@
 #include <utility> // std::pair
 #include <type_traits>
 
+#include "magic.hpp"
+
 namespace intt
 {
 
@@ -49,12 +51,7 @@ static constexpr auto is_intt_v{is_intt<T>::value};
 template <typename T>
 concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
 
-template <auto C> static constexpr auto coeff() noexcept { return C; }
-
-enum : std::size_t
-{
-  IGR = sizeof(std::size_t) >= 8 ? 0x9e3779b97f4a7c15 : 0x9e3779b9
-};
+template <auto C> constexpr auto coeff() noexcept { return C; }
 
 namespace detail
 {
@@ -1899,8 +1896,9 @@ struct hash<U>
   {
     return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
-        return ((seed ^= std::hash<T>()(a[I + 1]) + intt::IGR +
-          (seed << 6) + (seed >> 2)), ...), seed;
+        return ((seed ^= std::hash<T>()(a[I + 1]) +
+          intt::coeff<magic::igr()>() + (seed << 6) + (seed >> 2)), ...),
+          seed;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };
