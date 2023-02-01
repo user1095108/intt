@@ -1131,14 +1131,6 @@ constexpr auto clz(intt_type auto const& a) noexcept
   return r;
 }
 
-template <std::size_t I>
-constexpr void set_bit(intt_type auto& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  a.v_[I / U::wbits] |= T{1} << I % U::wbits;
-}
-
 constexpr void set_bit(intt_type auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1886,7 +1878,8 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 {
   auto const f(os.flags());
 
-  auto const& [i, arr](to_pair(
+  auto const& [i, arr](
+    to_pair(
       a,
       f & std::ios_base::dec ? 10u :
       f & std::ios_base::hex ? 16u :
