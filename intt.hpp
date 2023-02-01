@@ -1746,29 +1746,23 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         return {r, true};
     }
 
-    auto const scandigit([&](decltype(r) const d) noexcept
-      {
-        if (r >= coeff<T::min() / 10>())
-        {
-          if (auto const t(10 * r); t >= T::min() + d)
-          {
-            r = t - d;
-
-            return false;
-          }
-        }
-
-        return true;
-      }
-    );
-
     for (; end != i; i = std::next(i))
     {
       switch (*i)
       {
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-          if (scandigit(*i - '0')) return {r, true}; else continue;
+          if (decltype(r) const d(*i - '0'); r >= coeff<T::min() / 10>())
+          {
+            if (auto const t(10 * r); t >= T::min() + d)
+            {
+              r = t - d;
+
+              continue;
+            }
+          }
+
+          return {r, true};
 
         case '\0':
           break;
