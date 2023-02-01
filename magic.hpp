@@ -5,7 +5,7 @@
 namespace magic
 {
 
-consteval auto igr() noexcept
+consteval std::size_t igr() noexcept
 { // inverse golden ratio
   std::uint8_t const A[]{
     0x9E, 0x37, 0x79, 0xB9, 0x7F, 0x4A, 0x7C, 0x15,
@@ -18,15 +18,12 @@ consteval auto igr() noexcept
     0xC1, 0xD6, 0x4B, 0xA4, 0x0F, 0x33, 0x5E, 0x36
   };
 
-  auto const r([&]<auto ...I>(std::index_sequence<I...>) noexcept
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return (
         (std::size_t(A[I]) << (sizeof(std::size_t) - 1 - I) * CHAR_BIT) | ...
       );
-    }(std::make_index_sequence<sizeof(std::size_t)>())
-  );
-
-  return r % 2 ? r : r | std::size_t(1);
+    }(std::make_index_sequence<sizeof(std::size_t)>()) | std::size_t(1);
 }
 
 }
