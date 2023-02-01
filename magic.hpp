@@ -1,6 +1,7 @@
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 
 namespace magic
 {
