@@ -44,12 +44,12 @@ consteval T generate_constant() noexcept
 
 }
 
-consteval auto igr() noexcept
+constexpr auto igr() noexcept
 {
   return detail::generate_constant<std::size_t, detail::igr_c>();
 }
 
-consteval auto ipi() noexcept
+constexpr auto ipi() noexcept
 {
   return detail::generate_constant<std::size_t, detail::ipi_c>();
 }
