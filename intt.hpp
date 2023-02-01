@@ -1897,8 +1897,8 @@ struct hash<U>
     return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
       {
         return ((seed ^= std::hash<T>()(a[I + 1]) +
-          intt::coeff<magic::igr()>() + (seed << 6) + (seed >> 2)), ...),
-          seed;
+          intt::coeff<intt::magic::igr()>() + (seed << 6) +
+          (seed >> 2)), ...), seed;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };
