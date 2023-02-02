@@ -6,11 +6,12 @@
 #include <cmath> // std::ldexp()
 
 #include <algorithm> // std::max()
-#include <array>
+#include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
+#include <functional> // std::hash
 #include <iomanip> // std::hex
-#include <iterator>
+#include <iterator> // std::begin(), std::end()
 #include <ostream>
 #include <sstream>
 #include <type_traits>
