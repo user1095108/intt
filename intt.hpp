@@ -50,7 +50,7 @@ static constexpr auto is_intt_v{is_intt<T>::value};
 template <typename T>
 concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
 
-template <auto C> constexpr auto coeff() noexcept { return C; }
+template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 namespace detail
 {
