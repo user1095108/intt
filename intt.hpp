@@ -1892,10 +1892,10 @@ struct hash<U>
   constexpr auto operator()(auto const& a) const
     noexcept(noexcept(std::declval<std::hash<T>>()(std::declval<T>())))
   {
-    return [&]<auto ...I>(auto&& seed, std::index_sequence<I...>) noexcept
+    return [&]<auto ...I>(auto&& s, std::index_sequence<I...>) noexcept
       {
-        return ((seed ^= std::hash<T>()(a[I + 1]) + intt::magic::IGR +
-          (seed << 6) + (seed >> 2)), ...), seed;
+        return ((s ^= std::hash<T>()(a[I + 1]) + intt::magic::IGR +
+          (s << 6) + (s >> 2)), ...), s;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };
