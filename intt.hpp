@@ -1851,10 +1851,9 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   while (a);
 
   data[i] = '-';
-  i += posa;
 
   //
-  return std::pair(i, std::to_array(std::move(data)));
+  return std::pair(i + posa, std::to_array(std::move(data)));
 }
 
 constexpr auto to_string(intt_type auto const& a)
