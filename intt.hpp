@@ -1833,8 +1833,6 @@ template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
   unsigned char const base = 10u) noexcept
 {
-  auto const posa(!is_neg(a));
-
   char data[detail::num_digits(N * decltype(a)::wbits - 1) + 1];
   auto i(std::size(data) - 1);
 
@@ -1853,14 +1851,14 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   data[i] = '-';
 
   //
-  return std::pair(i + posa, std::to_array(std::move(data)));
+  return std::pair(i, std::to_array(std::move(data)));
 }
 
 constexpr auto to_string(intt_type auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
-  return std::string(std::next(arr.begin(), i), arr.end());
+  return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
 }
 
 inline auto& operator<<(std::ostream& os, intt_type auto const& a)
@@ -1876,7 +1874,8 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
     )
   );
 
-  return os << std::string_view(std::next(arr.begin(), i), arr.end());
+  return os <<
+    std::string_view(std::next(arr.begin(), i + !is_neg(a)), arr.end());
 }
 
 }
