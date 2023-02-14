@@ -1562,10 +1562,7 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
   {
     --i;
 
-    if (auto const c(a[i] <=> b[i]); c != 0)
-    {
-      return c;
-    }
+    if (auto const c(a[i] <=> b[i]); c != 0) return c;
   }
   while (i);
 
