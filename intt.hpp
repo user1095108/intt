@@ -1767,7 +1767,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
       break;
     }
 
-    return {neg ? r : -(T::min() == r ? r / 10 : r), false};
+    return {neg ? r : -r, !neg && (T::min() == r)};
   }
 }
 
