@@ -1828,15 +1828,13 @@ auto to_raw(intt_type auto const& a)
 
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
-  unsigned char const base = 10u) noexcept
+  decltype(a) const k = 10u) noexcept
 {
   char data[detail::num_digits(N * decltype(a)::wbits - 1) + 1];
   auto i(std::size(data) - 1);
 
   //
   decltype(auto) A{"0123456789abcdef"};
-
-  decltype(a) const k(base);
 
   do
   {
