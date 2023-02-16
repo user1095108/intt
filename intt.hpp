@@ -87,6 +87,18 @@ using double_uint_t = std::conditional_t<
   >
 >;
 
+template <typename T>
+using halve_uint_t = std::conditional_t<
+  std::is_same_v<T, std::uint64_t>,
+  std::uint32_t,
+  std::conditional_t<
+    std::is_same_v<T, std::uint32_t>,
+    std::uint16_t,
+    std::uint8_t
+  >
+>;
+
+
 template <auto ...F>
 consteval auto contains(auto const f) noexcept
 {
@@ -640,15 +652,7 @@ struct intt
 
     if constexpr(std::is_same_v<T, std::uint64_t>)
     { // multiplying half-words, wbits per iteration
-      using H = std::conditional_t<
-        std::is_same_v<T, std::uint64_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint16_t>,
-          std::uint8_t,
-          std::uint8_t
-        >
-      >;
+      using H = detail::halve_uint_t<T>;
 
       enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
 
@@ -777,15 +781,7 @@ struct intt
   template <bool Rem = false>
   constexpr auto naidiv(intt const& o) const noexcept
   { // wbits per iteration
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint32_t>,
-        std::uint16_t,
-        std::uint8_t
-      >
-    >;
+    using H = detail::halve_uint_t<T>;
 
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
     enum : T { dmax = (T(1) << hwbits) - 1 };
@@ -1162,15 +1158,7 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 
   if constexpr(std::is_same_v<T, std::uint64_t>)
   { // multiplying half-words, wbits per iteration
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
-        std::uint8_t
-      >
-    >;
+    using H = detail::halve_uint_t<T>;
 
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
@@ -1241,15 +1229,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 
   if constexpr(std::is_same_v<T, std::uint64_t>)
   {
-    using H = std::conditional_t<
-      std::is_same_v<T, std::uint64_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint8_t,
-        std::uint8_t
-      >
-    >;
+    using H = detail::halve_uint_t<T>;
 
     enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
 
