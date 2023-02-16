@@ -72,6 +72,21 @@ template <typename> struct double_ { using type = void; };
 template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
 
+template <typename T>
+using double_uint_t = std::conditional_t<
+  std::is_same_v<T, std::uint8_t>,
+  std::uint16_t,
+  std::conditional_t<
+    std::is_same_v<T, std::uint16_t>,
+    std::uint32_t,
+    std::conditional_t<
+      std::is_same_v<T, std::uint32_t>,
+      std::uint64_t,
+      void
+    >
+  >
+>;
+
 template <auto ...F>
 consteval auto contains(auto const f) noexcept
 {
@@ -661,19 +676,7 @@ struct intt
     }
     else
     { // multiplying words, 2 * wbits per iteration
-      using D = std::conditional_t<
-        std::is_same_v<T, std::uint8_t>,
-        std::uint16_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint16_t>,
-          std::uint32_t,
-          std::conditional_t<
-            std::is_same_v<T, std::uint32_t>,
-            std::uint64_t,
-            void
-          >
-        >
-      >;
+      using D = detail::double_uint_t<T>;
 
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
@@ -1197,19 +1200,7 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
   }
   else
   { // multiplying words, 2 * wbits per iteration
-    using D = std::conditional_t<
-      std::is_same_v<T, std::uint8_t>,
-      std::uint16_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint64_t,
-          void
-        >
-      >
-    >;
+    using D = detail::double_uint_t<T>;
 
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
@@ -1279,19 +1270,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
   }
   else
   {
-    using D = std::conditional_t<
-      std::is_same_v<T, std::uint8_t>,
-      std::uint16_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint16_t>,
-        std::uint32_t,
-        std::conditional_t<
-          std::is_same_v<T, std::uint32_t>,
-          std::uint64_t,
-          void
-        >
-      >
-    >;
+    using D = detail::double_uint_t<T>;
 
     for (std::size_t i{}; O != i; ++i)
     {
