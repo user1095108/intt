@@ -72,33 +72,6 @@ template <typename> struct double_ { using type = void; };
 template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
 
-template <typename T>
-using double_uint_t = std::conditional_t<
-  std::is_same_v<T, std::uint8_t>,
-  std::uint16_t,
-  std::conditional_t<
-    std::is_same_v<T, std::uint16_t>,
-    std::uint32_t,
-    std::conditional_t<
-      std::is_same_v<T, std::uint32_t>,
-      std::uint64_t,
-      void
-    >
-  >
->;
-
-template <typename T>
-using halve_uint_t = std::conditional_t<
-  std::is_same_v<T, std::uint64_t>,
-  std::uint32_t,
-  std::conditional_t<
-    std::is_same_v<T, std::uint32_t>,
-    std::uint16_t,
-    std::uint8_t
-  >
->;
-
-
 template <auto ...F>
 consteval auto contains(auto const f) noexcept
 {
@@ -123,6 +96,30 @@ struct intt
   };
 
   using value_type = T;
+
+  using D = std::conditional_t<
+    std::is_same_v<T, std::uint8_t>,
+    std::uint16_t,
+    std::conditional_t<
+      std::is_same_v<T, std::uint16_t>,
+      std::uint32_t,
+      std::conditional_t<
+        std::is_same_v<T, std::uint32_t>,
+        std::uint64_t,
+        void
+      >
+    >
+  >;
+
+  using H = std::conditional_t<
+    std::is_same_v<T, std::uint64_t>,
+    std::uint32_t,
+    std::conditional_t<
+      std::is_same_v<T, std::uint32_t>,
+      std::uint16_t,
+      std::uint8_t
+    >
+  >;
 
   T v_[N];
 
@@ -652,8 +649,6 @@ struct intt
 
     if constexpr(std::is_same_v<T, std::uint64_t>)
     { // multiplying half-words, wbits per iteration
-      using H = detail::halve_uint_t<T>;
-
       enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
 
       for (std::size_t i{}; M != i; ++i)
@@ -680,8 +675,6 @@ struct intt
     }
     else
     { // multiplying words, 2 * wbits per iteration
-      using D = detail::double_uint_t<T>;
-
       for (std::size_t i{}; N != i; ++i)
       { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
         auto S(i);
@@ -781,8 +774,6 @@ struct intt
   template <bool Rem = false>
   constexpr auto naidiv(intt const& o) const noexcept
   { // wbits per iteration
-    using H = detail::halve_uint_t<T>;
-
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
     enum : T { dmax = (T(1) << hwbits) - 1 };
 
@@ -831,13 +822,13 @@ struct intt
           T h(a.v_[k] / B);
           if (h >> hwbits) h = dmax;
 
-          for (a -= hwmul(h, hwlshr(b)); is_neg(a); a += b, --h);
+          for (a -= hwmul(hwlshr(b), h); is_neg(a); a += b, --h);
 
           //
           T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
           if (l >> hwbits) l = dmax;
 
-          for (a -= hwmul(l, hwlshr(b)); is_neg(a); a += b, --l);
+          for (a -= hwmul(hwlshr(b), l); is_neg(a); a += b, --l);
 
           //
           q.v_[k - N] = l | h << hwbits;
@@ -1141,10 +1132,13 @@ constexpr bool test_bit(intt_type auto const& a) noexcept
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
-constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
+constexpr auto hwmul(intt_type auto const& a,
+  typename std::remove_cvref_t<decltype(a)>::H const k) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
+  using D = typename U::D;
+  using H = typename U::H;
 
   enum : std::size_t
   {
@@ -1158,15 +1152,13 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
 
   if constexpr(std::is_same_v<T, std::uint64_t>)
   { // multiplying half-words, wbits per iteration
-    using H = detail::halve_uint_t<T>;
-
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
       (
         [&]() noexcept
         {
           T const pp(
-            T(H(k)) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
+            T(k) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
           );
 
           if constexpr((S % 2) && (M - 1 == S))
@@ -1188,8 +1180,6 @@ constexpr auto hwmul(auto const k, intt_type auto const& a) noexcept
   }
   else
   { // multiplying words, 2 * wbits per iteration
-    using D = detail::double_uint_t<T>;
-
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
       (
@@ -1220,6 +1210,8 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
+  using D = typename U::D;
+  using H = typename U::H;
 
   enum : std::size_t { N = U::words };
 
@@ -1229,8 +1221,6 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 
   if constexpr(std::is_same_v<T, std::uint64_t>)
   {
-    using H = detail::halve_uint_t<T>;
-
     enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
 
     for (std::size_t i{}; M != i; ++i)
@@ -1250,8 +1240,6 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
   }
   else
   {
-    using D = detail::double_uint_t<T>;
-
     for (std::size_t i{}; O != i; ++i)
     {
       for (std::size_t j{}; O != j; ++j)
