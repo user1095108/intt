@@ -355,7 +355,7 @@ struct intt
     {
       return [&]<auto ...I>(std::index_sequence<I...>) noexcept
         {
-          return -(((T(~v_[I]) * std::ldexp(U(1), I * wbits)) + ...) + U{1});
+          return -((U{1} + ... + (T(~v_[I]) * std::ldexp(U(1), I * wbits))));
         }(std::make_index_sequence<N>());
     }
     else
