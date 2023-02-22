@@ -1726,23 +1726,18 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
   using F = double;
   using U = std::remove_cvref_t<decltype(a)>;
 
-  if (is_neg(a))
-  {
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        return -(((T(~a.v_[I]) *
-          std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
-          std::ldexp(F(1), -int(M) * int(U::wbits)));
-      }(std::make_index_sequence<N>());
-  }
-  else
-  {
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        return ((a.v_[I] *
-          std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
-      }(std::make_index_sequence<N>());
-  }
+  return is_neg(a) ?
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return -(((T(~a.v_[I]) *
+        std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
+        std::ldexp(F(1), -int(M) * int(U::wbits)));
+    }(std::make_index_sequence<N>()) :
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a.v_[I] *
+        std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
+    }(std::make_index_sequence<N>());
 }
 
 auto to_raw(intt_type auto const& a)
