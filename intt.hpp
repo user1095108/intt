@@ -351,20 +351,15 @@ struct intt
   template <std::floating_point U>
   constexpr explicit operator U() const noexcept
   {
-    if (is_neg(*this))
-    {
-      return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-        {
-          return -((U{1} + ... + (T(~v_[I]) * std::ldexp(U(1), I * wbits))));
-        }(std::make_index_sequence<N>());
-    }
-    else
-    {
-      return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-        {
-          return ((v_[I] * std::ldexp(U(1), I * wbits)) + ...);
-        }(std::make_index_sequence<N>());
-    }
+    return is_neg(*this) ?
+      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return -((U{1} + ... + (T(~v_[I]) * std::ldexp(U(1), I * wbits))));
+      }(std::make_index_sequence<N>()) :
+      [&]<auto ...I>(std::index_sequence<I...>) noexcept
+      {
+        return ((v_[I] * std::ldexp(U(1), I * wbits)) + ...);
+      }(std::make_index_sequence<N>());
   }
 
   template <std::integral U>
