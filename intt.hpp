@@ -1821,10 +1821,10 @@ struct hash<U>
   using T = typename U::value_type;
 
   constexpr auto operator()(auto const& a) const
-    noexcept(noexcept(std::declval<std::hash<T>>()(std::declval<T>())))
+    noexcept(noexcept(std::hash<T>()(std::declval<T>())))
   {
     return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
-      noexcept(noexcept(std::declval<std::hash<T>>()(std::declval<T>())))
+      noexcept(noexcept(std::hash<T>()(std::declval<T>())))
       {
         return ((s ^= std::hash<T>()(a[I + 1]) + intt::magic::ISR +
           (s << 6) + (s >> 2)), ...), s;
