@@ -1681,6 +1681,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         return {r, true};
     }
 
+    //
     for (; end != i; i = std::next(i))
     {
       switch (*i)
@@ -1709,7 +1710,8 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
       break;
     }
 
-    return {neg ? r : -r, !neg && (T::min() == r)};
+    //
+    return {neg ? r : -r, !neg && (T::min() == r)}; // can return error
   }
 }
 
