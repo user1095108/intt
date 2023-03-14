@@ -48,7 +48,7 @@ template <typename T>
 static constexpr auto is_intt_v{is_intt<T>::value};
 
 template <typename T>
-concept intt_type = is_intt<std::remove_cvref_t<T>>::value;
+concept intt_concept = is_intt<std::remove_cvref_t<T>>::value;
 
 template <auto C> static constexpr auto coeff() noexcept { return C; }
 
@@ -1082,7 +1082,7 @@ INTT_RIGHT_CONVERSION__(>=)
 INTT_RIGHT_CONVERSION__(<=>)
 
 //utilities///////////////////////////////////////////////////////////////////
-constexpr bool is_neg(intt_type auto const& a) noexcept
+constexpr bool is_neg(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using S = std::make_signed_t<typename U::value_type>;
@@ -1090,7 +1090,7 @@ constexpr bool is_neg(intt_type auto const& a) noexcept
   return S(a.v_[U::words - 1]) < S{};
 }
 
-constexpr auto clz(intt_type auto const& a) noexcept
+constexpr auto clz(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1112,7 +1112,7 @@ constexpr auto clz(intt_type auto const& a) noexcept
   return r;
 }
 
-constexpr void set_bit(intt_type auto& a, std::size_t const i) noexcept
+constexpr void set_bit(intt_concept auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1120,14 +1120,14 @@ constexpr void set_bit(intt_type auto& a, std::size_t const i) noexcept
 }
 
 template <std::size_t I>
-constexpr bool test_bit(intt_type auto const& a) noexcept
+constexpr bool test_bit(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
-constexpr auto hwmul(intt_type auto const& a,
+constexpr auto hwmul(intt_concept auto const& a,
   typename std::remove_cvref_t<decltype(a)>::H const k) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1201,7 +1201,7 @@ constexpr auto hwmul(intt_type auto const& a,
 }
 
 template <std::size_t O>
-constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
+constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1289,7 +1289,7 @@ constexpr auto newmul(intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshl(intt_type auto&& a) noexcept requires(bool(M))
+constexpr auto& lshl(intt_concept auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1311,7 +1311,7 @@ constexpr auto& lshl(intt_type auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& lshl(intt_type auto&& a, std::size_t M) noexcept
+constexpr auto& lshl(intt_concept auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1349,7 +1349,7 @@ constexpr auto& lshl(intt_type auto&& a, std::size_t M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshr(intt_type auto&& a) noexcept requires(bool(M))
+constexpr auto& lshr(intt_concept auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1370,7 +1370,7 @@ constexpr auto& lshr(intt_type auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& lshr(intt_type auto&& a, std::size_t M) noexcept
+constexpr auto& lshr(intt_concept auto&& a, std::size_t M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1406,7 +1406,7 @@ constexpr auto& lshr(intt_type auto&& a, std::size_t M) noexcept
   return a;
 }
 
-constexpr auto& hwlshr(intt_type auto&& a) noexcept
+constexpr auto& hwlshr(intt_concept auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1429,7 +1429,7 @@ constexpr auto& hwlshr(intt_type auto&& a) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& wshl(intt_type auto&& a) noexcept requires(bool(M))
+constexpr auto& wshl(intt_concept auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1447,7 +1447,7 @@ constexpr auto& wshl(intt_type auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& wshl(intt_type auto&& a, std::size_t const M) noexcept
+constexpr auto& wshl(intt_concept auto&& a, std::size_t const M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1462,7 +1462,7 @@ constexpr auto& wshl(intt_type auto&& a, std::size_t const M) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
+constexpr auto& wshr(intt_concept auto&& a) noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1480,7 +1480,7 @@ constexpr auto& wshr(intt_type auto&& a) noexcept requires(bool(M))
   return a;
 }
 
-constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
+constexpr auto& wshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1494,7 +1494,7 @@ constexpr auto& wshr(intt_type auto&& a, std::size_t const M) noexcept
   return a;
 }
 
-constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
+constexpr auto ucompare(intt_concept auto const& a, decltype(a) b) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1512,7 +1512,7 @@ constexpr auto ucompare(intt_type auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t S, std::size_t M>
-constexpr void add_words(intt_type auto& a,
+constexpr void add_words(intt_concept auto& a,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
@@ -1554,7 +1554,7 @@ constexpr void add_words(intt_type auto& a,
 }
 
 template <std::size_t M>
-constexpr void add_words(intt_type auto& a, std::size_t i,
+constexpr void add_words(intt_concept auto& a, std::size_t i,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
@@ -1583,7 +1583,7 @@ constexpr void add_words(intt_type auto& a, std::size_t i,
 }
 
 template <std::size_t S, std::size_t M>
-constexpr void sub_words(intt_type auto& a,
+constexpr void sub_words(intt_concept auto& a,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
   noexcept requires(bool(M))
 {
@@ -1621,7 +1621,7 @@ constexpr void sub_words(intt_type auto& a,
   }(std::make_index_sequence<N - S>());
 }
 
-constexpr auto seqsqrt(intt_type auto const& a) noexcept
+constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
@@ -1742,7 +1742,7 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
     }(std::make_index_sequence<N>());
 }
 
-auto to_raw(intt_type auto const& a)
+auto to_raw(intt_concept auto const& a)
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1788,14 +1788,14 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   return std::pair(i, std::to_array(std::move(data)));
 }
 
-constexpr auto to_string(intt_type auto const& a)
+constexpr auto to_string(intt_concept auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
   return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
 }
 
-inline auto& operator<<(std::ostream& os, intt_type auto const& a)
+inline auto& operator<<(std::ostream& os, intt_concept auto const& a)
 {
   auto const f(os.flags());
 
@@ -1817,7 +1817,7 @@ inline auto& operator<<(std::ostream& os, intt_type auto const& a)
 namespace std
 {
 
-template <typename U> requires(intt::intt_type<U>)
+template <typename U> requires(intt::intt_concept<U>)
 struct hash<U>
 {
   using T = typename U::value_type;
