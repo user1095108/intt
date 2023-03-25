@@ -770,7 +770,7 @@ struct intt
   constexpr auto naidiv(intt const& o) const noexcept
   { // wbits per iteration
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-    enum : T { dmax = (T(1) << hwbits) - 1 };
+    enum : T { dmax = ~(T(1) << hwbits) };
 
     auto const nega(is_neg(*this)), negb(is_neg(o));
     intt q{};
@@ -999,15 +999,8 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept
-  {
-    return coeff<lshr<1>(~intt{})>();
-  }
-
-  static constexpr auto min() noexcept
-  {
-    return coeff<intt(1) << N * wbits - 1>();
-  }
+  static constexpr auto max() noexcept { return coeff<lshr<1>(~intt{})>(); }
+  static constexpr auto min() noexcept { return coeff<~max()>(); }
 };
 
 // type promotions
