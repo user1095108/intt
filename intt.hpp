@@ -1244,7 +1244,7 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
 
   r.v_[O] = a.v_[O] * b.v_[O];
 
-  if (nega ^ negb)
+  if (nega != negb)
   {
     for (auto i{O + 1}; N != i; r.v_[i++] = ~T{});
   }
