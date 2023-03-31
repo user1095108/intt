@@ -92,7 +92,8 @@ struct intt
   enum : std::size_t
   {
     wbits = sizeof(T) * CHAR_BIT, // bits per word
-    words = N
+    words = N,
+    bits = wbits * words
   };
 
   using value_type = T;
@@ -948,7 +949,7 @@ struct intt
       {
         auto i(CB - CA + 1);
 
-        lshl(r, N * wbits - i);
+        lshl(r, bits - i);
 
         do
         {
@@ -1123,7 +1124,7 @@ constexpr bool test_bit(intt_concept auto const& a) noexcept
 constexpr auto abs(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  auto const m(a >> U::words * U::wbits - 1);
+  auto const m(a >> U::bits - 1);
   return (a ^ m) - m; // ~a + 1, a < 0
 }
 
@@ -1625,29 +1626,27 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  enum : std::size_t { N = U::words, wbits = U::wbits };
-
   typename detail::double_<U>::type r(a, direct{}), Q{};
 
   //CR = CR + (N * wbits - CR) / 2;
-  auto const CR((N * wbits + clz(a)) / 2);
+  auto const CR((U::bits + clz(a)) / 2);
   lshl(r, CR);
 
-  for (auto i(N * wbits - CR); i;)
+  for (auto i(U::bits - CR); i;)
   {
     --i;
 
-    if (auto tmp(Q << 1); set_bit(tmp, N * wbits + i),
+    if (auto tmp(Q << 1); set_bit(tmp, U::bits + i),
       ucompare(lshl<1>(r), tmp) >= 0)
     {
       r -= tmp;
 
-      set_bit(Q, N * wbits + i);
+      set_bit(Q, U::bits + i);
     }
   }
 
   //
-  return U{wshr<N>(Q), direct{}};
+  return U{wshr<U::words>(Q), direct{}};
 }
 
 //
@@ -1769,7 +1768,7 @@ template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
   decltype(a) const k = 10u) noexcept
 {
-  char data[detail::num_digits(N * decltype(a)::wbits - 1) + 1];
+  char data[detail::num_digits(decltype(a)::bits - 1) + 1];
   auto i(std::size(data) - 1);
 
   //
