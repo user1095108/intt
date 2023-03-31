@@ -1084,6 +1084,11 @@ constexpr bool is_neg(intt_concept auto const& a) noexcept
   return S(a.v_[U::words - 1]) < S{};
 }
 
+constexpr auto abs(intt_concept auto const& a) noexcept
+{
+  return is_neg(a) ? -a : a;
+}
+
 constexpr auto clz(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1119,12 +1124,6 @@ constexpr bool test_bit(intt_concept auto const& a) noexcept
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
-}
-
-constexpr auto abs(intt_concept auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  return (a ^ (a >> U::bits - 1)) + is_neg(a); // ~a + 1, a < 0
 }
 
 constexpr auto hwmul(intt_concept auto const& a,
