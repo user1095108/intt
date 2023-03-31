@@ -1124,8 +1124,7 @@ constexpr bool test_bit(intt_concept auto const& a) noexcept
 constexpr auto abs(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  auto const m(a >> U::bits - 1);
-  return (a ^ m) - m; // ~a + 1, a < 0
+  return (a ^ (a >> U::bits - 1)) + is_neg(a); // ~a + 1, a < 0
 }
 
 constexpr auto hwmul(intt_concept auto const& a,
