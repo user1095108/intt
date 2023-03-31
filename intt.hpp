@@ -510,11 +510,11 @@ struct intt
   {
     intt r;
 
-    auto& s(r.v_);
-    auto const& a(v_);
-
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
+      auto& s(r.v_);
+      auto const& a(v_);
+
       bool c{true};
 
       ((c = (s[I] = c + T(~a[I])) < c), ...);
