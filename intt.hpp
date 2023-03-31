@@ -1120,6 +1120,13 @@ constexpr bool test_bit(intt_concept auto const& a) noexcept
   return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
+constexpr auto abs(intt_concept auto const& a) noexcept
+{
+  using U = std::remove_cvref_t<decltype(a)>;
+  auto const m(a >> U::words * U::wbits - 1);
+  return (a ^ m) - m; // ~a + 1, a < 0
+}
+
 constexpr auto hwmul(intt_concept auto const& a,
   typename std::remove_cvref_t<decltype(a)>::H const k) noexcept
 {
