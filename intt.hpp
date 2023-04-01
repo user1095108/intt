@@ -2,18 +2,14 @@
 # define INTT_HPP
 # pragma once
 
-#include <cassert>
 #include <cmath> // std::ldexp()
-
 #include <algorithm> // std::max()
 #include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
 #include <functional> // std::hash
-#include <iomanip> // std::hex
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
-#include <sstream>
 #include <type_traits>
 
 #include "magic.hpp"
@@ -1719,49 +1715,6 @@ constexpr auto to_integral(auto const& s) noexcept ->
   return to_integral<T>(std::cbegin(s), std::cend(s));
 }
 
-template <std::size_t M, typename T, std::size_t N, enum feat... FF>
-constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
-{
-  using F = double;
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  return is_neg(a) ?
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return -(((T(~a.v_[I]) *
-        std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...) +
-        std::ldexp(F(1), -int(M) * int(U::wbits)));
-    }(std::make_index_sequence<N>()) :
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return ((a.v_[I] *
-        std::ldexp(F(1), (int(I) - int(M)) * int(U::wbits))) + ...);
-    }(std::make_index_sequence<N>());
-}
-
-auto to_raw(intt_concept auto const& a)
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t { N = U::words };
-
-  using V = std::conditional_t<std::is_same_v<T, std::uint8_t>, unsigned, T>;
-
-  std::stringstream ss;
-
-  ss << '"' << std::hex << std::setfill('0');
-
-  for (auto i(N - 1); i; --i)
-  {
-    ss << std::setw(2) << V(a[i]) << " ";
-  }
-
-  ss << std::setw(2) << V(a[0]) << '"';
-
-  return ss.str();
-}
-
 template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
   decltype(a) const k = 10u) noexcept
@@ -1825,8 +1778,8 @@ struct hash<U>
     return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
       {
-        return ((s ^= std::hash<T>()(a[I + 1]) + intt::magic::ISR +
-          (s << 6) + (s >> 2)), ...), s;
+        return ((s ^= std::hash<T>()(a[I + 1]) ^ intt::magic::ISR ^
+          (s << 6) ^ (s >> 2)), ...), s;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };
