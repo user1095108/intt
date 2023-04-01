@@ -36,10 +36,10 @@ static constexpr std::uint8_t const isr_c[]{
 template <typename T, auto A>
 consteval T generate_constant() noexcept
 {
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  return []<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return ((T(A[I]) << (sizeof(T) - 1 - I) * CHAR_BIT) | ...);
-    }(std::make_index_sequence<sizeof(T)>()) | T(1);
+    }(std::make_index_sequence<sizeof(T)>());
 }
 
 }
