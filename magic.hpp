@@ -39,7 +39,7 @@ consteval T generate_constant() noexcept
   return []<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return ((T(A[I]) << (sizeof(T) - 1 - I) * CHAR_BIT) | ...);
-    }(std::make_index_sequence<sizeof(T)>());
+    }(std::make_index_sequence<sizeof(T)>()) | T(1);
 }
 
 }
