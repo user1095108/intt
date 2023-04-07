@@ -797,7 +797,7 @@ struct intt
 
       lshl(a, CB);
 
-      if (CB >= CA)
+      if (CB >= CA) [[likely]]
       {
         wshl<N>(lshl(b, CB));
 
@@ -812,13 +812,13 @@ struct intt
 
           //
           T h(a.v_[k] / B);
-          if (h >> hwbits) h = dmax;
+          if (h >> hwbits) [[unlikely]] h = dmax;
 
           for (a -= hwmul(hwlshr(b), h); is_neg(a); a += b, --h);
 
           //
           T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
-          if (l >> hwbits) l = dmax;
+          if (l >> hwbits) [[unlikely]] l = dmax;
 
           for (a -= hwmul(hwlshr(b), l); is_neg(a); a += b, --l);
 
@@ -941,7 +941,7 @@ struct intt
       }
 
       // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
-      if (CB >= CA)
+      if (CB >= CA) [[likely]]
       {
         auto i(CB - CA + 1);
 
