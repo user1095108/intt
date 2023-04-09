@@ -438,10 +438,10 @@ struct intt
 
       for (; std::size_t(M) >= wbits; M -= wbits - 1)
       {
-        shl.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+        shl(wbits - 1, std::make_index_sequence<N - 1>());
       }
 
-      shl.template operator()(M, std::make_index_sequence<N - 1>());
+      shl(M, std::make_index_sequence<N - 1>());
     }
 
     return r;
@@ -469,10 +469,10 @@ struct intt
 
       for (; std::size_t(M) >= wbits; M -= wbits - 1)
       {
-        shr.template operator()(wbits - 1, std::make_index_sequence<N - 1>());
+        shr(wbits - 1, std::make_index_sequence<N - 1>());
       }
 
-      shr.template operator()(M, std::make_index_sequence<N - 1>());
+      shr(M, std::make_index_sequence<N - 1>());
     }
 
     return r;
