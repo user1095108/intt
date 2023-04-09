@@ -1542,7 +1542,7 @@ constexpr void add_words(intt_concept auto& a, std::size_t i,
 template <std::size_t S, std::size_t M>
 constexpr void sub_words(intt_concept auto& a,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
-  noexcept requires(bool(M))
+  noexcept requires(bool(M) && (S < std::remove_cvref_t<decltype(a)>::words))
 {
   using U = std::remove_cvref_t<decltype(a)>;
   static_assert(S < U::words);
