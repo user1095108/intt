@@ -1395,8 +1395,8 @@ constexpr auto& lshr(intt_concept auto&& a, std::size_t M) noexcept
   return a;
 }
 
-template <std::size_t M>
-constexpr auto& wshl(intt_concept auto&& a) noexcept requires(bool(M))
+template <std::size_t M> requires(bool(M))
+constexpr auto& wshl(intt_concept auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
@@ -1421,13 +1421,13 @@ constexpr auto& wshl(intt_concept auto&& a, std::size_t const M) noexcept
   std::size_t i{};
 
   for (auto const J(U::words - M); i != J; ++i) a.v_[i + M] = a.v_[i];
-  for (; i != U::words;) a.v_[U::words - 1 - i++] = {};
+  for (; i != U::words;) a.v_[U::words - ++i] = {};
 
   return a;
 }
 
-template <std::size_t M>
-constexpr auto& wshr(intt_concept auto&& a) noexcept requires(bool(M))
+template <std::size_t M> requires(bool(M))
+constexpr auto& wshr(intt_concept auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
