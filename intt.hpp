@@ -1475,10 +1475,9 @@ constexpr auto ucompare(intt_concept auto const& a, decltype(a) b) noexcept
 template <std::size_t S, std::size_t M>
 constexpr void add_words(intt_concept auto& a,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
-  noexcept requires(bool(M))
+  noexcept requires(bool(M) && (S < std::remove_cvref_t<decltype(a)>::words))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-  static_assert(S < U::words);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
