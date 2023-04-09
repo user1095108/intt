@@ -1737,8 +1737,8 @@ struct hash<U>
     return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
       {
-        return ((s ^= std::hash<T>()(a[I + 1]) ^ intt::magic::ISR ^
-          (s << 6) ^ (s >> 2)), ...), s;
+        return ((s ^= std::hash<T>()(a[I + 1]) + intt::magic::ISR +
+          (s << 6) + (s >> 2)), ...), s;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }
 };
