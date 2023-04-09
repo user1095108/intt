@@ -1335,7 +1335,7 @@ constexpr auto& lshl(intt_concept auto&& a, std::size_t M) noexcept
       shl(U::wbits - 1, std::make_index_sequence<N - 1>());
     }
 
-    shl.template operator()(M, std::make_index_sequence<N - 1>());
+    shl(M, std::make_index_sequence<N - 1>());
   }
 
   return a;
@@ -1347,8 +1347,6 @@ constexpr auto& lshr(intt_concept auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  enum : std::size_t {N = U::words};
-
   [&a]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
@@ -1358,8 +1356,8 @@ constexpr auto& lshr(intt_concept auto&& a) noexcept
       ...
     );
 
-    a.v_[N - 1] >>= M;
-  }(std::make_index_sequence<N - 1>());
+    a.v_[U::words - 1] >>= M;
+  }(std::make_index_sequence<U::words - 1>());
 
   return a;
 }
@@ -1420,12 +1418,10 @@ constexpr auto& wshl(intt_concept auto&& a, std::size_t const M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  enum : std::size_t {N = U::words};
+  std::size_t i{};
 
-  std::size_t I{};
-
-  for (auto const J(N - M); I != J; ++I) a.v_[I + M] = a.v_[I];
-  for (; I != N; ++I) a.v_[N - 1 - I] = {};
+  for (auto const J(U::words - M); i != J; ++i) a.v_[i + M] = a.v_[i];
+  for (; i != U::words;) a.v_[U::words - 1 - i++] = {};
 
   return a;
 }
@@ -1436,15 +1432,13 @@ constexpr auto& wshr(intt_concept auto&& a) noexcept requires(bool(M))
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
 
-  enum : std::size_t {N = U::words};
-
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
-      (a.v_[I] = M + I < N ? a.v_[I + M] : T{}),
+      (a.v_[I] = M + I < U::words ? a.v_[I + M] : T{}),
       ...
     );
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<U::words>());
 
   return a;
 }
@@ -1453,12 +1447,10 @@ constexpr auto& wshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  enum : std::size_t {N = U::words};
+  std::size_t i{};
 
-  std::size_t I{};
-
-  for (auto const J(N - M); I != J; ++I) a.v_[I] = a.v_[I + M];
-  for (; I != N; ++I) a.v_[I] = {};
+  for (auto const J(U::words - M); i != J; ++i) a.v_[i] = a.v_[i + M];
+  for (; i != U::words;) a.v_[i++] = {};
 
   return a;
 }
@@ -1486,9 +1478,7 @@ constexpr void add_words(intt_concept auto& a,
   noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t { N = U::words };
-  static_assert(S < N);
+  static_assert(S < U::words);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -1519,7 +1509,7 @@ constexpr void add_words(intt_concept auto& a,
       }(),
       ...
     );
-  }(std::make_index_sequence<N - S>());
+  }(std::make_index_sequence<U::words - S>());
 }
 
 template <std::size_t M>
@@ -1529,8 +1519,6 @@ constexpr void add_words(intt_concept auto& a, std::size_t i,
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  enum : std::size_t { N = U::words };
-
   bool c;
 
   {
@@ -1539,7 +1527,7 @@ constexpr void add_words(intt_concept auto& a, std::size_t i,
     c = (a.v_[i++] += b) < b;
   }
 
-  for (std::size_t j(1); (M != j) && (N != i);)
+  for (std::size_t j(1); (M != j) && (U::words != i);)
   {
     auto& s(a.v_[i++]);
     auto const b(w[j++]);
@@ -1548,7 +1536,7 @@ constexpr void add_words(intt_concept auto& a, std::size_t i,
     c = c ? s <= b : s < b;
   }
 
-  while (N != i) c = (a.v_[i++] += c) < c;
+  while (U::words != i) c = (a.v_[i++] += c) < c;
 }
 
 template <std::size_t S, std::size_t M>
@@ -1557,9 +1545,7 @@ constexpr void sub_words(intt_concept auto& a,
   noexcept requires(bool(M))
 {
   using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t { N = U::words };
-  static_assert(S < N);
+  static_assert(S < U::words);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -1587,7 +1573,7 @@ constexpr void sub_words(intt_concept auto& a,
       }(),
       ...
     );
-  }(std::make_index_sequence<N - S>());
+  }(std::make_index_sequence<U::words - S>());
 }
 
 constexpr auto seqsqrt(intt_concept auto const& a) noexcept
