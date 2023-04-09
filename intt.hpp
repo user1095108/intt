@@ -69,9 +69,9 @@ template <typename T, std::size_t N, enum feat... F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
 
 template <auto ...F>
-consteval auto contains(auto const f) noexcept
+consteval auto contains([[maybe_unused]] auto const f) noexcept
 {
-  return void(f), ((f == F) || ...);
+  return ((f == F) || ...);
 }
 
 consteval std::size_t num_digits(std::size_t const N) noexcept
