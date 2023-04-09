@@ -1622,7 +1622,7 @@ template <typename T>
 constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   decltype(i) const end) noexcept
 {
-  if (T r{}; i == end)
+  if (T r{}; i == end) [[unlikely]]
   {
     return {r, true};
   }
@@ -1632,7 +1632,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
 
     switch (*i)
     {
-      case '0': case '1': case '2': case '3': case '4':
+      [[likely]] case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
         break;
 
@@ -1644,7 +1644,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         i = std::next(i);
         break;
 
-      default:
+      [[unlikely]] default:
         return {r, true};
     }
 
@@ -1653,7 +1653,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
     {
       switch (*i)
       {
-        case '0': case '1': case '2': case '3': case '4':
+        [[likely]] case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
           if (decltype(r) const d(*i - '0'); r >= coeff<T::min() / 10>())
           {
@@ -1670,7 +1670,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         case '\0':
           break;
 
-        default:
+        [[unlikely]] default:
           return {r, true};
       }
 
