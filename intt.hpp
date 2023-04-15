@@ -1626,7 +1626,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
         [[fallthrough]];
 
       case '+':
-        i = std::next(i);
+        ++i;
         break;
 
       [[unlikely]] default:
@@ -1634,7 +1634,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
     }
 
     //
-    for (; end != i; i = std::next(i))
+    for (; end != i; ++i)
     {
       switch (*i)
       {
@@ -1701,7 +1701,7 @@ constexpr auto to_string(intt_concept auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
-  return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
+  return std::string(arr.begin() + i + !is_neg(a), arr.end());
 }
 
 inline auto& operator<<(std::ostream& os, intt_concept auto const& a)
@@ -1717,8 +1717,7 @@ inline auto& operator<<(std::ostream& os, intt_concept auto const& a)
     )
   );
 
-  return os <<
-    std::string_view(std::next(arr.begin(), i + !is_neg(a)), arr.end());
+  return os << std::string_view(arr.begin() + i + !is_neg(a), arr.end());
 }
 
 }
