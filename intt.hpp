@@ -1581,13 +1581,12 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
   auto const CR((U::bits + clz(a)) / 2);
   lshl(r, CR);
 
-  for (auto i(U::bits - CR); i;)
+  for (auto i(2 * U::bits - CR); U::bits != i;)
   {
-    auto const j(U::bits + --i);
-
-    if (auto tmp(Q); set_bit(lshl<1>(tmp), j), ucompare(lshl<1>(r), tmp) >= 0)
+    if (auto tmp(Q);
+      set_bit(lshl<1>(tmp), --i), ucompare(lshl<1>(r), tmp) >= 0)
     {
-      set_bit(Q, j);
+      set_bit(Q, i);
       r -= tmp;
     }
   }
