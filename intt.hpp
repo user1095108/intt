@@ -951,9 +951,7 @@ struct intt
 
         do
         {
-          --i;
-
-          if (ucompare(lshl<1>(r), D) >= 0)
+          if (--i; ucompare(lshl<1>(r), D) >= 0)
           {
             set_bit(q, i);
             r -= D;
