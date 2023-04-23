@@ -37,7 +37,7 @@ template <
 
 template <typename> struct is_intt : std::false_type {};
 
-template <typename T, std::size_t N, enum feat... F>
+template <typename T, std::size_t N, enum feat ...F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
 template <typename T>
@@ -65,8 +65,10 @@ using underlying_type_t = typename underlying_type<T>::type;
 
 template <typename> struct double_ { using type = void; };
 
-template <typename T, std::size_t N, enum feat... F>
+template <typename T, std::size_t N, enum feat ...F>
 struct double_<intt<T, N, F...>> { using type = intt<T, 2 * N, F...>; };
+
+template <typename T> using double_t = typename double_<T>::type;
 
 template <auto ...F>
 consteval auto contains([[maybe_unused]] auto const f) noexcept
@@ -1579,7 +1581,7 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  typename detail::double_<U>::type r(a, direct{}), Q{};
+  detail::double_t<U> r(a, direct{}), Q{};
 
   //CR = CR + (N * wbits - CR) / 2;
   auto const CR((U::bits + clz(a)) / 2);
@@ -1589,7 +1591,7 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
   {
     --i;
 
-    if (auto tmp(Q << 1); set_bit(tmp, U::bits + i),
+    if (auto tmp(Q); set_bit(lshl<1>(tmp), U::bits + i),
       ucompare(lshl<1>(r), tmp) >= 0)
     {
       r -= tmp;
