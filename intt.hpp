@@ -955,9 +955,8 @@ struct intt
 
           if (ucompare(lshl<1>(r), D) >= 0)
           {
-            r -= D;
-
             set_bit(q, i);
+            r -= D;
           }
         }
         while (i);
@@ -1584,14 +1583,12 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 
   for (auto i(U::bits - CR); i;)
   {
-    --i;
+    auto const j(U::bits + --i);
 
-    if (auto tmp(Q); set_bit(lshl<1>(tmp), U::bits + i),
-      ucompare(lshl<1>(r), tmp) >= 0)
+    if (auto tmp(Q); set_bit(lshl<1>(tmp), j), ucompare(lshl<1>(r), tmp) >= 0)
     {
+      set_bit(Q, j);
       r -= tmp;
-
-      set_bit(Q, U::bits + i);
     }
   }
 
