@@ -1302,11 +1302,9 @@ constexpr auto& lshl(intt_concept auto&& a) noexcept
       ),
       ...
     );
-
-    *a.v_ <<= M;
   }(std::make_index_sequence<N - 1>());
 
-  return a;
+  return *a.v_ <<= M, a;
 }
 
 constexpr auto& lshl(intt_concept auto&& a, std::size_t M) noexcept
@@ -1349,7 +1347,7 @@ constexpr auto& lshr(intt_concept auto&& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
-  [&a]<auto ...I>(std::index_sequence<I...>) noexcept
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
       (
@@ -1357,11 +1355,9 @@ constexpr auto& lshr(intt_concept auto&& a) noexcept
       ),
       ...
     );
-
-    a.v_[U::words - 1] >>= M;
   }(std::make_index_sequence<U::words - 1>());
 
-  return a;
+  return a.v_[U::words - 1] >>= M, a;
 }
 
 constexpr auto& lshr(intt_concept auto&& a, std::size_t M) noexcept
@@ -1372,7 +1368,7 @@ constexpr auto& lshr(intt_concept auto&& a, std::size_t M) noexcept
 
   if (M)
   {
-    auto const shr([&a]<auto ...I>(auto const e,
+    auto const shr([&]<auto ...I>(auto const e,
       std::index_sequence<I...>) noexcept
       {
         (
@@ -1578,12 +1574,11 @@ constexpr void sub_words(intt_concept auto& a,
 }
 
 constexpr auto seqsqrt(intt_concept auto const& a) noexcept
-{
+{ // CR = CR + (N * wbits - CR) / 2;
   using U = std::remove_cvref_t<decltype(a)>;
 
   detail::double_t<U> r(a, direct{}), Q{};
 
-  //CR = CR + (N * wbits - CR) / 2;
   auto const CR((U::bits + clz(a)) / 2);
   lshl(r, CR);
 
