@@ -1602,7 +1602,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   {
     return {r, true};
   }
-  else
+  else [[likely]]
   {
     bool neg{};
 
@@ -1631,9 +1631,10 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
       {
         [[likely]] case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-          if (r >= coeff<T::min() / 10>())
+          if (r >= coeff<T::min() / 10>()) [[likely]]
           {
-            if (decltype(r) const t(10 * r), d(*i - '0'); t >= T::min() + d)
+            if (decltype(r) const t(10 * r), d(*i - '0');
+              t >= T::min() + d) [[likely]]
             {
               r = t - d;
 
