@@ -1090,10 +1090,8 @@ constexpr auto abs(intt_concept auto const& a) noexcept
 }
 
 #if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
-constexpr bool is_neg(__int128 const a) noexcept
-{
-  return a < decltype(a){};
-}
+constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
+constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
 
 constexpr std::size_t clz(unsigned __int128 const a) noexcept
 {
