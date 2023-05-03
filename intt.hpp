@@ -1079,6 +1079,11 @@ constexpr bool is_neg(intt_concept auto const& a) noexcept
   return S(a.v_[U::words - 1]) < S{};
 }
 
+constexpr bool is_neg(std::integral auto const a) noexcept
+{
+  return a < decltype(a){};
+}
+
 constexpr auto abs(intt_concept auto const& a) noexcept
 {
   return is_neg(a) ? -a : a;
@@ -1094,12 +1099,9 @@ constexpr std::size_t clz(unsigned __int128 const a) noexcept
 }
 #endif
 
-constexpr std::size_t clz(auto const a) noexcept
-  requires(std::is_integral_v<std::remove_const_t<decltype(a)>>)
+constexpr std::size_t clz(std::integral auto const a) noexcept
 {
-  return std::countl_zero(
-    std::make_unsigned_t<std::remove_const_t<decltype(a)>>(a)
-  );
+  return std::countl_zero(std::make_unsigned_t<decltype(a)>(a));
 }
 
 constexpr std::size_t clz(intt_concept auto const& a) noexcept
