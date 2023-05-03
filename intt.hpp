@@ -1084,7 +1084,25 @@ constexpr auto abs(intt_concept auto const& a) noexcept
   return is_neg(a) ? -a : a;
 }
 
-constexpr auto clz(intt_concept auto const& a) noexcept
+#if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
+constexpr std::size_t clz(unsigned __int128 const a) noexcept
+{
+  std::uint64_t const hi(a >> 64);
+  std::uint64_t const lo(a);
+  int const r[]{__builtin_clzll(hi), __builtin_clzll(lo) + 64, 128};
+  return r[!hi + (!lo & !hi)];
+}
+#endif
+
+constexpr std::size_t clz(auto const a) noexcept
+  requires(std::is_integral_v<std::remove_const_t<decltype(a)>>)
+{
+  return std::countl_zero(
+    std::make_unsigned_t<std::remove_const_t<decltype(a)>>(a)
+  );
+}
+
+constexpr std::size_t clz(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
 
