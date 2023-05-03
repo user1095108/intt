@@ -1090,7 +1090,7 @@ constexpr std::size_t clz(unsigned __int128 const a) noexcept
   std::uint64_t const hi(a >> 64);
   std::uint64_t const lo(a);
   int const r[]{__builtin_clzll(hi), __builtin_clzll(lo) + 64, 128};
-  return r[!hi + (!lo & !hi)];
+  return r[!hi + (!lo && !hi)];
 }
 #endif
 
