@@ -1736,7 +1736,7 @@ inline auto& operator<<(std::ostream& os, intt_concept auto const& a)
 namespace std
 {
 
-template <typename U> requires(intt::intt_concept<U>)
+template <intt::intt_concept U>
 struct hash<U>
 {
   using T = typename U::value_type;
