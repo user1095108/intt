@@ -286,7 +286,7 @@ struct intt
       (
         [&]() noexcept
         {
-          auto const& b(o.v_[I]);
+          auto const b(o.v_[I]);
           auto& s(v_[I]);
 
           if constexpr(I)
@@ -531,7 +531,7 @@ struct intt
         [&]() noexcept
         {
           auto& s(r.v_[I]);
-          auto const& a(v_[I]);
+          auto const a(v_[I]);
 
           if constexpr(I)
           {
@@ -562,7 +562,7 @@ struct intt
         [&]() noexcept
         {
           auto& d(r.v_[I]);
-          auto const& a(v_[I]);
+          auto const a(v_[I]);
 
           if constexpr(I)
           {
