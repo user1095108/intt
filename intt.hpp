@@ -180,7 +180,7 @@ struct intt
     {
       if constexpr(std::is_signed_v<detail::underlying_type_t<U>>)
       { // v_[0] is lsw, v_[N - 1] msw
-        auto const neg(v < 0);
+        auto const neg(v < U{});
 
         (
           (
