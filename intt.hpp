@@ -286,19 +286,16 @@ struct intt
       (
         [&]() noexcept
         {
+          auto const& b(o.v_[I]);
           auto& s(v_[I]);
 
           if constexpr(I)
           {
-            auto const& b(o.v_[I]);
-
             s += c + b;
             c = c ? s <= b : s < b;
           }
           else
           {
-            auto const& b(o.v_[I]);
-
             c = (s += b) < b;
           }
         }(),
