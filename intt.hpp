@@ -641,7 +641,7 @@ struct intt
   {
     intt r{};
 
-    if constexpr(std::is_same_v<T, std::uint64_t>)
+    if constexpr(std::is_same_v<T, std::uintmax_t>)
     { // multiplying half-words, wbits per iteration
       enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
 
@@ -1161,7 +1161,7 @@ constexpr auto hwmul(intt_concept auto const& a,
 
   U r{};
 
-  if constexpr(std::is_same_v<T, std::uint64_t>)
+  if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
     {
@@ -1230,7 +1230,7 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
 
   U r{};
 
-  if constexpr(std::is_same_v<T, std::uint64_t>)
+  if constexpr(std::is_same_v<T, std::uintmax_t>)
   {
     enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
 
