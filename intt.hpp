@@ -1089,13 +1089,6 @@ constexpr auto abs(intt_concept auto const& a) noexcept
 #if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
 constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
-
-constexpr std::size_t clz(unsigned __int128 const a) noexcept
-{
-  std::uint64_t const lo(a), hi(a >> 64);
-  int const r[]{__builtin_clzll(hi), __builtin_clzll(lo) + 64, 128};
-  return r[!hi + (!lo && !hi)];
-}
 #endif
 
 constexpr std::size_t clz(std::integral auto const a) noexcept
