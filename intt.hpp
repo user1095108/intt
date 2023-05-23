@@ -1072,7 +1072,6 @@ constexpr bool is_neg(intt_concept auto const& a) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using S = std::make_signed_t<typename U::value_type>;
-
   return S(a.v_[U::words - 1]) < S{};
 }
 
@@ -1082,8 +1081,8 @@ constexpr bool is_neg(std::integral auto const a) noexcept
 }
 
 #if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
-constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
+constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 #endif
 
 constexpr auto abs(intt_concept auto const& a) noexcept
