@@ -439,64 +439,12 @@ struct intt
   //
   constexpr auto operator+(intt const& o) const noexcept
   {
-    intt r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      bool c;
-
-      (
-        [&]() noexcept
-        {
-          auto& s(r.v_[I]);
-          auto const a(v_[I]);
-
-          if constexpr(I)
-          {
-            s = c + a + o.v_[I];
-            c = c ? s <= a : s < a;
-          }
-          else
-          {
-            c = (s = a + o.v_[I]) < a;
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-
-    return r;
+    auto r(*this); ar::add(r.v_, o.v_); return r;
   }
 
   constexpr auto operator-(intt const& o) const noexcept
   {
-    intt r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      bool c;
-
-      (
-        [&]() noexcept
-        {
-          auto& d(r.v_[I]);
-          auto const a(v_[I]);
-
-          if constexpr(I)
-          {
-            d = a - o.v_[I] - c;
-            c = c ? d >= a : d > a;
-          }
-          else
-          {
-            c = (d = a - o.v_[I]) > a;
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-
-    return r;
+    auto r(*this); ar::sub(r.v_, o.v_); return r;
   }
 
   constexpr auto operator*(intt const& o) const noexcept
