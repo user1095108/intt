@@ -26,7 +26,7 @@ constexpr auto eq(T const(&a)[N], T const(&b)[N]) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto ucmp(T const(&a)[N], T const(&b)[N]) noexcept
 {
-  auto i{N};
+  auto i(N);
 
   do
   {
@@ -58,7 +58,7 @@ constexpr std::size_t clz(T const(&a)[N]) noexcept
   decltype(N) r{};
 
   {
-    decltype(r) i{N};
+    auto i(N);
 
     int c;
 
