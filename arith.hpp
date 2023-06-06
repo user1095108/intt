@@ -118,8 +118,7 @@ constexpr void add(T(&a)[N0], T const(&b)[N1]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
-constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i = {})
-  noexcept
+constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i = {}) noexcept
 {
   bool c;
 
@@ -140,7 +139,6 @@ constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i = {})
 
   while (N0 != i) c = (a[i++] += c) < c;
 }
-
 
 template <std::size_t S = {}, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
