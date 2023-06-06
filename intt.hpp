@@ -5,13 +5,11 @@
 #include <cmath> // std::ldexp()
 #include <algorithm> // std::max()
 #include <array> // std::to_array()
-#include <bit> // std::countl_zero
-#include <concepts> // std::floating_point, std::integral
 #include <functional> // std::hash
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
-#include <type_traits>
 
+#include "arith.hpp"
 #include "magic.hpp"
 
 namespace intt
@@ -50,9 +48,6 @@ template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 namespace detail
 {
-
-template <typename U>
-static constexpr auto bit_size_v(CHAR_BIT * sizeof(U));
 
 template <typename T, auto = std::is_enum_v<T>>
 struct underlying_type : std::underlying_type<T> {};
@@ -184,7 +179,7 @@ struct intt
 
         (
           (
-            v_[I] = I * wbits < detail::bit_size_v<U> ?
+            v_[I] = I * wbits < ar::bit_size_v<U> ?
               v >> I * wbits :
               neg ? ~T{} : T{}
           ),
@@ -195,7 +190,7 @@ struct intt
       {
         (
           (
-            v_[I] = I * wbits < detail::bit_size_v<U> ?
+            v_[I] = I * wbits < ar::bit_size_v<U> ?
               v >> I * wbits :
               T{}
           ),
@@ -365,7 +360,7 @@ struct intt
       {
         if constexpr(bool(sizeof...(I)))
         { // words shifted to the left
-          if constexpr(detail::bit_size_v<U> > N * wbits)
+          if constexpr(ar::bit_size_v<U> > N * wbits)
           {
             return is_neg(*this) ?
               (((I < N ? U(v_[I]) : U(~U{})) << I * wbits) | ...) :
@@ -380,7 +375,7 @@ struct intt
         {
           return *v_;
         }
-      }(std::make_index_sequence<detail::bit_size_v<U> / wbits>());
+      }(std::make_index_sequence<ar::bit_size_v<U> / wbits>());
   }
 
   //
@@ -480,12 +475,12 @@ struct intt
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
-    add_words<0>(*this, {T(1)}); return *this;
+    ar::add(v_, {T(1)}); return *this;
   }
 
   constexpr auto& operator--() noexcept
   {
-    sub_words<0>(*this, {T(1)}); return *this;
+    ar::sub(v_, {T(1)}); return *this;
   }
 
   constexpr auto operator++(int) noexcept
@@ -724,7 +719,7 @@ struct intt
       {
         auto const tmp(negb ? -o : o);
 
-        C = clz(tmp);
+        C = ar::clz(tmp.v_);
         b = {tmp, direct{}};
       }
 
@@ -750,13 +745,13 @@ struct intt
 
     if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
     {
-      if (ucompare(r, b) >= 0) r -= b;
+      if (ar::ucmp(r.v_, b.v_) >= 0) r -= b;
 
       return nega ? -r : r;
     }
     else
     {
-      if (ucompare(r, b) >= 0) ++q;
+      if (ar::ucmp(r.v_, b.v_) >= 0) ++q;
 
       return nega == negb ? q : -q;
     }
@@ -781,7 +776,7 @@ struct intt
       {
         auto const tmp(nega ? -*this : *this);
 
-        CA = clz(tmp);
+        CA = ar::clz(tmp.v_);
         a = {tmp, direct{}};
       }
 
@@ -790,7 +785,7 @@ struct intt
       {
         auto const tmp(negb ? -o : o);
 
-        CB = clz(tmp);
+        CB = ar::clz(tmp.v_);
         b = {tmp, direct{}};
       }
 
@@ -864,7 +859,7 @@ struct intt
       {
         auto const tmp(negb ? -o : o);
 
-        C = clz(tmp);
+        C = ar::clz(tmp.v_);
         b = {tmp, direct{}};
       }
 
@@ -926,7 +921,7 @@ struct intt
       {
         auto const tmp(negb ? -o : o);
 
-        CB = clz(tmp);
+        CB = ar::clz(tmp.v_);
         wshl<N>(D = {tmp, direct{}});
       }
 
@@ -935,7 +930,7 @@ struct intt
       {
         auto const tmp(nega ? -*this : *this);
 
-        CA = clz(tmp);
+        CA = ar::clz(tmp.v_);
         r = {tmp, direct{}};
       }
 
@@ -948,7 +943,7 @@ struct intt
 
         do
         {
-          if (--i; ucompare(lshl<1>(r), D) >= 0)
+          if (--i; ar::ucmp(lshl<1>(r).v_, D) >= 0)
           {
             set_bit(q, i);
             r -= D;
@@ -978,17 +973,14 @@ struct intt
   //
   constexpr bool operator==(intt const& o) const noexcept
   {
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        return ((v_[I] == o.v_[I]) && ...);
-      }(std::make_index_sequence<N>());
+    return ar::eq(v_, o.v_);
   }
 
   constexpr auto operator<=>(intt const& o) const noexcept
   {
     auto const c(is_neg(o) <=> is_neg(*this));
 
-    return c == 0 ? ucompare(*this, o) : c;
+    return c == 0 ? ar::ucmp(v_, o.v_) : c;
   }
 
   //
@@ -1003,7 +995,7 @@ template <typename A, std::size_t M, typename B,\
 constexpr auto operator OP (intt<A, M, F...> const& a,\
   intt<B, N, G...> const& b) noexcept\
 {\
-  if constexpr(M * detail::bit_size_v<A> < N * detail::bit_size_v<B>)\
+  if constexpr(M * ar::bit_size_v<A> < N * ar::bit_size_v<B>)\
     return intt<B, N, G...>(a) OP b;\
   else\
     return a OP intt<A, M, F...>(b);\
@@ -1090,33 +1082,6 @@ constexpr auto abs(intt_concept auto const& a) noexcept
   return is_neg(a) ? -a : a;
 }
 
-constexpr std::size_t clz(std::integral auto const a) noexcept
-{
-  return std::countl_zero(std::make_unsigned_t<decltype(a)>(a));
-}
-
-constexpr std::size_t clz(intt_concept auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t { N = U::words };
-
-  detail::underlying_type_t<decltype(N)> r{};
-
-  {
-    decltype(r) I{N};
-
-    int c;
-
-    do
-    {
-      r += c = std::countl_zero(a.v_[--I]);
-    } while ((U::wbits == c) && I);
-  }
-
-  return r;
-}
-
 constexpr void set_bit(intt_concept auto& a, std::size_t const i) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
@@ -1163,15 +1128,15 @@ constexpr auto hwmul(intt_concept auto const& a,
 
           if constexpr((S % 2) && (M - 1 == S))
           {
-            add_words<S / 2>(r, {pp << hwbits});
+            ar::add<S / 2>(r.v_, {pp << hwbits});
           }
           else if constexpr(S % 2)
           {
-            add_words<S / 2>(r, {pp << hwbits, pp >> hwbits});
+            ar::add<S / 2>(r.v_, {pp << hwbits, pp >> hwbits});
           }
           else
           {
-            add_words<S / 2>(r, {pp});
+            ar::add<S / 2>(r.v_, {pp});
           }
         }(),
         ...
@@ -1189,11 +1154,11 @@ constexpr auto hwmul(intt_concept auto const& a,
 
           if constexpr(N - 1 == S)
           {
-            add_words<S>(r, {T(pp)});
+            ar::add<S>(r.v_, {T(pp)});
           }
           else
           {
-            add_words<S>(r, {T(pp), T(pp >> wbits)});
+            ar::add<S>(r.v_, {T(pp), T(pp >> wbits)});
           }
         }(),
         ...
@@ -1266,12 +1231,12 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
     if (intt<T, O> const bb(b, direct{}); nega)
     {
       auto A{-a.v_[O]};
-      do sub_words<0>(r, bb.v_); while (--A);
+      do ar::sub(r.v_, bb.v_); while (--A);
     }
     else
     {
       auto A{a.v_[O]};
-      do add_words<0>(r, bb.v_); while (--A);
+      do ar::add(r.v_, bb.v_); while (--A);
     }
   }
 
@@ -1280,12 +1245,12 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
     if (intt<T, O> const aa(a, direct{}); negb)
     {
       auto B{-b.v_[O]};
-      do sub_words<0>(r, aa.v_); while (--B);
+      do ar::sub(r.v_, aa.v_); while (--B);
     }
     else
     {
       auto B{b.v_[O]};
-      do add_words<0>(r, aa.v_); while (--B);
+      do ar::add(r.v_, aa.v_); while (--B);
     }
   }
 
@@ -1461,62 +1426,6 @@ constexpr auto& wshr(intt_concept auto&& a, std::size_t const M) noexcept
   return a;
 }
 
-constexpr auto ucompare(intt_concept auto const& a, decltype(a) b) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  detail::underlying_type_t<decltype(U::words)> i{U::words};
-
-  do
-  {
-    --i;
-
-    if (auto const c(a[i] <=> b[i]); c != 0) return c;
-  }
-  while (i);
-
-  return std::strong_ordering::equal;
-}
-
-template <std::size_t S, std::size_t M>
-constexpr void add_words(intt_concept auto& a,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
-  noexcept requires(bool(M) && (S < std::remove_cvref_t<decltype(a)>::words))
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    bool c;
-
-    (
-      [&]() noexcept
-      {
-        auto& s(a.v_[S + I]);
-
-        if constexpr(!I)
-        {
-          auto const b(*w);
-
-          c = (s += b) < b;
-        }
-        else if constexpr(I < M)
-        {
-          auto const b(w[I]);
-
-          s += c + b;
-          c = c ? s <= b : s < b;
-        }
-        else
-        {
-          c = (s += c) < c;
-        }
-      }(),
-      ...
-    );
-  }(std::make_index_sequence<U::words - S>());
-}
-
 template <std::size_t M>
 constexpr void add_words(intt_concept auto& a, std::size_t i,
   typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
@@ -1544,56 +1453,19 @@ constexpr void add_words(intt_concept auto& a, std::size_t i,
   while (U::words != i) c = (a.v_[i++] += c) < c;
 }
 
-template <std::size_t S, std::size_t M>
-constexpr void sub_words(intt_concept auto& a,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
-  noexcept requires(bool(M) && (S < std::remove_cvref_t<decltype(a)>::words))
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  static_assert(S < U::words);
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    bool c;
-
-    (
-      [&]() noexcept
-      {
-        auto& d(a.v_[S + I]);
-        auto const a(d);
-
-        if constexpr(!I)
-        {
-          c = (d -= *w) > a;
-        }
-        else if constexpr(I < M)
-        {
-          d = d - w[I] - c;
-          c = c ? d >= a : d > a;
-        }
-        else
-        {
-          c = (d -= c) > a;
-        }
-      }(),
-      ...
-    );
-  }(std::make_index_sequence<U::words - S>());
-}
-
 constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
   using U = std::remove_cvref_t<decltype(a)>;
 
   detail::double_t<U> r(a, direct{}), Q{};
 
-  auto const CR((U::bits + clz(a)) / 2);
+  auto const CR((U::bits + ar::clz(a.v_)) / 2);
   lshl(r, CR);
 
   for (auto i(2 * U::bits - CR); U::bits != i;)
   {
     if (auto tmp(Q); set_bit(lshl<1>(tmp), --i),
-      ucompare(lshl<1>(r), tmp) >= 0)
+      ar::ucmp(lshl<1>(r).v_, tmp.v_) >= 0)
     {
       set_bit(Q, i);
       r -= tmp;

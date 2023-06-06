@@ -1,7 +1,7 @@
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint8_t
-#include <utility> // std::make_index_sequence()
+#include <utility> // std::index_sequence
 
 namespace intt::magic
 {
