@@ -6,14 +6,21 @@
 #include <utility> // std::index_sequence
 
 namespace ar
-{
+{ // provides ops on arrays of unsigned ints
 
 template <typename U>
 static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
 
 //
+template <std::unsigned_integral T, std::size_t N>
+constexpr bool any(T const(&a)[N]) noexcept
+{
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return (a[I] || ...);
+    }(std::make_index_sequence<N>());
+}
 
-//
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto eq(T const(&a)[N], T const(&b)[N]) noexcept
 {
@@ -80,6 +87,15 @@ constexpr void neg(T (&a)[N]) noexcept
     bool c{true};
 
     ((c = (a[I] = T(~a[I]) + c) < c), ...);
+  }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void not_(T (&a)[N]) noexcept
+{
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    ((a[I] = T(~a[I])), ...);
   }(std::make_index_sequence<N>());
 }
 

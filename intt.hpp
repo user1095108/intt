@@ -274,70 +274,16 @@ struct intt
 
   constexpr auto& operator+=(intt const& o) noexcept
   {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      bool c;
-
-      (
-        [&]() noexcept
-        {
-          auto const b(o.v_[I]);
-          auto& s(v_[I]);
-
-          if constexpr(I)
-          {
-            s += c + b;
-            c = c ? s <= b : s < b;
-          }
-          else
-          {
-            c = (s += b) < b;
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-
-    return *this;
+    ar::add(v_, o.v_); return *this;
   }
 
   constexpr auto& operator-=(intt const& o) noexcept
   {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      bool c;
-
-      (
-        [&]() noexcept
-        {
-          auto& d(v_[I]);
-          auto const a(d);
-
-          if constexpr(I)
-          {
-            d = a - o.v_[I] - c;
-            c = c ? d >= a : d > a;
-          }
-          else
-          {
-            c = (d -= o.v_[I]) > a;
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-
-    return *this;
+    ar::sub(v_, o.v_); return *this;
   }
 
   //
-  constexpr explicit operator bool() const noexcept
-  {
-    return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-      {
-        return (v_[I] || ...);
-      }(std::make_index_sequence<N>());
-  }
+  constexpr explicit operator bool() const noexcept { return ar::any(v_); }
 
   template <std::floating_point U>
   constexpr explicit operator U() const noexcept
@@ -388,11 +334,7 @@ struct intt
   // bitwise
   constexpr auto operator~() const noexcept
   {
-    return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt
-      {
-        return {direct{}, T(~v_[I])...};
-      }
-    )(std::make_index_sequence<N>());
+    auto r(*this); ar::not_(r.v_); return r;
   }
 
   #define INTT_BITWISE__(OP)\
