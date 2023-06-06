@@ -473,15 +473,8 @@ struct intt
   }
 
   // increment, decrement
-  constexpr auto& operator++() noexcept
-  {
-    ar::add(v_, {T(1)}); return *this;
-  }
-
-  constexpr auto& operator--() noexcept
-  {
-    ar::sub(v_, {T(1)}); return *this;
-  }
+  constexpr auto& operator++() noexcept { ar::add(v_, {T(1)}); return *this; }
+  constexpr auto& operator--() noexcept { ar::sub(v_, {T(1)}); return *this; }
 
   constexpr auto operator++(int) noexcept
   {
@@ -498,19 +491,7 @@ struct intt
 
   constexpr auto operator-() const noexcept
   {
-    intt r;
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      auto& s(r.v_);
-      auto const& a(v_);
-
-      bool c{true};
-
-      ((c = (s[I] = c + T(~a[I])) < c), ...);
-    }(std::make_index_sequence<N>());
-
-    return r;
+    auto r(*this); ar::neg(r.v_); return r;
   }
 
   //

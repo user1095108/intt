@@ -72,6 +72,17 @@ constexpr std::size_t clz(T const(&a)[N]) noexcept
 }
 
 //
+template <std::unsigned_integral T, std::size_t N>
+constexpr void neg(T (&a)[N]) noexcept
+{
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    bool c{true};
+
+    ((c = (a[I] = T(~a[I]) + c) < c), ...);
+  }(std::make_index_sequence<N>());
+}
+
 template <std::size_t S = {}, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
 constexpr void add(T(&a)[N0], T const(&b)[N1]) noexcept
