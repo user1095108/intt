@@ -117,6 +117,31 @@ constexpr void add(T(&a)[N0], T const(&b)[N1]) noexcept
   }(std::make_index_sequence<N0 - S>());
 }
 
+template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
+constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i = {})
+  noexcept
+{
+  bool c;
+
+  {
+    auto const b0(*b);
+
+    c = (a[i++] += b0) < b0;
+  }
+
+  for (std::size_t j(1); (N1 != j) && (N0 != i);)
+  {
+    auto& s(a[i++]);
+    auto const a(s);
+
+    s += c + b[j++];
+    c = c ? s <= a : s < a;
+  }
+
+  while (N0 != i) c = (a[i++] += c) < c;
+}
+
+
 template <std::size_t S = {}, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
 constexpr void sub(T(&a)[N0], T const(&b)[N1]) noexcept

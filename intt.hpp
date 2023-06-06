@@ -634,8 +634,8 @@ struct intt
           }
 
           S % 2 ?
-            add_words(r, S / 2, {pp << hwbits, pp >> hwbits}) :
-            add_words(r, S / 2, {pp});
+            ar::add(r.v_, {pp << hwbits, pp >> hwbits}, S / 2) :
+            ar::add(r.v_, {pp}, S / 2);
         }
         while (M != ++S);
       }
@@ -650,7 +650,7 @@ struct intt
         {
           D const pp(D(v_[i]) * o.v_[S - i]);
 
-          add_words(r, S, {T(pp), T(pp >> wbits)});
+          ar::add(r.v_, {T(pp), T(pp >> wbits)}, S);
         }
         while (N != ++S);
       }
@@ -1179,8 +1179,8 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
         auto const S(i + j);
 
         S % 2 ?
-          add_words(r, S / 2, {pp << hwbits, pp >> hwbits}) :
-          add_words(r, S / 2, {pp});
+          ar::add(r, {pp << hwbits, pp >> hwbits}, S / 2) :
+          ar::add(r, {pp}, S / 2);
       }
     }
   }
@@ -1192,7 +1192,7 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
       {
         D const pp(D(a.v_[i]) * b.v_[j]);
 
-        add_words(r, i + j, {T(pp), T(pp >> U::wbits)});
+        ar::add(r, {T(pp), T(pp >> U::wbits)}, i + j);
       }
     }
   }
@@ -1405,33 +1405,6 @@ constexpr auto& wshr(intt_concept auto&& a, std::size_t const M) noexcept
   for (; i != U::words;) a.v_[i++] = {};
 
   return a;
-}
-
-template <std::size_t M>
-constexpr void add_words(intt_concept auto& a, std::size_t i,
-  typename std::remove_cvref_t<decltype(a)>::value_type const (&w)[M])
-  noexcept requires(bool(M))
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  bool c;
-
-  {
-    auto const b(*w);
-
-    c = (a.v_[i++] += b) < b;
-  }
-
-  for (std::size_t j(1); (M != j) && (U::words != i);)
-  {
-    auto& s(a.v_[i++]);
-    auto const b(w[j++]);
-
-    s += c + b;
-    c = c ? s <= b : s < b;
-  }
-
-  while (U::words != i) c = (a.v_[i++] += c) < c;
 }
 
 constexpr auto seqsqrt(intt_concept auto const& a) noexcept
