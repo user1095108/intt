@@ -1060,23 +1060,23 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
 }
 
 template <std::size_t M>
-constexpr auto& lshl(intt_concept auto&& a) noexcept
+constexpr auto&& lshl(intt_concept auto&& a) noexcept
 {
   ar::lshl<M>(a.v_); return a;
 }
 
-constexpr auto& lshl(intt_concept auto&& a, std::size_t const M) noexcept
+constexpr auto&& lshl(intt_concept auto&& a, std::size_t const M) noexcept
 {
   ar::lshl(a.v_, M); return a;
 }
 
 template <std::size_t M>
-constexpr auto& lshr(intt_concept auto&& a) noexcept
+constexpr auto&& lshr(intt_concept auto&& a) noexcept
 {
   ar::lshr<M>(a.v_); return a;
 }
 
-constexpr auto& lshr(intt_concept auto&& a, std::size_t const M) noexcept
+constexpr auto&& lshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
   ar::lshr(a.v_, M); return a;
 }
