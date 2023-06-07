@@ -22,7 +22,7 @@ constexpr bool any(T const(&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto eq(T const(&a)[N], T const(&b)[N]) noexcept
+constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -31,7 +31,7 @@ constexpr auto eq(T const(&a)[N], T const(&b)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto ucmp(T const(&a)[N], T const(&b)[N]) noexcept
+constexpr auto ucmp(T const (&a)[N], T const (&b)[N]) noexcept
 {
   auto i(N);
 
@@ -150,6 +150,25 @@ constexpr void ashr(T (&a)[N], std::size_t M) noexcept
 
     shr(M, std::make_index_sequence<N - 1>());
   }
+}
+
+template <std::size_t M, std::unsigned_integral T, std::size_t N>
+  requires(bool(M) && (M < bit_size_v<T>))
+constexpr void lshr(T (&a)[N]) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (
+        a[I] = (a[I + 1] << (wbits - M)) | (a[I] >> M)
+      ),
+      ...
+    );
+  }(std::make_index_sequence<N - 1>());
+
+  a[N - 1] >>= M;
 }
 
 template <std::unsigned_integral T, std::size_t N>
