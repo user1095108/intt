@@ -264,12 +264,12 @@ struct intt
 
   constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
-    return *this = *this << i;
+    ar::lshl(v_, i); return *this;
   }
 
   constexpr auto& operator>>=(std::integral auto const i) noexcept
   {
-    return *this = *this >> i;
+    ar::ashr(v_, i); return *this;
   }
 
   constexpr auto& operator+=(intt const& o) noexcept
