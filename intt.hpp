@@ -1061,110 +1061,24 @@ constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
 
 template <std::size_t M>
 constexpr auto& lshl(intt_concept auto&& a) noexcept
-  requires(bool(M) && (M < std::remove_cvref_t<decltype(a)>::wbits))
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t {N = U::words};
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (
-        a.v_[N - 1 - I] = (a.v_[N - 1 - I] << M) |
-          (a.v_[N - 1 - I - 1] >> (U::wbits - M))
-      ),
-      ...
-    );
-  }(std::make_index_sequence<N - 1>());
-
-  return *a.v_ <<= M, a;
+  ar::lshl<M>(a.v_); return a;
 }
 
-constexpr auto& lshl(intt_concept auto&& a, std::size_t M) noexcept
+constexpr auto& lshl(intt_concept auto&& a, std::size_t const M) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t {N = U::words};
-
-  if (M)
-  {
-    auto const shl([&]<auto ...I>(auto const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            a.v_[N - 1 - I] = (a.v_[N - 1 - I] << e) |
-              (a.v_[N - 1 - I - 1] >> (U::wbits - e))
-          ),
-          ...
-        );
-
-        *a.v_ <<= e;
-      }
-    );
-
-    for (; std::size_t(M) >= U::wbits; M -= U::wbits - 1)
-    {
-      shl(U::wbits - 1, std::make_index_sequence<N - 1>());
-    }
-
-    shl(M, std::make_index_sequence<N - 1>());
-  }
-
-  return a;
+  ar::lshl(a.v_, M); return a;
 }
 
 template <std::size_t M>
 constexpr auto& lshr(intt_concept auto&& a) noexcept
-  requires(bool(M) && (M < std::remove_cvref_t<decltype(a)>::wbits))
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (
-        a.v_[I] = (a.v_[I + 1] << (U::wbits - M)) | (a.v_[I] >> M)
-      ),
-      ...
-    );
-  }(std::make_index_sequence<U::words - 1>());
-
-  return a.v_[U::words - 1] >>= M, a;
+  ar::lshr<M>(a.v_); return a;
 }
 
-constexpr auto& lshr(intt_concept auto&& a, std::size_t M) noexcept
+constexpr auto& lshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  enum : std::size_t {N = U::words};
-
-  if (M)
-  {
-    auto const shr([&]<auto ...I>(auto const e,
-      std::index_sequence<I...>) noexcept
-      {
-        (
-          (
-            a.v_[I] = (a.v_[I + 1] << (U::wbits - e)) | (a.v_[I] >> e)
-          ),
-          ...
-        );
-
-        a.v_[N - 1] >>= e;
-      }
-    );
-
-    for (; std::size_t(M) >= U::wbits; M -= U::wbits - 1)
-    {
-      shr(U::wbits - 1, std::make_index_sequence<N - 1>());
-    }
-
-    shr(M, std::make_index_sequence<N - 1>());
-  }
-
-  return a;
+  ar::lshr(a.v_, M); return a;
 }
 
 template <std::size_t M> requires(bool(M))

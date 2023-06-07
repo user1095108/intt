@@ -91,6 +91,26 @@ constexpr std::size_t clz(T const(&a)[N]) noexcept
 }
 
 //
+template <std::size_t M, std::unsigned_integral T, std::size_t N>
+  requires(bool(M) && (M < bit_size_v<T>))
+constexpr void lshl(T (&a)[N]) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (
+        a[N - 1 - I] = (a[N - 1 - I] << M) |
+          (a[N - 1 - I - 1] >> (wbits - M))
+      ),
+      ...
+    );
+  }(std::make_index_sequence<N - 1>());
+
+  *a <<= M;
+}
+
 template <std::unsigned_integral T, std::size_t N>
 constexpr void lshl(T (&a)[N], std::size_t M) noexcept
 {
@@ -169,6 +189,36 @@ constexpr void lshr(T (&a)[N]) noexcept
   }(std::make_index_sequence<N - 1>());
 
   a[N - 1] >>= M;
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void lshr(T (&a)[N], std::size_t M) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+
+  if (M)
+  {
+    auto const shr([&]<auto ...I>(auto const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            a[I] = (a[I + 1] << (wbits - e)) | (a[I] >> e)
+          ),
+          ...
+        );
+
+        a[N - 1] >>= e;
+      }
+    );
+
+    for (; M >= wbits; M -= wbits - 1)
+    {
+      shr(wbits - 1, std::make_index_sequence<N - 1>());
+    }
+
+    shr(M, std::make_index_sequence<N - 1>());
+  }
 }
 
 template <std::unsigned_integral T, std::size_t N>
