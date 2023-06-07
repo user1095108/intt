@@ -46,6 +46,18 @@ constexpr auto ucmp(T const(&a)[N], T const(&b)[N]) noexcept
   return std::strong_ordering::equal;
 }
 
+template <std::unsigned_integral T, std::size_t N>
+constexpr bool is_neg(T const(&a)[N]) noexcept
+{
+  using S = std::make_signed_t<T>;
+  return S(a[N - 1]) < S{};
+}
+
+constexpr bool is_neg(std::integral auto const a) noexcept
+{
+  return a < decltype(a){};
+}
+
 //
 constexpr std::size_t clz(std::signed_integral auto const a) noexcept
 {
@@ -80,6 +92,82 @@ constexpr std::size_t clz(T const(&a)[N]) noexcept
 
 //
 template <std::unsigned_integral T, std::size_t N>
+constexpr void lshl(T (&a)[N], std::size_t M) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+
+  if (M)
+  {
+    auto const shl([&]<auto ...I>(auto const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            a[N - 1 - I] = (a[N - 1 - I] << e) |
+              (a[N - 1 - I - 1] >> (wbits - e))
+          ),
+          ...
+        );
+
+        *a <<= e;
+      }
+    );
+
+    for (; M >= wbits; M -= wbits - 1)
+    {
+      shl(wbits - 1, std::make_index_sequence<N - 1>());
+    }
+
+    shl(M, std::make_index_sequence<N - 1>());
+  }
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void ashr(T (&a)[N], std::size_t M) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+
+  if (M)
+  {
+    auto const shr([neg(is_neg(a)), &a]<auto ...I>(auto const e,
+      std::index_sequence<I...>) noexcept
+      {
+        (
+          (
+            a[I] = (a[I] >> e) | (a[I + 1] << (wbits - e))
+          ),
+          ...
+        );
+
+        a[N - 1] = (a[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
+      }
+    );
+
+    for (; M >= wbits; M -= wbits - 1)
+    {
+      shr(wbits - 1, std::make_index_sequence<N - 1>());
+    }
+
+    shr(M, std::make_index_sequence<N - 1>());
+  }
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void set_bit(T (&a)[N], std::size_t const i) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+  a[i / wbits] |= T{1} << i % wbits;
+}
+
+template <std::size_t I, std::unsigned_integral T, std::size_t N>
+constexpr bool test_bit(T const (&a)[N]) noexcept
+{
+  enum : std::size_t { wbits = bit_size_v<T> };
+  return a[I / wbits] & T{1} << I % wbits;
+}
+
+//
+template <std::unsigned_integral T, std::size_t N>
 constexpr void neg(T (&a)[N]) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -101,7 +189,7 @@ constexpr void not_(T (&a)[N]) noexcept
 
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void add(T(&a)[N0], T const(&b)[N1]) noexcept
+constexpr void add(T (&a)[N0], T const (&b)[N1]) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -158,7 +246,7 @@ constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i) noexcept
 
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void sub(T(&a)[N0], T const(&b)[N1]) noexcept
+constexpr void sub(T(&a)[N0], T const (&b)[N1]) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept

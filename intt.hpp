@@ -353,65 +353,12 @@ struct intt
 
   constexpr auto operator<<(std::integral auto M) const noexcept
   {
-    auto r(*this);
-
-    if (M)
-    {
-      auto const shl([&]<auto ...I>(auto const e,
-        std::index_sequence<I...>) noexcept
-        {
-          (
-            (
-              r.v_[N - 1 - I] = (r.v_[N - 1 - I] << e) |
-                (r.v_[N - 1 - I - 1] >> (wbits - e))
-            ),
-            ...
-          );
-
-          *r.v_ <<= e;
-        }
-      );
-
-      for (; std::size_t(M) >= wbits; M -= wbits - 1)
-      {
-        shl(wbits - 1, std::make_index_sequence<N - 1>());
-      }
-
-      shl(M, std::make_index_sequence<N - 1>());
-    }
-
-    return r;
+    auto r(*this); ar::lshl(r.v_, M); return r;
   }
 
   constexpr auto operator>>(std::integral auto M) const noexcept
   {
-    auto r(*this);
-
-    if (M)
-    {
-      auto const shr([neg(is_neg(*this)), &r]<auto ...I>(auto const e,
-        std::index_sequence<I...>) noexcept
-        {
-          (
-            (
-              r.v_[I] = (r.v_[I] >> e) | (r.v_[I + 1] << (wbits - e))
-            ),
-            ...
-          );
-
-          r.v_[N - 1] = (r.v_[N - 1] >> e) | (neg ? ~T{} << (wbits - e) : T{});
-        }
-      );
-
-      for (; std::size_t(M) >= wbits; M -= wbits - 1)
-      {
-        shr(wbits - 1, std::make_index_sequence<N - 1>());
-      }
-
-      shr(M, std::make_index_sequence<N - 1>());
-    }
-
-    return r;
+    auto r(*this); ar::ashr(r.v_, M); return r;
   }
 
   // increment, decrement
@@ -560,7 +507,7 @@ struct intt
       (
         [&]() noexcept
         {
-          if (test_bit<I>(o)) r += A;
+          if (ar::test_bit<I>(o.v_)) r += A;
 
           lshr<1>(r);
         }(),
@@ -933,9 +880,7 @@ INTT_RIGHT_CONVERSION__(<=>)
 //utilities///////////////////////////////////////////////////////////////////
 constexpr bool is_neg(intt_concept auto const& a) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-  using S = std::make_signed_t<typename U::value_type>;
-  return S(a.v_[U::words - 1]) < S{};
+  return ar::is_neg(a.v_);
 }
 
 constexpr bool is_neg(std::integral auto const a) noexcept
@@ -951,21 +896,6 @@ constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 constexpr auto abs(intt_concept auto const& a) noexcept
 {
   return is_neg(a) ? -a : a;
-}
-
-constexpr void set_bit(intt_concept auto& a, std::size_t const i) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  a.v_[i / U::wbits] |= T{1} << i % U::wbits;
-}
-
-template <std::size_t I>
-constexpr bool test_bit(intt_concept auto const& a) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  return a.v_[I / U::wbits] & T{1} << I % U::wbits;
 }
 
 constexpr auto hwmul(intt_concept auto const& a,
@@ -1308,10 +1238,10 @@ constexpr auto seqsqrt(intt_concept auto const& a) noexcept
 
   for (auto i(2 * U::bits - CR); U::bits != i;)
   {
-    if (auto tmp(Q); set_bit(lshl<1>(tmp), --i),
+    if (auto tmp(Q); ar::set_bit(lshl<1>(tmp).v_, --i),
       ar::ucmp(lshl<1>(r).v_, tmp.v_) >= 0)
     {
-      set_bit(Q, i);
+      ar::set_bit(Q.v_, i);
       r -= tmp;
     }
   }
@@ -1405,7 +1335,7 @@ constexpr auto to_pair(intt<T, N, FF...> a,
 
   do
   {
-    data[i--] = A[std::abs((signed char)(a % k))];
+    data[i--] = A[std::abs(int(a % k))];
     a /= k;
   }
   while (a);
