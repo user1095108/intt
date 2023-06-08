@@ -78,22 +78,25 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr std::size_t clz(T const(&a)[N]) noexcept
 {
-  enum : std::size_t { wbits = bit_size_v<T> };
-
-  decltype(N) r{};
-
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    auto i(N);
+    enum : int { wbits = bit_size_v<T> };
 
-    int c;
+    decltype(N) r{};
 
-    do
-    {
-      r += c = std::countl_zero(a[--i]);
-    } while ((wbits == c) && i);
-  }
+    (
+      [&]() noexcept
+      {
+        auto const c(std::countl_zero(a[N - I - 1]));
 
-  return r;
+        r += c;
+
+        return wbits == c;
+      }() && ...
+    );
+
+    return r;
+  }(std::make_index_sequence<N>());
 }
 
 //
