@@ -67,7 +67,7 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto clz(T const(&a)[N]) noexcept
+constexpr auto clz(T const (&a)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -324,7 +324,7 @@ constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i) noexcept
 
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void sub(T(&a)[N0], T const (&b)[N1]) noexcept
+constexpr void sub(T (&a)[N0], T const (&b)[N1]) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
