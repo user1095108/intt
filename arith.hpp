@@ -12,7 +12,7 @@ template <typename U>
 static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
 
 template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
-static constexpr void copyarray(T (&d)[N0], T const (&s)[N1]) noexcept
+constexpr void copyarray(T (&d)[N0], T const (&s)[N1]) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
