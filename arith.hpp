@@ -11,9 +11,18 @@ namespace ar
 template <typename U>
 static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
 
+template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
+static constexpr void copyarray(T (&d)[N0], T const (&s)[N1]) noexcept
+{
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[I] = I < N1 ? s[I] : T{}), ...);
+  }(std::make_index_sequence<N0>());
+}
+
 //
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool any(T const(&a)[N]) noexcept
+constexpr bool any(T const (&a)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -33,21 +42,18 @@ constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto ucmp(T const (&a)[N], T const (&b)[N]) noexcept
 {
-  auto i(N);
+  auto r(a[N - 1] <=> b[N - 1]);
 
-  do
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    --i;
+    (void)((r == 0) && ... && ((r = a[N - I - 2] <=> b[N - I - 2]) == 0));
+  }(std::make_index_sequence<N - 1>());
 
-    if (auto const c(a[i] <=> b[i]); c != 0) return c;
-  }
-  while (i);
-
-  return std::strong_ordering::equal;
+  return r;
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool is_neg(T const(&a)[N]) noexcept
+constexpr bool is_neg(T const (&a)[N]) noexcept
 {
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
