@@ -22,7 +22,7 @@ constexpr bool any(T const (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
+constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -67,7 +67,7 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr std::size_t clz(T const(&a)[N]) noexcept
+constexpr auto clz(T const(&a)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
