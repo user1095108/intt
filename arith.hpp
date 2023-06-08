@@ -14,7 +14,7 @@ static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
 //
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool any(T const (&a)[N]) noexcept
-{
+{ // a != 0
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return (a[I] || ...);
@@ -23,7 +23,7 @@ constexpr bool any(T const (&a)[N]) noexcept
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
-{
+{ // a != b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return ((a[I] == b[I]) && ...);
@@ -32,19 +32,19 @@ constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool is_neg(T const (&a)[N]) noexcept
-{
+{ // a < 0
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
 }
 
 constexpr bool is_neg(std::integral auto const a) noexcept
-{
+{ // a < 0
   return a < decltype(a){};
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto ucmp(T const (&a)[N], T const (&b)[N]) noexcept
-{
+{ // a <=> b
   auto r(a[N - 1] <=> b[N - 1]);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -92,7 +92,7 @@ constexpr std::size_t clz(T const(&a)[N]) noexcept
 
 template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
 constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
-{
+{ // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
     ((d[I] = I < N1 ? s[I] : T{}), ...);
