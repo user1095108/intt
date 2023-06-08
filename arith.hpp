@@ -23,7 +23,7 @@ constexpr bool any(T const (&a)[N]) noexcept
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr auto eq(T const (&a)[N], T const (&b)[N]) noexcept
-{ // a != b
+{ // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return ((a[I] == b[I]) && ...);
