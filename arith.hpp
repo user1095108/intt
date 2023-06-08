@@ -1,3 +1,7 @@
+#ifndef INTT_ARITH_HPP
+# define INTT_ARITH_HPP
+# pragma once
+
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <bit> // std::countl_zero
@@ -71,14 +75,14 @@ constexpr auto clz(T const (&a)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    enum : int { wbits = bit_size_v<T> };
-
     decltype(N) r{};
+
+    enum : decltype(r) { wbits = bit_size_v<T> };
 
     (
       [&]() noexcept
       {
-        auto const c(std::countl_zero(a[N - I - 1]));
+        decltype(r) const c(std::countl_zero(a[N - I - 1]));
 
         r += c;
 
@@ -357,3 +361,5 @@ constexpr void sub(T (&a)[N0], T const (&b)[N1]) noexcept
 }
 
 }
+
+#endif // INTT_ARITH_HPP

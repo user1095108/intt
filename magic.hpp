@@ -1,3 +1,7 @@
+#ifndef INTT_MAGIC_HPP
+# define INTT_MAGIC_HPP
+# pragma once
+
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint8_t
@@ -51,3 +55,5 @@ enum : std::size_t
 };
 
 }
+
+#endif // INTT_MAGIC_HPP
