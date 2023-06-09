@@ -1082,63 +1082,25 @@ constexpr auto&& lshr(intt_concept auto&& a, std::size_t const M) noexcept
 }
 
 template <std::size_t M> requires(bool(M))
-constexpr auto& wshl(intt_concept auto&& a) noexcept
+constexpr auto&& wshl(intt_concept auto&& a) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  enum : std::size_t {N = U::words};
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (a.v_[N - 1 - I] = M + I < N ? a.v_[N - 1 - M - I] : T{}),
-      ...
-    );
-  }(std::make_index_sequence<N>());
-
-  return a;
+  ar::wshl<M>(a.v_); return a;
 }
 
-constexpr auto& wshl(intt_concept auto&& a, std::size_t const M) noexcept
+constexpr auto&& wshl(intt_concept auto&& a, std::size_t const M) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  std::size_t i{};
-
-  for (auto const J(U::words - M); i != J; ++i) a.v_[i + M] = a.v_[i];
-  for (; i != U::words;) a.v_[U::words - ++i] = {};
-
-  return a;
+  ar::wshl(a.v_, M); return a;
 }
 
 template <std::size_t M> requires(bool(M))
-constexpr auto& wshr(intt_concept auto&& a) noexcept
+constexpr auto&& wshr(intt_concept auto&& a) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    (
-      (a.v_[I] = M + I < U::words ? a.v_[I + M] : T{}),
-      ...
-    );
-  }(std::make_index_sequence<U::words>());
-
-  return a;
+  ar::wshr<M>(a.v_); return a;
 }
 
-constexpr auto& wshr(intt_concept auto&& a, std::size_t const M) noexcept
+constexpr auto&& wshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  std::size_t i{};
-
-  for (auto const J(U::words - M); i != J; ++i) a.v_[i] = a.v_[i + M];
-  for (; i != U::words;) a.v_[i++] = {};
-
-  return a;
+  ar::wshr(a.v_, M); return a;
 }
 
 constexpr auto seqsqrt(intt_concept auto const& a) noexcept

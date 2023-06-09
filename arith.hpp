@@ -245,6 +245,48 @@ constexpr void lshr(T (&a)[N], std::size_t M) noexcept
   }
 }
 
+template <std::size_t M, std::unsigned_integral T, std::size_t N>
+constexpr void wshl(T (&a)[N]) noexcept requires(bool(M))
+{
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (a[N - 1 - I] = M + I < N ? a[N - 1 - M - I] : T{}),
+      ...
+    );
+  }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void wshl(T (&a)[N], std::size_t const M) noexcept
+{
+  std::size_t i{};
+
+  for (auto const J(N - M); i != J; ++i) a[i + M] = a[i];
+  for (; i != N;) a[N - i++] = {};
+}
+
+template <std::size_t M, std::unsigned_integral T, std::size_t N>
+constexpr void wshr(T (&a)[N]) noexcept requires(bool(M))
+{
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    (
+      (a[I] = M + I < N ? a[I + M] : T{}),
+      ...
+    );
+  }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr void wshr(T (&a)[N], std::size_t const M) noexcept
+{
+  std::size_t i{};
+
+  for (auto const J(N - M); i != J; ++i) a[i] = a[i + M];
+  for (; i != N;) a[i++] = {};
+}
+
 template <std::unsigned_integral T, std::size_t N>
 constexpr void set_bit(T (&a)[N], std::size_t const i) noexcept
 {
