@@ -95,23 +95,33 @@ constexpr auto clz(T const (&a)[N]) noexcept
 }
 
 template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
-  std::size_t N1>
+  std::size_t N1> requires (D < N0)
 constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[D + I] = (I < N1) && (I >= D) ? s[I] : T{}), ...);
-  }(std::make_index_sequence<N0>());
+    ((d[D + I] = I < N1 ? s[I] : T{}), ...);
+  }(std::make_index_sequence<N0 - D>());
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[I] = {}), ...);
+  }(std::make_index_sequence<D>());
 }
 
 template <std::size_t D, std::unsigned_integral T, std::size_t N0,
-  std::size_t N1>
+  std::size_t N1> requires (D < N0)
 constexpr void rcopy(T (&d)[N0], T const (&s)[N1]) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[D - I] = (I < N1) && (D >= I) ? s[N1 - I - 1] : T{}), ...);
-  }(std::make_index_sequence<N0>());
+    ((d[D - I] = I < N1 ? s[N1 - I - 1] : T{}), ...);
+  }(std::make_index_sequence<D + 1>());
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[N0 - I - 1] = {}), ...);
+  }(std::make_index_sequence<N0 - D - 1>());
 }
 
 //
