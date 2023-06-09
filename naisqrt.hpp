@@ -8,7 +8,7 @@ namespace ar
 { // provides naive implementations of sqrt
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto seqsqrt(T (&a)[N]) noexcept
+constexpr void seqsqrt(T (&a)[N]) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
   T r[2 * N], Q[2 * N]{};
   copy(r, a);
