@@ -110,7 +110,7 @@ constexpr void rcopy(T (&d)[N0], T const (&s)[N1]) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[D - I] = (N1 >= I + 1) && (D >= I) ? s[N1 - I - 1] : T{}), ...);
+    ((d[D - I] = (I < N1) && (D >= I) ? s[N1 - I - 1] : T{}), ...);
   }(std::make_index_sequence<N0>());
 }
 
