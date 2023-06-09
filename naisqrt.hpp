@@ -20,10 +20,11 @@ constexpr auto seqsqrt(T (&a)[N]) noexcept
 
   for (auto i(2 * bits - CR); bits != i;)
   {
+    lshl<1>(r);
+
     T tmp[2 * N];
     copy(tmp, Q);
     lshl<1>(tmp);
-    lshl<1>(r);
 
     if (set_bit(tmp, --i), ucmp(r, tmp) >= 0)
     {
