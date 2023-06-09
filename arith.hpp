@@ -74,32 +74,43 @@ template <std::unsigned_integral T, std::size_t N>
 constexpr auto clz(T const (&a)[N]) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    decltype(N) r{};
+    {
+      decltype(N) r{};
 
-    enum : decltype(r) { wbits = bit_size_v<T> };
+      enum : decltype(r) { wbits = bit_size_v<T> };
 
-    (
-      [&]() noexcept
-      {
-        decltype(r) const c(std::countl_zero(a[N - I - 1]));
+      (
+        [&]() noexcept
+        {
+          decltype(r) const c(std::countl_zero(a[N - I - 1]));
 
-        r += c;
+          r += c;
 
-        return wbits == c;
-      }() && ...
-    );
+          return wbits == c;
+        }() && ...
+      );
 
-    return r;
-  }(std::make_index_sequence<N>());
+      return r;
+    }(std::make_index_sequence<N>());
 }
 
-template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
+template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
+  std::size_t N1>
 constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[I] = I < N1 ? s[I] : T{}), ...);
+    ((d[D + I] = (I < N1) && (I >= D) ? s[I] : T{}), ...);
+  }(std::make_index_sequence<N0>());
+}
+
+template <std::size_t D, std::unsigned_integral T, std::size_t N0,
+  std::size_t N1>
+constexpr void rcopy(T (&d)[N0], T const (&s)[N1]) noexcept
+{ // d = s
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[D - I] = (N1 >= I + 1) && (D >= I) ? s[N1 - I - 1] : T{}), ...);
   }(std::make_index_sequence<N0>());
 }
 
