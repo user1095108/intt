@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "../intt.hpp"
+#include "../naisqrt.hpp"
 #include "../debug.hpp"
 
 int main()
@@ -67,11 +68,11 @@ int main()
   std::cout << "sqrt():" << std::endl;
 
   {
-    std::cout << seqsqrt(D(1)) << std::endl;
-    std::cout << seqsqrt(D(4)) << std::endl;
-    std::cout << seqsqrt(D(9)) << std::endl;
-    std::cout << seqsqrt(D(16)) << std::endl;
-    std::cout << seqsqrt(D(25)) << std::endl;
+    std::cout << isqrt(D(1)) << std::endl;
+    std::cout << isqrt(D(4)) << std::endl;
+    std::cout << isqrt(D(9)) << std::endl;
+    std::cout << isqrt(D(16)) << std::endl;
+    std::cout << isqrt(D(25)) << std::endl;
   }
 
   {

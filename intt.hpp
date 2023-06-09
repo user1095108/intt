@@ -9,7 +9,7 @@
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
 
-#include "arith.hpp"
+#include "naisqrt.hpp"
 #include "magic.hpp"
 
 namespace intt
@@ -1103,27 +1103,10 @@ constexpr auto&& wshr(intt_concept auto&& a, std::size_t const M) noexcept
   ar::wshr(a.v_, M); return a;
 }
 
-constexpr auto seqsqrt(intt_concept auto const& a) noexcept
-{ // CR = CR + (N * wbits - CR) / 2;
-  using U = std::remove_cvref_t<decltype(a)>;
-
-  detail::double_t<U> r(a, direct{}), Q{};
-
-  auto const CR((U::bits + ar::clz(a.v_)) / 2);
-  lshl(r, CR);
-
-  for (auto i(2 * U::bits - CR); U::bits != i;)
-  {
-    if (auto tmp(Q); ar::set_bit(lshl<1>(tmp).v_, --i),
-      ar::ucmp(lshl<1>(r).v_, tmp.v_) >= 0)
-    {
-      ar::set_bit(Q.v_, i);
-      r -= tmp;
-    }
-  }
-
-  //
-  return U{wshr<U::words>(Q), direct{}};
+//
+constexpr auto isqrt(intt_concept auto const& a) noexcept
+{
+  auto r(a); ar::seqsqrt(r.v_); return r;
 }
 
 //
