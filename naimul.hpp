@@ -51,14 +51,10 @@ constexpr void naimul(T (&a)[N], T const (&b)[N]) noexcept
 
       do
       {
-        T pp;
+        auto const j(S - i);
 
-        {
-          auto const j(S - i);
-
-          pp = T(H<T>(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-            H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
-        }
+        T const pp(T(H<T>(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+          H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
 
         S % 2 ?
           add(r, {pp << hwbits, pp >> hwbits}, S / 2) :
