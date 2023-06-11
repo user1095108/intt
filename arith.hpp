@@ -56,6 +56,15 @@ constexpr bool any(T const (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
+constexpr void clear(T (&a)[N]) noexcept
+{ // a = 0
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((a[I] = {}), ...);
+    }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
