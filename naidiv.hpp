@@ -195,11 +195,13 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
 template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
 constexpr void sdiv(T (&a)[N], T const (&b)[N]) noexcept
 {
-  auto const nega(is_neg(a)), negb(is_neg(b));
+  auto const nega(is_neg(a));
 
   if (nega) neg(a);
 
   T B[N];
+
+  auto const negb(is_neg(b));
 
   if (copy(B, b); negb) neg(B);
 
