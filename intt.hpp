@@ -9,6 +9,7 @@
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
 
+#include "naimul.hpp"
 #include "naisqrt.hpp"
 #include "magic.hpp"
 
@@ -90,30 +91,6 @@ struct intt
   };
 
   using value_type = T;
-
-  using D = std::conditional_t<
-    std::is_same_v<T, std::uint8_t>,
-    std::uint16_t,
-    std::conditional_t<
-      std::is_same_v<T, std::uint16_t>,
-      std::uint32_t,
-      std::conditional_t<
-        std::is_same_v<T, std::uint32_t>,
-        std::uint64_t,
-        void
-      >
-    >
-  >;
-
-  using H = std::conditional_t<
-    std::is_same_v<T, std::uint64_t>,
-    std::uint32_t,
-    std::conditional_t<
-      std::is_same_v<T, std::uint32_t>,
-      std::uint16_t,
-      std::uint8_t
-    >
-  >;
 
   T v_[N];
 
@@ -282,6 +259,20 @@ struct intt
     ar::sub(v_, o.v_); return *this;
   }
 
+  constexpr auto& operator*=(intt const& o) noexcept
+  {
+    if constexpr(detail::contains<F...>(SEQMUL))
+    {
+      ar::seqmul(v_, o.v_);
+    }
+    else
+    {
+      ar::naimul(v_, o.v_);
+    }
+
+    return *this;
+  }
+
   //
   constexpr explicit operator bool() const noexcept { return ar::any(v_); }
 
@@ -396,14 +387,7 @@ struct intt
 
   constexpr auto operator*(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(SEQMUL))
-    {
-      return seqmul(o);
-    }
-    else
-    {
-      return naimul(o);
-    }
+    auto r(*this); r *= o; return r;
   }
 
   constexpr auto operator/(intt const& o) const noexcept
@@ -444,78 +428,6 @@ struct intt
     {
       return naidiv<true>(o);
     }
-  }
-
-  //
-  constexpr auto naimul(intt const& o) const noexcept
-  {
-    intt r{};
-
-    if constexpr(std::is_same_v<T, std::uintmax_t>)
-    { // multiplying half-words, wbits per iteration
-      enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-
-      for (std::size_t i{}; M != i; ++i)
-      { // detail::bit_size_v<H> * (i + j) < wbits * N
-        auto S(i);
-
-        do
-        {
-          T pp;
-
-          {
-            auto const j(S - i);
-
-            pp = T(H(v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-              H(o.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0));
-          }
-
-          S % 2 ?
-            ar::add(r.v_, {pp << hwbits, pp >> hwbits}, S / 2) :
-            ar::add(r.v_, {pp}, S / 2);
-        }
-        while (M != ++S);
-      }
-    }
-    else
-    { // multiplying words, 2 * wbits per iteration
-      for (std::size_t i{}; N != i; ++i)
-      { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
-        auto S(i);
-
-        do
-        {
-          D const pp(D(v_[i]) * o.v_[S - i]);
-
-          ar::add(r.v_, {T(pp), T(pp >> wbits)}, S);
-        }
-        while (N != ++S);
-      }
-    }
-
-    //
-    return r;
-  }
-
-  constexpr auto seqmul(intt const& o) const noexcept
-  {
-    intt<T, 2 * N> r{}, A{*this, direct{}};
-    wshl<N>(A);
-
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          if (ar::test_bit<I>(o.v_)) r += A;
-
-          lshr<1>(r);
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<wbits * N>());
-
-    return intt(r, direct{});
   }
 
   //
@@ -613,7 +525,7 @@ struct intt
       {
         wshl<N>(lshl(b, CB));
 
-        H const B(b.v_[M - 1] >> hwbits);
+        ar::H<T> const B(b.v_[M - 1] >> hwbits);
 
         auto k(N + (CB - CA) / wbits + 1);
         wshr(b, M - k);
@@ -899,12 +811,12 @@ constexpr auto abs(intt_concept auto const& a) noexcept
 }
 
 constexpr auto hwmul(intt_concept auto const& a,
-  typename std::remove_cvref_t<decltype(a)>::H const k) noexcept
+  ar::H<typename std::remove_cvref_t<decltype(a)>::value_type> const k) noexcept
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;
-  using D = typename U::D;
-  using H = typename U::H;
+  using D = typename ar::D<T>;
+  using H = typename ar::H<T>;
 
   enum : std::size_t
   {

@@ -4,6 +4,7 @@
 
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
+#include <cstdint> // std::uintmax_t
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
 #include <type_traits> // std::make_unsigned()
@@ -14,6 +15,32 @@ namespace ar
 
 template <typename U>
 static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
+
+template <typename T>
+using D = std::conditional_t<
+  std::is_same_v<T, std::uint8_t>,
+  std::uint16_t,
+  std::conditional_t<
+    std::is_same_v<T, std::uint16_t>,
+    std::uint32_t,
+    std::conditional_t<
+      std::is_same_v<T, std::uint32_t>,
+      std::uint64_t,
+      void
+    >
+  >
+>;
+
+template <typename T>
+using H = std::conditional_t<
+  std::is_same_v<T, std::uint64_t>,
+  std::uint32_t,
+  std::conditional_t<
+    std::is_same_v<T, std::uint32_t>,
+    std::uint16_t,
+    std::uint8_t
+  >
+>;
 
 //
 template <std::unsigned_integral T, std::size_t N>
