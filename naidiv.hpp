@@ -135,7 +135,7 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
 
     H<T> const B0(B[M - 1] >> hwbits);
 
-    auto k(N + (CB - CA) / wbits + 1);
+    auto k(N + 1 + (CB - CA) / wbits);
     wshr(B, M - k);
 
     do
