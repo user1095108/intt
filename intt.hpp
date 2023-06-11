@@ -3,7 +3,6 @@
 # pragma once
 
 #include <cmath> // std::ldexp()
-#include <algorithm> // std::max()
 #include <functional> // std::hash
 #include <iterator> // std::begin(), std::end()
 #include <ostream>

@@ -5,6 +5,7 @@
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uintmax_t
+#include <algorithm> // std::max()
 #include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
@@ -49,46 +50,35 @@ using H = std::conditional_t<
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool any(T const (&a)[N]) noexcept
 { // a != 0
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return (a[I] || ...);
-    }(std::make_index_sequence<N>());
+  return std::any_of(
+    a,
+    a + N,
+    [](auto const& a) noexcept { return bool(a); }
+  );
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr void clear(T (&a)[N]) noexcept
 { // a = 0
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      ((a[I] = {}), ...);
-    }(std::make_index_sequence<N>());
+  std::fill(a, a + N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 { // a == b
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return ((a[I] == b[I]) && ...);
-    }(std::make_index_sequence<N>());
+  return std::equal(a, a + N, b);
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
 { // a == b
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return ((a[I] == b[I]) && ...);
-    }(std::make_index_sequence<N>());
+  return std::equal(a, a + N, b.begin());
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(std::array<T, N> const &a, T const (&b)[N]) noexcept
 { // a == b
-  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      return ((a[I] == b[I]) && ...);
-    }(std::make_index_sequence<N>());
+  return std::equal(a.begin(), a.end(), b);
 }
 
 template <std::unsigned_integral T, std::size_t N>
