@@ -4,11 +4,12 @@
 
 #include <cmath> // std::ldexp()
 #include <algorithm> // std::max()
-#include <array> // std::to_array()
 #include <functional> // std::hash
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
 
+#include "naidiv.hpp"
+#include "newdiv.hpp"
 #include "naimul.hpp"
 #include "naisqrt.hpp"
 #include "magic.hpp"
@@ -191,18 +192,6 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <std::size_t M, enum feat... FF>
-  constexpr intt(intt<T, M, FF...> const& o, direct) noexcept
-  {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        (v_[I] = I < M ? o.v_[I] : T{}),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-  }
-
   template <typename U, std::size_t M, enum feat... FF>
   constexpr intt(intt<U, M, FF...> const& o) noexcept
   {
@@ -216,6 +205,18 @@ struct intt
             T(o >> I * wbits) :
             neg ? ~T{} : T{}
         ),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
+
+  template <std::size_t M, enum feat... FF>
+  constexpr intt(intt<T, M, FF...> const& o, direct) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        (v_[I] = I < M ? o.v_[I] : T{}),
         ...
       );
     }(std::make_index_sequence<N>());
@@ -235,9 +236,6 @@ struct intt
   INTT_ASSIGNMENT__(&)
   INTT_ASSIGNMENT__(|)
   INTT_ASSIGNMENT__(^)
-  INTT_ASSIGNMENT__(*)
-  INTT_ASSIGNMENT__(/)
-  INTT_ASSIGNMENT__(%)
 
   constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
@@ -268,6 +266,50 @@ struct intt
     else
     {
       ar::naimul(v_, o.v_);
+    }
+
+    return *this;
+  }
+
+  constexpr auto operator/=(intt const& o) noexcept
+  {
+    if constexpr(detail::contains<F...>(GLDDIV))
+    {
+      ar::sdiv<false, ar::glddiv<false, T, N>>(v_, o.v_);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
+    {
+      ar::sdiv<false, ar::newdiv<false, T, N>>(v_, o.v_);
+    }
+    else if constexpr(detail::contains<F...>(SEQDIV))
+    {
+      ar::sdiv<false, ar::seqdiv<false, T, N>>(v_, o.v_);
+    }
+    else
+    {
+      ar::sdiv<false, ar::naidiv<false, T, N>>(v_, o.v_);
+    }
+
+    return *this;
+  }
+
+  constexpr auto operator%=(intt const& o) noexcept
+  {
+    if constexpr(detail::contains<F...>(GLDDIV))
+    {
+      ar::sdiv<true, ar::glddiv<true, T, N>>(v_, o.v_);
+    }
+    else if constexpr(detail::contains<F...>(NEWDIV))
+    {
+      ar::sdiv<true, ar::newdiv<true, T, N>>(v_, o.v_);
+    }
+    else if constexpr(detail::contains<F...>(SEQDIV))
+    {
+      ar::sdiv<true, ar::seqdiv<true, T, N>>(v_, o.v_);
+    }
+    else
+    {
+      ar::sdiv<true, ar::naidiv<true, T, N>>(v_, o.v_);
     }
 
     return *this;
@@ -392,312 +434,12 @@ struct intt
 
   constexpr auto operator/(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(GLDDIV))
-    {
-      return glddiv<false>(o);
-    }
-    else if constexpr(detail::contains<F...>(NEWDIV))
-    {
-      return newdiv<false>(o);
-    }
-    else if constexpr(detail::contains<F...>(SEQDIV))
-    {
-      return seqdiv<false>(o);
-    }
-    else
-    {
-      return naidiv<false>(o);
-    }
+    auto r(*this); r /= o; return r;
   }
 
   constexpr auto operator%(intt const& o) const noexcept
   {
-    if constexpr(detail::contains<F...>(GLDDIV))
-    {
-      return glddiv<true>(o);
-    }
-    else if constexpr(detail::contains<F...>(NEWDIV))
-    {
-      return newdiv<true>(o);
-    }
-    else if constexpr(detail::contains<F...>(SEQDIV))
-    {
-      return seqdiv<true>(o);
-    }
-    else
-    {
-      return naidiv<true>(o);
-    }
-  }
-
-  //
-  template <bool Rem = false>
-  constexpr auto glddiv(intt const& o) const noexcept
-  {
-    enum : std::size_t { M = 2 * N };
-
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
-    intt q;
-
-    {
-      intt<T, M, F...> a{nega ? -*this : *this, direct{}};
-      intt<T, M, F...> b;
-
-      std::size_t C;
-
-      {
-        auto const tmp(negb ? -o : o);
-
-        C = ar::clz(tmp.v_);
-        b = {tmp, direct{}};
-      }
-
-      lshl(b, C);
-
-      {
-        auto const k(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
-
-        for (auto const end(coeff<wshr<N>(~intt<T, M, F...>{})>()); end != b;)
-        {
-          auto const l(k - b);
-
-          b = newmul<N>(b, l);
-          a = newmul<N>(a, l);
-        }
-      }
-
-      q = lshr(a, N * wbits - C);
-    }
-
-    //
-    auto const b(negb ? -o : o);
-
-    if constexpr(auto r((nega ? -*this : *this) - q * b); Rem)
-    {
-      if (ar::ucmp(r.v_, b.v_) >= 0) r -= b;
-
-      return nega ? -r : r;
-    }
-    else
-    {
-      if (ar::ucmp(r.v_, b.v_) >= 0) ++q;
-
-      return nega == negb ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto naidiv(intt const& o) const noexcept
-  { // wbits per iteration
-    enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
-    enum : T { dmax = (T(1) << hwbits) - 1 };
-
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-    intt q{};
-
-    std::size_t CB;
-    intt<T, M, F...> a;
-
-    //
-    {
-      std::size_t CA;
-
-      {
-        auto const tmp(nega ? -*this : *this);
-
-        CA = ar::clz(tmp.v_);
-        a = {tmp, direct{}};
-      }
-
-      intt<T, M, F...> b;
-
-      {
-        auto const tmp(negb ? -o : o);
-
-        CB = ar::clz(tmp.v_);
-        b = {tmp, direct{}};
-      }
-
-      lshl(a, CB);
-
-      if (CB >= CA) [[likely]]
-      {
-        wshl<N>(lshl(b, CB));
-
-        ar::H<T> const B(b.v_[M - 1] >> hwbits);
-
-        auto k(N + (CB - CA) / wbits + 1);
-        wshr(b, M - k);
-
-        do
-        {
-          --k;
-
-          //
-          T h(a.v_[k] / B);
-          if (h >> hwbits) [[unlikely]] h = dmax;
-
-          for (a -= hwmul(lshr<hwbits>(b), h); is_neg(a); a += b, --h);
-
-          //
-          T l((T(a.v_[k] << hwbits) | T(a.v_[k - 1] >> hwbits)) / B);
-          if (l >> hwbits) [[unlikely]] l = dmax;
-
-          for (a -= hwmul(lshr<hwbits>(b), l); is_neg(a); a += b, --l);
-
-          //
-          q.v_[k - N] = l | h << hwbits;
-        }
-        while (N != k);
-      }
-    }
-
-    //
-    if constexpr(Rem)
-    {
-      lshr(a, CB);
-
-      return nega ? -intt(a, direct{}) : intt(a, direct{});
-    }
-    else
-    {
-      return nega == negb ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto newdiv(intt const& o) const noexcept
-  {
-    enum : std::size_t { M = 2 * N };
-
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-
-    intt q;
-
-    {
-      constexpr auto make_coeff([](int const a, int const b) noexcept
-        {
-          return wshl<N>(intt<T, M, F...>(a)).naidiv(b);
-        }
-      );
-
-      std::size_t C;
-
-      intt<T, M, F...> b;
-
-      {
-        auto const tmp(negb ? -o : o);
-
-        C = ar::clz(tmp.v_);
-        b = {tmp, direct{}};
-      }
-
-      lshl(b, C);
-
-      //auto xn(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
-
-      auto xn(
-        coeff<make_coeff(48, 17)>() -
-        newmul<N>(b, coeff<make_coeff(32, 17)>())
-      );
-
-      {
-        auto const k(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>());
-
-        // x_n = x_n(2 - a*x_n)
-        for (intt<T, M, F...> tmp; tmp = newmul<N>(b, xn), tmp.v_[N - 1];)
-        {
-          xn = newmul<N>(xn, k - tmp);
-        }
-      }
-
-      q = lshr(
-          newmul<N>(
-            intt<T, M, F...>{nega ? -*this : *this, direct{}},
-            xn
-          ),
-          N * wbits - C
-        );
-    }
-
-    //
-    if constexpr(Rem)
-    {
-      auto const r((nega ? -*this : *this) - q * (negb ? -o : o));
-
-      return nega ? -r : r;
-    }
-    else
-    {
-      return nega == negb ? q : -q;
-    }
-  }
-
-  template <bool Rem = false>
-  constexpr auto seqdiv(intt const& o) const noexcept
-  {
-    auto const nega(is_neg(*this)), negb(is_neg(o));
-    intt q{};
-
-    intt<T, 2 * N, F...> r;
-
-    //
-    {
-      decltype(r) D;
-
-      std::size_t CB;
-
-      {
-        auto const tmp(negb ? -o : o);
-
-        CB = ar::clz(tmp.v_);
-        wshl<N>(D = {tmp, direct{}});
-      }
-
-      std::size_t CA;
-
-      {
-        auto const tmp(nega ? -*this : *this);
-
-        CA = ar::clz(tmp.v_);
-        r = {tmp, direct{}};
-      }
-
-      // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
-      if (CB >= CA) [[likely]]
-      {
-        auto i(CB - CA + 1);
-
-        lshl(r, bits - i);
-
-        do
-        {
-          if (--i; ar::ucmp(lshl<1>(r).v_, D) >= 0)
-          {
-            set_bit(q, i);
-            r -= D;
-          }
-        }
-        while (i);
-      }
-      else if constexpr(Rem)
-      {
-        return *this;
-      }
-    }
-
-    //
-    if constexpr(Rem)
-    {
-      intt const tmp(wshr<N>(r), direct{});
-
-      return nega ? -tmp : tmp;
-    }
-    else
-    {
-      return nega == negb ? q : -q;
-    }
+    auto r(*this); r %= o; return r;
   }
 
   //
@@ -808,167 +550,6 @@ constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 constexpr auto abs(intt_concept auto const& a) noexcept
 {
   return is_neg(a) ? -a : a;
-}
-
-constexpr auto hwmul(intt_concept auto const& a,
-  ar::H<typename std::remove_cvref_t<decltype(a)>::value_type> const k) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  using D = typename ar::D<T>;
-  using H = typename ar::H<T>;
-
-  enum : std::size_t
-  {
-    M = 2 * U::words,
-    N = U::words,
-    wbits = U::wbits,
-    hwbits = wbits / 2
-  };
-
-  U r{};
-
-  if constexpr(std::is_same_v<T, std::uintmax_t>)
-  { // multiplying half-words, wbits per iteration
-    [&]<auto ...S>(std::index_sequence<S...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          T const pp(
-            T(k) * H(a.v_[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
-          );
-
-          if constexpr((S % 2) && (M - 1 == S))
-          {
-            ar::add<S / 2>(r.v_, {pp << hwbits});
-          }
-          else if constexpr(S % 2)
-          {
-            ar::add<S / 2>(r.v_, {pp << hwbits, pp >> hwbits});
-          }
-          else
-          {
-            ar::add<S / 2>(r.v_, {pp});
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<M>());
-  }
-  else
-  { // multiplying words, 2 * wbits per iteration
-    [&]<auto ...S>(std::index_sequence<S...>) noexcept
-    {
-      (
-        [&]() noexcept
-        {
-          D const pp(D(k) * a.v_[S]);
-
-          if constexpr(N - 1 == S)
-          {
-            ar::add<S>(r.v_, {T(pp)});
-          }
-          else
-          {
-            ar::add<S>(r.v_, {T(pp), T(pp >> wbits)});
-          }
-        }(),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-  }
-
-  //
-  return r;
-}
-
-template <std::size_t O>
-constexpr auto newmul(intt_concept auto const& a, decltype(a) b) noexcept
-{
-  using U = std::remove_cvref_t<decltype(a)>;
-  using T = typename U::value_type;
-  using D = typename U::D;
-  using H = typename U::H;
-
-  enum : std::size_t { N = U::words };
-
-  auto const nega(is_neg(a)), negb(is_neg(b));
-
-  U r{};
-
-  if constexpr(std::is_same_v<T, std::uintmax_t>)
-  {
-    enum : std::size_t { M = 2 * O, hwbits = U::wbits / 2 };
-
-    for (std::size_t i{}; M != i; ++i)
-    {
-      for (std::size_t j{}; M != j; ++j)
-      {
-        T const pp(T(H(a.v_[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-          H(b.v_[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
-
-        auto const S(i + j);
-
-        S % 2 ?
-          ar::add(r, {pp << hwbits, pp >> hwbits}, S / 2) :
-          ar::add(r, {pp}, S / 2);
-      }
-    }
-  }
-  else
-  {
-    for (std::size_t i{}; O != i; ++i)
-    {
-      for (std::size_t j{}; O != j; ++j)
-      {
-        D const pp(D(a.v_[i]) * b.v_[j]);
-
-        ar::add(r, {T(pp), T(pp >> U::wbits)}, i + j);
-      }
-    }
-  }
-
-  //
-  wshr<O>(r);
-
-  r.v_[O] = a.v_[O] * b.v_[O];
-
-  if (nega != negb)
-  {
-    for (auto i{O + 1}; N != i; r.v_[i++] = ~T{});
-  }
-
-  if (a.v_[O])
-  {
-    if (intt<T, O> const bb(b, direct{}); nega)
-    {
-      auto A{-a.v_[O]};
-      do ar::sub(r.v_, bb.v_); while (--A);
-    }
-    else
-    {
-      auto A{a.v_[O]};
-      do ar::add(r.v_, bb.v_); while (--A);
-    }
-  }
-
-  if (b.v_[O])
-  {
-    if (intt<T, O> const aa(a, direct{}); negb)
-    {
-      auto B{-b.v_[O]};
-      do ar::sub(r.v_, aa.v_); while (--B);
-    }
-    else
-    {
-      auto B{b.v_[O]};
-      do ar::add(r.v_, aa.v_); while (--B);
-    }
-  }
-
-  //
-  return r;
 }
 
 template <std::size_t M> requires(bool(M))

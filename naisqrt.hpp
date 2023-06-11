@@ -10,25 +10,24 @@ namespace ar
 template <std::unsigned_integral T, std::size_t N>
 constexpr void seqsqrt(T (&a)[N]) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
-  T r[2 * N];
-  copy(r, a);
-
-  enum : std::size_t { bits = bit_size_v<decltype(a)> };
+  enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
 
   auto const CR((bits + clz(a)) / 2);
+
+  T r[M];
+  copy(r, a);
   lshl(r, CR);
 
-  T Q[2 * N]{};
+  T Q[M]{};
 
   for (auto i(2 * bits - CR); bits != i;)
   {
-    lshl<1>(r);
-
-    T tmp[2 * N];
+    T tmp[M];
     copy(tmp, Q);
     lshl<1>(tmp);
+    set_bit(tmp, --i);
 
-    if (set_bit(tmp, --i), ucmp(r, tmp) >= 0)
+    if (lshl<1>(r), ucmp(r, tmp) >= 0)
     {
       set_bit(Q, i);
       sub(r, tmp);

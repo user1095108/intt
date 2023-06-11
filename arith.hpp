@@ -5,6 +5,7 @@
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uintmax_t
+#include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
 #include <type_traits> // std::make_unsigned()
@@ -15,6 +16,8 @@ namespace ar
 
 template <typename U>
 static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
+
+template <auto C> static constexpr auto coeff() noexcept { return C; }
 
 template <typename T>
 using D = std::conditional_t<
@@ -54,6 +57,24 @@ constexpr bool any(T const (&a)[N]) noexcept
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
+{ // a == b
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[I] == b[I]) && ...);
+    }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
+{ // a == b
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[I] == b[I]) && ...);
+    }(std::make_index_sequence<N>());
+}
+
+template <std::unsigned_integral T, std::size_t N>
+constexpr bool eq(std::array<T, N> const &a, T const (&b)[N]) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -124,6 +145,21 @@ constexpr auto clz(T const (&a)[N]) noexcept
 template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
   std::size_t N1> requires (D < N0)
 constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
+{ // d = s
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[I] = {}), ...);
+  }(std::make_index_sequence<D>());
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  { // set every element of d
+    ((d[D + I] = I < N1 ? s[I] : T{}), ...);
+  }(std::make_index_sequence<N0 - D>());
+}
+
+template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
+  std::size_t N1> requires (D < N0)
+constexpr void copy(T (&d)[N0], std::array<T, N1> const& s) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d

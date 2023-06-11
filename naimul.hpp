@@ -46,7 +46,7 @@ constexpr void naimul(T (&a)[N], T const (&b)[N]) noexcept
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
 
     for (std::size_t i{}; M != i; ++i)
-    { // detail::bit_size_v<H> * (i + j) < wbits * N
+    { // bit_size_v<H> * (i + j) < wbits * N
       auto S(i);
 
       do
@@ -66,7 +66,7 @@ constexpr void naimul(T (&a)[N], T const (&b)[N]) noexcept
   else
   { // multiplying words, 2 * wbits per iteration
     for (std::size_t i{}; N != i; ++i)
-    { // detail::bit_size_v<T> * (i + j) < detail::bit_size_v<T> * N
+    { // bit_size_v<T> * (i + j) < bit_size_v<T> * N
       auto S(i);
 
       do
