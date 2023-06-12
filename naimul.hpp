@@ -10,12 +10,12 @@ namespace ar
 template <std::unsigned_integral T, std::size_t N>
 constexpr void seqmul(T (&a)[N], T const (&b)[N]) noexcept
 {
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
 
-  T A[2 * N];
-  rcopy<2 * N - 1>(A, a);
+  T A[M];
+  rcopy<M - 1>(A, a);
 
-  T r[2 * N]{};
+  T r[M]{};
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
