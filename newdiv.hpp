@@ -215,10 +215,8 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
   //
   if constexpr(Rem)
   {
-    T r[N];
-    copy(r, q);
-    naimul(r, b);
-    sub(a, r); // r = a - q * b
+    naimul(q, b);
+    sub(a, q); // r = a - q * b
   }
   else
   {

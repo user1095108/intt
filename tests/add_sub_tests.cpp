@@ -4,7 +4,7 @@
 
 int main()
 {
-  using D = intt::intt<std::uint8_t, 3>;
+  using D = intt::intt<std::uint8_t, 3, intt::NEWDIV>;
 
   for (D i{D::max()}; i != D::min(); --i)
   {
