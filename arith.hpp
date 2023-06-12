@@ -72,7 +72,7 @@ constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
 { // a == b
-  return std::equal(a, a + N, b.begin());
+  return std::equal(b.begin(), b.end(), a);
 }
 
 template <std::unsigned_integral T, std::size_t N>
