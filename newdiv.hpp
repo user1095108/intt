@@ -146,27 +146,25 @@ constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
       newmul<N>(A, k);
     }
 
+    //
     lshr(A, N * wbits - C);
+
+    //
+    copy(q, A);
+    naimul(q, b);
+    sub(a, q); // a = a - q * b
+
+    //
     copy(q, A);
   }
 
-  //
-  T r[N];
-  copy(r, q);
-  naimul(r, b);
-
-  sub(a, r);
-  copy(r, a); // r = a - q * b
-
   if constexpr(Rem)
   {
-    if (ucmp(r, b) >= 0) sub(r, b);
-
-    copy(a, r);
+    if (ucmp(a, b) >= 0) sub(a, b);
   }
   else
   {
-    if (ucmp(r, b) >= 0) add(q, {T(1)});
+    if (ucmp(a, b) >= 0) add(q, {T(1)});
 
     copy(a, q);
   }
@@ -185,12 +183,8 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
     auto const C(clz(b));
     lshl(B, C);
 
-    //auto xn(coeff<wshl<N>(intt<T, M, F...>(direct{}, T(2)))>() - b);
-
-    //auto xn(
-    //  coeff<make_coeff(48, 17)>() -
-    //  newmul<N>(b, coeff<make_coeff(32, 17)>())
-    //);
+    // xn = 2 - b
+    // xn = 48/17 - 32/17 * b
 
     T xn[M];
     copy(xn, newc<T, M, 48, 17>);
@@ -201,7 +195,7 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
 
     sub(xn, tmp);
 
-    // x_n = x_n(2 - a*x_n)
+    // xn = xn(2 - a * xn)
     for (; copy(tmp, B), newmul<N>(tmp, xn), tmp[N - 1];)
     {
       T k[M];
@@ -211,14 +205,6 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
       sub(k, tmp);
       newmul<N>(xn, k);
     }
-
-    //q = lshr(
-    //    newmul<N>(
-    //      intt<T, M, F...>{nega ? -*this : *this, direct{}},
-    //      xn
-    //    ),
-    //    N * wbits - C
-    //  );
 
     copy(B, a);
     newmul<N>(B, xn); // a * inv(b)

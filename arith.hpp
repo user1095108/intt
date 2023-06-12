@@ -51,16 +51,16 @@ template <std::unsigned_integral T, std::size_t N>
 constexpr bool any(T const (&a)[N]) noexcept
 { // a != 0
   return std::any_of(
-    a,
-    a + N,
-    [](auto const& a) noexcept { return bool(a); }
-  );
+      a,
+      a + N,
+      [](auto const& a) noexcept { return bool(a); }
+    );
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr void clear(T (&a)[N]) noexcept
 { // a = 0
-  std::fill(a, a + N, T{});
+  std::fill_n(a, N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
