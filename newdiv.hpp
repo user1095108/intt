@@ -123,7 +123,7 @@ static constexpr auto newc{
 template <bool Rem = false, typename T, std::size_t N>
 constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
 {
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
+  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
   T q[N];
 
@@ -147,7 +147,7 @@ constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
     }
 
     //
-    lshr(A, N * wbits - C);
+    lshr(A, bits - C);
 
     //
     copy(q, A);
@@ -173,7 +173,7 @@ constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
 template <bool Rem = false, typename T, std::size_t N>
 constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
 {
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
+  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
   T q[N];
 
@@ -208,7 +208,7 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
 
     copy(B, a);
     newmul<N>(B, xn); // a * inv(b)
-    lshr(B, N * wbits - C);
+    lshr(B, bits - C);
     copy(q, B);
   }
 
