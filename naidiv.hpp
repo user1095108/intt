@@ -154,7 +154,9 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
     {
       --k;
 
-      q[k - N] = correction_step(A[k] / B0) << hwbits |
+      auto const h(correction_step(A[k] / B0));
+
+      q[k - N] = h << hwbits |
         correction_step((T(A[k] << hwbits) | T(A[k - 1] >> hwbits)) / B0);
     }
     while (N != k);
