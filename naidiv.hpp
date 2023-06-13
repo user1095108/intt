@@ -59,8 +59,6 @@ constexpr void hwmul(T const (&a)[N], H<T> const k, T (&r)[N]) noexcept
   using D = D<T>;
   using H = H<T>;
 
-  clear(r);
-
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
     [&]<auto ...S>(std::index_sequence<S...>) noexcept
@@ -138,33 +136,26 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
     auto k(N + 1 + (CB - CA) / wbits);
     wshr(B, M - k);
 
+    auto const correction_step([&](T d) noexcept
+        {
+          if (d >> hwbits) [[unlikely]] d = dmax;
+          lshr<hwbits>(B);
+          decltype(B) tmp{};
+          hwmul(B, d, tmp);
+          sub(A, tmp);
+
+          for (; is_neg(A); --d, add(A, B));
+
+          return d;
+        }
+      );
+
     do
     {
       --k;
 
-      //
-      T h(A[k] / B0);
-      if (h >> hwbits) [[unlikely]] h = dmax;
-
-      lshr<hwbits>(B);
-      decltype(B) tmp;
-      hwmul(B, h, tmp);
-      sub(A, tmp);
-
-      for (; is_neg(A); --h, add(A, B));
-
-      //
-      T l((T(A[k] << hwbits) | T(A[k - 1] >> hwbits)) / B0);
-      if (l >> hwbits) [[unlikely]] l = dmax;
-
-      lshr<hwbits>(B);
-      hwmul(B, l, tmp);
-      sub(A, tmp);
-
-      for (; is_neg(A); --l, add(A, B));
-
-      //
-      q[k - N] = l | h << hwbits;
+      q[k - N] = correction_step(A[k] / B0) << hwbits |
+        correction_step((T(A[k] << hwbits) | T(A[k - 1] >> hwbits)) / B0);
     }
     while (N != k);
   }
