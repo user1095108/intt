@@ -9,7 +9,6 @@
 #include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
-#include <execution>
 #include <type_traits> // std::make_unsigned()
 #include <utility> // std::index_sequence
 
@@ -60,7 +59,7 @@ constexpr bool any(T const (&a)[N]) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr void clear(T (&a)[N]) noexcept
 { // a = 0
-  std::fill_n(std::execution::unseq, a, N, T{});
+  std::fill_n(a, N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
