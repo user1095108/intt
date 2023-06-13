@@ -117,12 +117,12 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 
-  auto const CA(clz(a)), CB(clz(b));
-
   T A[M];
   T q[N]{};
 
-  if (CB >= CA) [[likely]]
+  auto const CB(clz(b));
+
+  if (auto const CA(clz(a)); CB >= CA) [[likely]]
   {
     copy(A, a);
     lshl(A, CB);
