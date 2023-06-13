@@ -9,6 +9,7 @@
 #include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral
+#include <execution>
 #include <type_traits> // std::make_unsigned()
 #include <utility> // std::index_sequence
 
@@ -50,35 +51,43 @@ using H = std::conditional_t<
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool any(T const (&a)[N]) noexcept
 { // a != 0
-  return std::any_of(
-      a,
-      a + N,
-      [](auto const& a) noexcept { return bool(a); }
-    );
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return (a[I] || ...);
+    }(std::make_index_sequence<N>());
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr void clear(T (&a)[N]) noexcept
 { // a = 0
-  std::fill_n(a, N, T{});
+  std::fill_n(std::execution::unseq, a, N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 { // a == b
-  return std::equal(a, a + N, b);
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[I] == b[I]) && ...);
+    }(std::make_index_sequence<N>());
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
 { // a == b
-  return std::equal(b.begin(), b.end(), a);
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[I] == b[I]) && ...);
+    }(std::make_index_sequence<N>());
 }
 
 template <std::unsigned_integral T, std::size_t N>
 constexpr bool eq(std::array<T, N> const &a, T const (&b)[N]) noexcept
 { // a == b
-  return std::equal(a.begin(), a.end(), b);
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[I] == b[I]) && ...);
+    }(std::make_index_sequence<N>());
 }
 
 template <std::unsigned_integral T, std::size_t N>
