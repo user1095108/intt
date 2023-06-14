@@ -189,10 +189,8 @@ constexpr void sdiv(T (&a)[N], T const (&b)[N]) noexcept
 
   T B[N];
 
-  auto const& b_(negb ? copy(B, b), neg(B), B : b);
-
   //
-  if constexpr(F(a, b_); Rem)
+  if constexpr(F(a, negb ? copy(B, b), neg(B), B : b); Rem)
   {
     if (nega) neg(a);
   }
