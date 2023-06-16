@@ -12,10 +12,9 @@ constexpr void seqsqrt(T (&a)[N]) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
   enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
 
-  auto const CR((bits + clz(a)) / 2);
-
   T r[M];
   copy(r, a);
+  auto const CR((bits + clz(a)) / 2);
   lshl(r, CR);
 
   T Q[M]{};
