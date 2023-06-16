@@ -45,8 +45,6 @@ static constexpr auto is_intt_v{is_intt<T>::value};
 template <typename T>
 concept intt_concept = is_intt<std::remove_cvref_t<T>>::value;
 
-template <auto C> static constexpr auto coeff() noexcept { return C; }
-
 namespace detail
 {
 
@@ -460,8 +458,8 @@ struct intt
   }
 
   //
-  static constexpr auto max() noexcept { return coeff<lshr<1>(~intt{})>(); }
-  static constexpr auto min() noexcept { return coeff<~max()>(); }
+  static constexpr auto max() noexcept {return ar::coeff<lshr<1>(~intt{})>();}
+  static constexpr auto min() noexcept {return ar::coeff<~max()>();}
 };
 
 // type promotions
@@ -611,7 +609,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
       {
         [[likely]] case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-          if (r >= coeff<T::min() / 10>()) [[likely]]
+          if (r >= ar::coeff<T::min() / 10>()) [[likely]]
           {
             if (decltype(r) const t(10 * r), d(*i - '0');
               t >= T::min() + d) [[likely]]
