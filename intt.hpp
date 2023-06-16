@@ -552,17 +552,6 @@ constexpr auto abs(intt_concept auto const& a) noexcept
 }
 
 template <std::size_t M> requires(bool(M))
-constexpr auto&& lshl(intt_concept auto&& a) noexcept
-{
-  ar::lshl<M>(a.v_); return a;
-}
-
-constexpr auto&& lshl(intt_concept auto&& a, std::size_t const M) noexcept
-{
-  ar::lshl(a.v_, M); return a;
-}
-
-template <std::size_t M> requires(bool(M))
 constexpr auto&& lshr(intt_concept auto&& a) noexcept
 {
   ar::lshr<M>(a.v_); return a;
@@ -571,28 +560,6 @@ constexpr auto&& lshr(intt_concept auto&& a) noexcept
 constexpr auto&& lshr(intt_concept auto&& a, std::size_t const M) noexcept
 {
   ar::lshr(a.v_, M); return a;
-}
-
-template <std::size_t M> requires(bool(M))
-constexpr auto&& wshl(intt_concept auto&& a) noexcept
-{
-  ar::wshl<M>(a.v_); return a;
-}
-
-constexpr auto&& wshl(intt_concept auto&& a, std::size_t const M) noexcept
-{
-  ar::wshl(a.v_, M); return a;
-}
-
-template <std::size_t M> requires(bool(M))
-constexpr auto&& wshr(intt_concept auto&& a) noexcept
-{
-  ar::wshr<M>(a.v_); return a;
-}
-
-constexpr auto&& wshr(intt_concept auto&& a, std::size_t const M) noexcept
-{
-  ar::wshr(a.v_, M); return a;
 }
 
 //
