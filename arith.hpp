@@ -59,7 +59,7 @@ constexpr bool any(T const (&a)[N]) noexcept
 template <std::unsigned_integral T, std::size_t N>
 constexpr void clear(T (&a)[N]) noexcept
 { // a = 0
-  std::fill_n(a, N, {});
+  std::fill_n(a, N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
