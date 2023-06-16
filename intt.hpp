@@ -225,16 +225,20 @@ struct intt
   intt& operator=(intt const&) = default;
   intt& operator=(intt&&) = default;
 
-  #define INTT_ASSIGNMENT__(OP)\
-    template <typename U>\
-    constexpr auto& operator OP ## =(U&& a) noexcept\
-    {\
-      return *this = *this OP std::forward<U>(a);\
-    }
+  constexpr auto& operator &=(intt const& a) noexcept
+  {
+    ar::and_(v_, a.v_); return *this;
+  }
 
-  INTT_ASSIGNMENT__(&)
-  INTT_ASSIGNMENT__(|)
-  INTT_ASSIGNMENT__(^)
+  constexpr auto& operator |=(intt const& a) noexcept
+  {
+    ar::or_(v_, a.v_); return *this;
+  }
+
+  constexpr auto& operator ^=(intt const& a) noexcept
+  {
+    ar::xor_(v_, a.v_); return *this;
+  }
 
   constexpr auto& operator<<=(std::integral auto const i) noexcept
   {
@@ -369,19 +373,20 @@ struct intt
     auto r(*this); ar::not_(r.v_); return r;
   }
 
-  #define INTT_BITWISE__(OP)\
-  constexpr auto operator OP(intt const& o) const noexcept\
-  {\
-    return ([&]<auto ...I>(std::index_sequence<I...>) noexcept -> intt\
-      {\
-        return {direct{}, T(v_[I] OP o.v_[I])...};\
-      }\
-    )(std::make_index_sequence<N>());\
+  constexpr auto operator&(intt const& o) const noexcept
+  {
+    auto r(*this); ar::and_(r.v_, o.v_); return r;
   }
 
-  INTT_BITWISE__(&)
-  INTT_BITWISE__(|)
-  INTT_BITWISE__(^)
+  constexpr auto operator|(intt const& o) const noexcept
+  {
+    auto r(*this); ar::or_(r.v_, o.v_); return r;
+  }
+
+  constexpr auto operator^(intt const& o) const noexcept
+  {
+    auto r(*this); ar::xor_(r.v_, o.v_); return r;
+  }
 
   constexpr auto operator<<(std::integral auto M) const noexcept
   {
