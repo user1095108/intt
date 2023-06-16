@@ -29,8 +29,8 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
     {
       if (--i; lshl<1>(r), ucmp(r, D) >= 0)
       {
-        set_bit(q, i);
         sub(r, D);
+        set_bit(q, i);
       }
     }
     while (i);

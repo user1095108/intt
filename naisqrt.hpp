@@ -28,8 +28,8 @@ constexpr void seqsqrt(T (&a)[N]) noexcept
 
     if (lshl<1>(r), ucmp(r, tmp) >= 0)
     {
-      set_bit(Q, i);
       sub(r, tmp);
+      set_bit(Q, i);
     }
   }
 
