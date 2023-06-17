@@ -7,11 +7,11 @@
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
 
+#include "constants.hpp"
 #include "naidiv.hpp"
 #include "newdiv.hpp"
 #include "naimul.hpp"
 #include "naisqrt.hpp"
-#include "magic.hpp"
 
 namespace intt
 {
@@ -706,7 +706,7 @@ struct hash<U>
     return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
       {
-        return ((s ^= std::hash<T>()(a[I + 1]) + intt::magic::ISR +
+        return ((s ^= std::hash<T>()(a[I + 1]) + intt::consts::ISR +
           (s << 6) + (s >> 2)), ...), s;
       }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
   }

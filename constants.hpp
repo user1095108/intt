@@ -1,5 +1,5 @@
-#ifndef INTT_MAGIC_HPP
-# define INTT_MAGIC_HPP
+#ifndef INTT_CONSTANTS_HPP
+# define INTT_CONSTANTS_HPP
 # pragma once
 
 #include <climits> // CHAR_BIT
@@ -7,7 +7,7 @@
 #include <cstdint> // std::uint8_t
 #include <utility> // std::index_sequence
 
-namespace intt::magic
+namespace intt::consts
 {
 
 namespace detail
@@ -56,4 +56,4 @@ enum : std::size_t
 
 }
 
-#endif // INTT_MAGIC_HPP
+#endif // INTT_CONSTANTS_HPP
