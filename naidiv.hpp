@@ -178,28 +178,6 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
   }
 }
 
-template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
-constexpr void sdiv(T (&a)[N], T const (&b)[N]) noexcept
-{
-  auto const nega(is_neg(a));
-
-  if (nega) neg(a);
-
-  auto const negb(is_neg(b));
-
-  T B[N];
-
-  //
-  if constexpr(F(a, negb ? copy(B, b), neg(B), B : b); Rem)
-  {
-    if (nega) neg(a);
-  }
-  else
-  {
-    if (nega != negb) neg(a);
-  }
-}
-
 }
 
 #endif // INTT_ARITH_NAIDIV_HPP
