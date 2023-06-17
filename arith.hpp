@@ -524,9 +524,9 @@ constexpr void sub(T (&a)[N0], T const (&b)[N1]) noexcept
 template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
 constexpr void sdiv(T (&a)[N], T const (&b)[N]) noexcept
 {
-  if (is_neg(a)) neg(a);
-
   auto const s(Rem ? is_neg(a) : is_neg(a) != is_neg(b));
+
+  if (is_neg(a)) neg(a);
 
   T B[N];
 
