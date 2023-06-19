@@ -7,42 +7,6 @@
 namespace ar
 { // provides naive implementations of div
 
-template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
-{
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
-
-  // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
-  if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
-  {
-    T r[M];
-    copy(r, a);
-    clear(a);
-    auto i(CB - CA + 1);
-    lshl(r, bits - i);
-
-    T D[M];
-    rcopy<M - 1>(D, b);
-
-    do
-    {
-      if (--i; lshl<1>(r), ucmp(r, D) >= 0)
-      {
-        sub(r, D);
-        set_bit(a, i);
-      }
-    }
-    while (i);
-
-    //
-    if constexpr(Rem)
-    {
-      rcopy<N - 1>(a, r);
-    }
-  }
-  else if constexpr(!Rem) clear(a);
-}
-
 template <std::unsigned_integral T, std::size_t N>
 constexpr void hwmul(T const (&a)[N], H<T> const k, T (&r)[N]) noexcept
 {
@@ -101,6 +65,42 @@ constexpr void hwmul(T const (&a)[N], H<T> const k, T (&r)[N]) noexcept
       );
     }(std::make_index_sequence<N>());
   }
+}
+
+template <bool Rem = false, std::unsigned_integral T, std::size_t N>
+constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
+{
+  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
+
+  // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
+  if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
+  {
+    T r[M];
+    copy(r, a);
+    clear(a);
+    auto i(CB - CA + 1);
+    lshl(r, bits - i);
+
+    T D[M];
+    rcopy<M - 1>(D, b);
+
+    do
+    {
+      if (--i; lshl<1>(r), ucmp(r, D) >= 0)
+      {
+        sub(r, D);
+        set_bit(a, i);
+      }
+    }
+    while (i);
+
+    //
+    if constexpr(Rem)
+    {
+      rcopy<N - 1>(a, r);
+    }
+  }
+  else if constexpr(!Rem) clear(a);
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
