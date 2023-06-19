@@ -15,8 +15,6 @@ constexpr void newmul(T (&a)[N], T const (&b)[N]) noexcept
   using D = D<T>;
   using H = H<T>;
 
-  auto const nega(is_neg(a)), negb(is_neg(b));
-
   T r[N]{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
@@ -55,6 +53,8 @@ constexpr void newmul(T (&a)[N], T const (&b)[N]) noexcept
   wshr<O>(r);
 
   r[O] = a[O] * b[O];
+
+  auto const nega(is_neg(a)), negb(is_neg(b));
 
   if (nega != negb)
   {
