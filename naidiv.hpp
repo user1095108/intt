@@ -40,10 +40,7 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
       rcopy<N - 1>(a, r);
     }
   }
-  else
-  {
-    if constexpr(Rem) return; else clear(a);
-  }
+  else if constexpr(!Rem) clear(a);
 }
 
 template <std::unsigned_integral T, std::size_t N>
@@ -158,10 +155,7 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
       copy(a, A);
     }
   }
-  else 
-  {
-    if constexpr(Rem) return; else clear(a);
-  }
+  else if constexpr(!Rem) clear(a);
 }
 
 }
