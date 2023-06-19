@@ -95,10 +95,7 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
     while (i);
 
     //
-    if constexpr(Rem)
-    {
-      rcopy<N - 1>(a, r);
-    }
+    if constexpr(Rem) rcopy<N - 1>(a, r);
   }
   else if constexpr(!Rem) clear(a);
 }
