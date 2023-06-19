@@ -95,28 +95,26 @@ constexpr void newmul(T (&a)[N], T const (&b)[N]) noexcept
 
 //
 template <typename T, std::size_t M>
-static constexpr auto gldend{
-  []<auto ...I>(std::index_sequence<I...>) noexcept
+static constexpr auto gldend{[]() noexcept
   {
     T A[M]{};
     not_(A);
     wshr<M / 2>(A);
 
-    return std::array<T, M>{A[I]...};
-  }(std::make_index_sequence<M>())
+    return std::to_array(A);
+  }()
 };
 
 template <typename T, std::size_t M, unsigned A0, unsigned B0>
-static constexpr auto newc{
-  []<auto ...I>(std::index_sequence<I...>) noexcept
+static constexpr auto newc{[]() noexcept
   {
     T A[M]{T(A0)};
     wshl<M / 2>(A);
     T const B[M]{T(B0)};
     naidiv(A, B);
 
-    return std::array<T, M>{A[I]...};
-  }(std::make_index_sequence<M>())
+    return std::to_array(A);
+  }()
 };
 
 //
