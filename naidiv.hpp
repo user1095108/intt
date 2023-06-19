@@ -12,11 +12,10 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
 
-  T r[M];
-
   // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
+    T r[M];
     copy(r, a);
     clear(a);
     auto i(CB - CA + 1);
@@ -34,16 +33,16 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
       }
     }
     while (i);
+
+    //
+    if constexpr(Rem)
+    {
+      rcopy<N - 1>(a, r);
+    }
   }
   else
   {
     if constexpr(Rem) return; else clear(a);
-  }
-
-  //
-  if constexpr(Rem)
-  {
-    rcopy<N - 1>(a, r);
   }
 }
 
@@ -113,12 +112,9 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 
-  T A[M];
-
-  auto const CB(clz(b));
-
-  if (auto const CA(clz(a)); CB >= CA) [[likely]]
+  if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
+    T A[M];
     copy(A, a);
     clear(a);
     lshl(A, CB);
@@ -154,17 +150,17 @@ constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
         correction_step((T(A[k] << hwbits) | T(A[k - 1] >> hwbits)) / B0);
     }
     while (N != k);
+
+    //
+    if constexpr(Rem)
+    {
+      lshr(A, CB);
+      copy(a, A);
+    }
   }
   else 
   {
     if constexpr(Rem) return; else clear(a);
-  }
-
-  //
-  if constexpr(Rem)
-  {
-    lshr(A, CB);
-    copy(a, A);
   }
 }
 
