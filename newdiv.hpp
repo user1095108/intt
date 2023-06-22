@@ -8,7 +8,7 @@ namespace ar
 { // provides Newton-Raphson method implementations of div
 
 template <std::size_t O, std::unsigned_integral T, std::size_t N>
-constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -91,6 +91,8 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
   //
   copy(a, r);
+
+  return a;
 }
 
 //
@@ -184,11 +186,9 @@ constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     // xn = 48/17 - 32/17 * b
 
     auto xn{newc<T, M, 48, 17>};
-
     auto tmp{newc<T, M, 32, 17>};
-    newmul<N>(tmp, B);
 
-    sub(xn, tmp);
+    sub(xn, newmul<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
     for (; copy(tmp, B), newmul<N>(tmp, xn), tmp[N - 1];)
@@ -199,8 +199,7 @@ constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     }
 
     copy(B, a);
-    newmul<N>(B, xn); // a * inv(b)
-    lshr(B, bits - C);
+    lshr(newmul<N>(B, xn), bits - C); // a * inv(b)
     copy(q, B);
   }
 
