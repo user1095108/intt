@@ -8,14 +8,14 @@ namespace ar
 { // provides Newton-Raphson method implementations of div
 
 template <std::size_t O, std::unsigned_integral T, std::size_t N>
-constexpr void newmul(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
   using D = D<T>;
   using H = H<T>;
 
-  T r[N]{};
+  array_t<T, N> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   {
@@ -97,7 +97,7 @@ constexpr void newmul(T (&a)[N], T const (&b)[N]) noexcept
 template <typename T, std::size_t M>
 static constexpr auto gldend{[]() noexcept
   {
-    T A[M]{};
+    array_t<T, M> A{};
     not_(A);
     wshr<M / 2>(A);
 
@@ -108,9 +108,9 @@ static constexpr auto gldend{[]() noexcept
 template <typename T, std::size_t M, unsigned A0, unsigned B0>
 static constexpr auto newc{[]() noexcept
   {
-    T A[M]{T(A0)};
+    array_t<T, M> A{T(A0)};
     wshl<M / 2>(A);
-    T const B[M]{T(B0)};
+    array_t<T, M> const B{T(B0)};
     naidiv(A, B);
 
     return std::to_array(A);
@@ -119,24 +119,24 @@ static constexpr auto newc{[]() noexcept
 
 //
 template <bool Rem = false, typename T, std::size_t N>
-constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
+constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
-  T q[N];
+  array_t<T, N> q;
 
   {
-    T A[M];
+    array_t<T, M> A;
     copy(A, a);
 
-    T B[M];
+    array_t<T, M> B;
     copy(B, b);
     auto const C(clz(b));
     lshl(B, C);
 
     while (!eq(gldend<T, M>, B))
     {
-      T k[M];
+      array_t<T, M> k;
       copy(k, newc<T, M, 2, 1>);
       sub(k, B);
 
@@ -169,14 +169,14 @@ constexpr auto glddiv(T (&a)[N], T const (&b)[N]) noexcept
 }
 
 template <bool Rem = false, typename T, std::size_t N>
-constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
+constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
-  T q[N];
+  array_t<T, N> q;
 
   {
-    T B[M];
+    array_t<T, M> B;
     copy(B, b);
     auto const C(clz(b));
     lshl(B, C);
@@ -184,10 +184,10 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
     // xn = 2 - b
     // xn = 48/17 - 32/17 * b
 
-    T xn[M];
+    array_t<T, M> xn;
     copy(xn, newc<T, M, 48, 17>);
 
-    T tmp[M];
+    array_t<T, M> tmp;
     copy(tmp, newc<T, M, 32, 17>);
     newmul<N>(tmp, B);
 
@@ -196,7 +196,7 @@ constexpr auto newdiv(T (&a)[N], T const (&b)[N]) noexcept
     // xn = xn(2 - a * xn)
     for (; copy(tmp, B), newmul<N>(tmp, xn), tmp[N - 1];)
     {
-      T k[M];
+      array_t<T, M> k;
       copy(k, newc<T, M, 2, 1>);
 
       // xn = newmul<N>(xn, k - tmp);

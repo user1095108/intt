@@ -46,9 +46,11 @@ using H = std::conditional_t<
   >
 >;
 
+template <typename T, std::size_t N> using array_t = T[N];
+
 //
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool any(T const (&a)[N]) noexcept
+constexpr bool any(array_t<T, N> const& a) noexcept
 { // a != 0
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -57,13 +59,13 @@ constexpr bool any(T const (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void clear(T (&a)[N]) noexcept
+constexpr void clear(array_t<T, N>& a) noexcept
 { // a = 0
   std::fill_n(a, N, T{});
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
+constexpr bool eq(array_t<T, N> const& a, array_t<T, N> const& b) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -72,7 +74,7 @@ constexpr bool eq(T const (&a)[N], T const (&b)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
+constexpr bool eq(array_t<T, N> const& a, std::array<T, N> const &b) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -81,7 +83,7 @@ constexpr bool eq(T const (&a)[N], std::array<T, N> const &b) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(std::array<T, N> const &a, T const (&b)[N]) noexcept
+constexpr bool eq(std::array<T, N> const &a, array_t<T, N> const& b) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -90,7 +92,7 @@ constexpr bool eq(std::array<T, N> const &a, T const (&b)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool is_neg(T const (&a)[N]) noexcept
+constexpr bool is_neg(array_t<T, N> const &a) noexcept
 { // a < 0
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
@@ -102,7 +104,7 @@ constexpr bool is_neg(std::integral auto const a) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto ucmp(T const (&a)[N], T const (&b)[N]) noexcept
+constexpr auto ucmp(array_t<T, N> const& a, array_t<T, N> const& b) noexcept
 { // a <=> b
   auto r(a[N - 1] <=> b[N - 1]);
 
@@ -126,7 +128,7 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr auto clz(T const (&a)[N]) noexcept
+constexpr auto clz(array_t<T, N> const& a) noexcept
 {
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -151,7 +153,7 @@ constexpr auto clz(T const (&a)[N]) noexcept
 
 template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
   std::size_t N1> requires (D < N0)
-constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
+constexpr void copy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
@@ -166,7 +168,7 @@ constexpr void copy(T (&d)[N0], T const (&s)[N1]) noexcept
 
 template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
   std::size_t N1> requires (D < N0)
-constexpr void copy(T (&d)[N0], std::array<T, N1> const& s) noexcept
+constexpr void copy(array_t<T, N0> &d, std::array<T, N1> const& s) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
@@ -181,7 +183,7 @@ constexpr void copy(T (&d)[N0], std::array<T, N1> const& s) noexcept
 
 template <std::size_t D, std::unsigned_integral T, std::size_t N0,
   std::size_t N1> requires (D < N0)
-constexpr void rcopy(T (&d)[N0], T const (&s)[N1]) noexcept
+constexpr void rcopy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
@@ -197,7 +199,7 @@ constexpr void rcopy(T (&d)[N0], T const (&s)[N1]) noexcept
 //
 template <std::size_t M, std::unsigned_integral T, std::size_t N>
   requires(bool(M) && (M < bit_size_v<T>))
-constexpr void lshl(T (&a)[N]) noexcept
+constexpr void lshl(array_t<T, N>& a) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -216,7 +218,7 @@ constexpr void lshl(T (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void lshl(T (&a)[N], std::size_t M) noexcept
+constexpr void lshl(array_t<T, N>& a, std::size_t M) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -247,7 +249,7 @@ constexpr void lshl(T (&a)[N], std::size_t M) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void ashr(T (&a)[N], std::size_t M) noexcept
+constexpr void ashr(array_t<T, N>& a, std::size_t M) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -278,7 +280,7 @@ constexpr void ashr(T (&a)[N], std::size_t M) noexcept
 
 template <std::size_t M, std::unsigned_integral T, std::size_t N>
   requires(bool(M) && (M < bit_size_v<T>))
-constexpr void lshr(T (&a)[N]) noexcept
+constexpr void lshr(array_t<T, N>& a) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -296,7 +298,7 @@ constexpr void lshr(T (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void lshr(T (&a)[N], std::size_t M) noexcept
+constexpr void lshr(array_t<T, N>& a, std::size_t M) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -326,7 +328,7 @@ constexpr void lshr(T (&a)[N], std::size_t M) noexcept
 }
 
 template <std::size_t M, std::unsigned_integral T, std::size_t N>
-constexpr void wshl(T (&a)[N]) noexcept requires(bool(M))
+constexpr void wshl(array_t<T, N>& a) noexcept requires(bool(M))
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -338,7 +340,7 @@ constexpr void wshl(T (&a)[N]) noexcept requires(bool(M))
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void wshl(T (&a)[N], std::size_t const M) noexcept
+constexpr void wshl(array_t<T, N>& a, std::size_t const M) noexcept
 {
   std::size_t i{};
 
@@ -347,7 +349,7 @@ constexpr void wshl(T (&a)[N], std::size_t const M) noexcept
 }
 
 template <std::size_t M, std::unsigned_integral T, std::size_t N>
-constexpr void wshr(T (&a)[N]) noexcept requires(bool(M))
+constexpr void wshr(array_t<T, N>& a) noexcept requires(bool(M))
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -359,7 +361,7 @@ constexpr void wshr(T (&a)[N]) noexcept requires(bool(M))
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void wshr(T (&a)[N], std::size_t const M) noexcept
+constexpr void wshr(array_t<T, N>& a, std::size_t const M) noexcept
 {
   std::size_t i{};
 
@@ -368,14 +370,14 @@ constexpr void wshr(T (&a)[N], std::size_t const M) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void set_bit(T (&a)[N], std::size_t const i) noexcept
+constexpr void set_bit(array_t<T, N>& a, std::size_t const i) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
   a[i / wbits] |= T{1} << i % wbits;
 }
 
 template <std::size_t I, std::unsigned_integral T, std::size_t N>
-constexpr bool test_bit(T const (&a)[N]) noexcept
+constexpr bool test_bit(array_t<T, N> const& a) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
   return a[I / wbits] & T{1} << I % wbits;
@@ -383,7 +385,7 @@ constexpr bool test_bit(T const (&a)[N]) noexcept
 
 //
 template <std::unsigned_integral T, std::size_t N>
-constexpr void neg(T (&a)[N]) noexcept
+constexpr void neg(array_t<T, N>& a) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -394,7 +396,7 @@ constexpr void neg(T (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void not_(T (&a)[N]) noexcept
+constexpr void not_(array_t<T, N>& a) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -403,7 +405,7 @@ constexpr void not_(T (&a)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void and_(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void and_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -412,7 +414,7 @@ constexpr void and_(T (&a)[N], T const (&b)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void or_(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void or_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -421,7 +423,7 @@ constexpr void or_(T (&a)[N], T const (&b)[N]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void xor_(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void xor_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -432,7 +434,7 @@ constexpr void xor_(T (&a)[N], T const (&b)[N]) noexcept
 //
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void add(T (&a)[N0], T const (&b)[N1]) noexcept
+constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -465,7 +467,8 @@ constexpr void add(T (&a)[N0], T const (&b)[N1]) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
-constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i) noexcept
+constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b,
+  std::size_t i) noexcept
 {
   bool c;
 
@@ -489,7 +492,7 @@ constexpr void add(T (&a)[N0], T const (&b)[N1], std::size_t i) noexcept
 
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void sub(T (&a)[N0], T const (&b)[N1]) noexcept
+constexpr void sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -522,7 +525,7 @@ constexpr void sub(T (&a)[N0], T const (&b)[N1]) noexcept
 }
 
 template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
-constexpr void sdiv(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void sdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   auto const s(Rem ? is_neg(a) : is_neg(a) != is_neg(b));
 

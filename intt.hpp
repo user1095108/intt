@@ -90,7 +90,7 @@ struct intt
 
   using value_type = T;
 
-  T v_[N];
+  ar::array_t<T, N> v_;
 
   intt() = default;
 

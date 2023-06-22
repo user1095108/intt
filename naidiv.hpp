@@ -8,7 +8,7 @@ namespace ar
 { // provides naive implementations of div
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void hwmul(T const (&a)[N], H<T> const k, T (&r)[N]) noexcept
+constexpr void hwmul(array_t<T, N> const& a, H<T> const k, array_t<T, N>& r) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
@@ -68,20 +68,20 @@ constexpr void hwmul(T const (&a)[N], H<T> const k, T (&r)[N]) noexcept
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
 
   // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
-    T r[M];
+    array_t<T, M> r;
     copy(r, a);
     clear(a);
     auto i(CB - CA + 1);
     lshl(r, bits - i);
 
-    T D[M];
+    array_t<T, M> D;
     rcopy<M - 1>(D, b);
 
     do
@@ -101,19 +101,19 @@ constexpr void seqdiv(T (&a)[N], T const (&b)[N]) noexcept
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr void naidiv(T (&a)[N], T const (&b)[N]) noexcept
+constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 { // wbits per iteration
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
-    T A[M];
+    array_t<T, M> A;
     copy(A, a);
     clear(a);
     lshl(A, CB);
 
-    T B[M];
+    array_t<T, M> B;
     rcopy<M - 1>(B, b);
     lshl(B, CB);
 
