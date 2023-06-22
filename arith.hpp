@@ -74,7 +74,7 @@ constexpr bool eq(array_t<T, N> const& a, array_t<T, N> const& b) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(array_t<T, N> const& a, std::array<T, N> const &b) noexcept
+constexpr bool eq(array_t<T, N> const& a, std::array<T, N> const& b) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -168,7 +168,7 @@ constexpr void copy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
 
 template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
   std::size_t N1> requires (D < N0)
-constexpr void copy(array_t<T, N0> &d, std::array<T, N1> const& s) noexcept
+constexpr void copy(array_t<T, N0>& d, std::array<T, N1> const& s) noexcept
 { // d = s
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
