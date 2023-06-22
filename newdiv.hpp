@@ -181,8 +181,7 @@ constexpr auto& newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     }
 
     //
-    lshr(newmul<N>(copy(B, a), xn), bits - C); // a * inv(b)
-    copy(q, B);
+    copy(q, lshr(newmul<N>(copy(B, a), xn), bits - C)); // a * inv(b)
   }
 
   //
