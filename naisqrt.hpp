@@ -23,7 +23,7 @@ constexpr void seqsqrt(array_t<T, N>& a) noexcept
     auto tmp(Q);
     set_bit(lshl<1>(tmp), --i);
 
-    if (lshl<1>(r), ucmp(r, tmp) >= 0)
+    if (ucmp(lshl<1>(r), tmp) >= 0)
     {
       sub(r, tmp);
       set_bit(Q, i);

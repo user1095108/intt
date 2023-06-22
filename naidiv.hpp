@@ -89,7 +89,7 @@ constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
     do
     {
-      if (--i; ucmp(rlshl<1>(r), D) >= 0)
+      if (--i; ucmp(lshl<1>(r), D) >= 0)
       {
         sub(r, D);
         set_bit(a, i);
