@@ -125,9 +125,8 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     copy(A, a);
 
     array_t<T, M> B;
-    copy(B, b);
     auto const C(clz(b));
-    lshl(B, C);
+    lshl(copy(B, b), C);
 
     while (!eq(gldend<T, M>, B))
     {
