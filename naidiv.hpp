@@ -8,12 +8,14 @@ namespace ar
 { // provides naive implementations of div
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void hwmul(array_t<T, N> const& a, H<T> const k, array_t<T, N>& r) noexcept
+constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
   using D = D<T>;
   using H = H<T>;
+
+  array_t<T, N> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
@@ -28,15 +30,15 @@ constexpr void hwmul(array_t<T, N> const& a, H<T> const k, array_t<T, N>& r) noe
 
           if constexpr((S % 2) && (M - 1 == S))
           {
-            add<S / 2>(r, {pp << hwbits});
+            add<S / 2>(r, array_t<T, N>{pp << hwbits});
           }
           else if constexpr(S % 2)
           {
-            add<S / 2>(r, {pp << hwbits, pp >> hwbits});
+            add<S / 2>(r, array_t<T, N>{pp << hwbits, pp >> hwbits});
           }
           else
           {
-            add<S / 2>(r, {pp});
+            add<S / 2>(r, array_t<T, N>{pp});
           }
         }(),
         ...
@@ -54,17 +56,19 @@ constexpr void hwmul(array_t<T, N> const& a, H<T> const k, array_t<T, N>& r) noe
 
           if constexpr(N - 1 == S)
           {
-            add<S>(r, {T(pp)});
+            add<S>(r, array_t<T, N>{T(pp)});
           }
           else
           {
-            add<S>(r, {T(pp), T(pp >> wbits)});
+            add<S>(r, array_t<T, N>{T(pp), T(pp >> wbits)});
           }
         }(),
         ...
       );
     }(std::make_index_sequence<N>());
   }
+
+  return r;
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
@@ -86,7 +90,7 @@ constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
     do
     {
-      if (--i; lshl<1>(r), ucmp(r, D) >= 0)
+      if (--i; ucmp(rlshl<1>(r), D) >= 0)
       {
         sub(r, D);
         set_bit(a, i);
@@ -125,10 +129,7 @@ constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     auto const correction_step([&](T d) noexcept
         {
           if (d >> hwbits) [[unlikely]] d = dmax;
-          lshr<hwbits>(B);
-          decltype(B) tmp{};
-          hwmul(B, d, tmp);
-          sub(A, tmp);
+          sub(A, hwmul(lshr<hwbits>(B), d));
 
           for (; is_neg(A); --d, add(A, B));
 
@@ -146,11 +147,7 @@ constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     while (N != k);
 
     //
-    if constexpr(Rem)
-    {
-      lshr(A, CB);
-      copy(a, A);
-    }
+    if constexpr(Rem) copy(a, lshr(A, CB));
   }
   else if constexpr(!Rem) clear(a);
 }

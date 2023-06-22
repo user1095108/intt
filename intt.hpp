@@ -353,7 +353,7 @@ struct intt
         }
         else
         {
-          return *v_;
+          return v_.front();
         }
       }(std::make_index_sequence<ar::bit_size_v<U> / wbits>());
   }
@@ -363,7 +363,6 @@ struct intt
 
   //
   static constexpr auto size() noexcept { return N; }
-  constexpr auto data() const noexcept { return v_; }
 
   // bitwise
   constexpr auto operator~() const noexcept
@@ -397,8 +396,15 @@ struct intt
   }
 
   // increment, decrement
-  constexpr auto& operator++() noexcept { ar::add(v_, {T(1)}); return *this; }
-  constexpr auto& operator--() noexcept { ar::sub(v_, {T(1)}); return *this; }
+  constexpr auto& operator++() noexcept
+  {
+    ar::add(v_, ar::array_t<T, N>{T(1)}); return *this;
+  }
+
+  constexpr auto& operator--() noexcept
+  {
+    ar::sub(v_, ar::array_t<T, N>{T(1)}); return *this;
+  }
 
   constexpr auto operator++(int) noexcept
   {
@@ -636,6 +642,8 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
     return {neg ? r : -r, !neg && (T::min() == r)}; // can return error
   }
 }
+
+constexpr auto& to_array(intt_concept auto const& a) noexcept { return a.v_; }
 
 template <typename T>
 constexpr auto to_integral(auto const& s) noexcept ->
