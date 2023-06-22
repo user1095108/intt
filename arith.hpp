@@ -83,7 +83,7 @@ constexpr bool eq(array_t<T, N> const& a, std::array<T, N> const &b) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(std::array<T, N> const &a, array_t<T, N> const& b) noexcept
+constexpr bool eq(std::array<T, N> const& a, array_t<T, N> const& b) noexcept
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -92,7 +92,7 @@ constexpr bool eq(std::array<T, N> const &a, array_t<T, N> const& b) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr bool is_neg(array_t<T, N> const &a) noexcept
+constexpr bool is_neg(array_t<T, N> const& a) noexcept
 { // a < 0
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
