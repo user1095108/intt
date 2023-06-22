@@ -8,7 +8,7 @@ namespace ar
 { // provides naive implementations of mul
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void seqmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& seqmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
 
@@ -31,11 +31,11 @@ constexpr void seqmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }(std::make_index_sequence<wbits * N>());
 
   //
-  copy(a, r);
+  return copy(a, r);
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { wbits = bit_size_v<T> };
 
@@ -80,7 +80,7 @@ constexpr void naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }
 
   //
-  copy(a, r);
+  return copy(a, r);
 }
 
 }

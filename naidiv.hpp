@@ -72,7 +72,7 @@ constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
 
@@ -101,10 +101,12 @@ constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     if constexpr(Rem) rcopy<N - 1>(a, r);
   }
   else if constexpr(!Rem) clear(a);
+
+  return a;
 }
 
 template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 { // wbits per iteration
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
@@ -147,6 +149,8 @@ constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     if constexpr(Rem) copy(a, lshr(A, CB));
   }
   else if constexpr(!Rem) clear(a);
+
+  return a;
 }
 
 }

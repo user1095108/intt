@@ -90,9 +90,7 @@ constexpr auto& newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }
 
   //
-  copy(a, r);
-
-  return a;
+  return copy(a, r);
 }
 
 //
@@ -121,7 +119,7 @@ static constexpr auto newc{[]() noexcept
 
 //
 template <bool Rem = false, typename T, std::size_t N>
-constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
@@ -146,11 +144,7 @@ constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     }
 
     //
-    lshr(A, bits - C);
-
-    //
-    copy(q, A);
-    naimul(q, b);
+    naimul(copy(q, lshr(A, bits - C)), b);
     sub(a, q); // a = a - q * b
 
     //
@@ -159,18 +153,18 @@ constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
   if constexpr(Rem)
   {
-    if (ucmp(a, b) >= 0) sub(a, b);
+    if (ucmp(a, b) >= 0) sub(a, b); return a;
   }
   else
   {
     if (ucmp(a, b) >= 0) add(q, array_t<T, 1>{T(1)});
 
-    copy(a, q);
+    return copy(a, q);
   }
 }
 
 template <bool Rem = false, typename T, std::size_t N>
-constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
@@ -198,20 +192,19 @@ constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
       newmul<N>(xn, sub(k, tmp));
     }
 
-    copy(B, a);
-    lshr(newmul<N>(B, xn), bits - C); // a * inv(b)
+    //
+    lshr(newmul<N>(copy(B, a), xn), bits - C); // a * inv(b)
     copy(q, B);
   }
 
   //
   if constexpr(Rem)
   {
-    naimul(q, b);
-    sub(a, q); // a = r = a - q * b
+    return sub(a, naimul(q, b)); // a = r = a - q * b
   }
   else
   {
-    copy(a, q);
+    return copy(a, q);
   }
 }
 
