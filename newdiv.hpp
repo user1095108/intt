@@ -31,8 +31,8 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
         auto const S(i + j);
 
         S % 2 ?
-          add(r, {pp << hwbits, pp >> hwbits}, S / 2) :
-          add(r, {pp}, S / 2);
+          add(r, array_t<T, N>{pp << hwbits, pp >> hwbits}, S / 2) :
+          add(r, array_t<T, N>{pp}, S / 2);
       }
     }
   }
@@ -44,7 +44,7 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
       {
         D const pp(D(a[i]) * b[j]);
 
-        add(r, {T(pp), T(pp >> wbits)}, i + j);
+        add(r, array_t<T, N>{T(pp), T(pp >> wbits)}, i + j);
       }
     }
   }
@@ -63,7 +63,7 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
   if (a[O])
   {
-    if (T bb[O]; copy(bb, b), nega)
+    if (array_t<T, O> bb; copy(bb, b), nega)
     {
       auto A{-a[O]};
       do sub(r, bb); while (--A);
@@ -77,7 +77,7 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
   if (b[O])
   {
-    if (T aa[O]; copy(aa, a), negb)
+    if (array_t<T, O> aa; copy(aa, a), negb)
     {
       auto B{-b[O]};
       do sub(r, aa); while (--B);
@@ -101,7 +101,7 @@ static constexpr auto gldend{[]() noexcept
     not_(A);
     wshr<M / 2>(A);
 
-    return std::to_array(A);
+    return A;
   }()
 };
 
@@ -113,7 +113,7 @@ static constexpr auto newc{[]() noexcept
     array_t<T, M> const B{T(B0)};
     naidiv(A, B);
 
-    return std::to_array(A);
+    return A;
   }()
 };
 
