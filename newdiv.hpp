@@ -118,10 +118,9 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
-  array_t<T, N> q;
+  array_t<T, M> A;
 
   {
-    array_t<T, M> A;
     copy(A, a);
 
     array_t<T, M> B;
@@ -138,22 +137,17 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     }
 
     //
-    naimul(copy(q, lshr(A, bits - C)), b);
-    sub(a, q); // a = a - q * b
-
-    //
-    copy(q, A);
+    array_t<T, N> q;
+    sub(a, naimul(copy(q, lshr(A, bits - C)), b)); // a = a - q * b
   }
 
-  if constexpr(Rem)
+  if constexpr(auto const c(ucmp(a, b) >= 0); Rem)
   {
-    return ucmp(a, b) >= 0 ? sub(a, b) : a;
+    return c ? sub(a, b) : a;
   }
   else
   {
-    if (ucmp(a, b) >= 0) add(q, array_t<T, 1>{T(1)});
-
-    return copy(a, q);
+    return add(copy(a, A), array_t<T, 1>{T(c)});
   }
 }
 
