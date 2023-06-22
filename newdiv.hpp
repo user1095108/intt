@@ -173,7 +173,7 @@ constexpr auto& newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     sub(xn, newmul<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
-    for (; newmul<N>(copy(tmp, B), xn), tmp[N - 1];)
+    for (; newmul<N>(tmp = B, xn), tmp[N - 1];)
     {
       // xn = newmul<N>(xn, k - tmp);
       newmul<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));
