@@ -80,10 +80,9 @@ constexpr void seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
     array_t<T, M> r;
-    copy(r, a);
-    clear(a);
     auto i(CB - CA + 1);
-    lshl(r, bits - i);
+    lshl(copy(r, a), bits - i);
+    clear(a);
 
     array_t<T, M> D;
     rcopy<M - 1>(D, b);
@@ -113,13 +112,11 @@ constexpr void naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
   {
     array_t<T, M> A;
-    copy(A, a);
+    lshl(copy(A, a), CB);
     clear(a);
-    lshl(A, CB);
 
     array_t<T, M> B;
-    rcopy<M - 1>(B, b);
-    lshl(B, CB);
+    lshl(rcopy<M - 1>(B, b), CB);
 
     H<T> const B0(B[M - 1] >> hwbits);
 

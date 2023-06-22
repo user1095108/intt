@@ -13,18 +13,15 @@ constexpr void seqsqrt(array_t<T, N>& a) noexcept
   enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
 
   array_t<T, M> r;
-  copy(r, a);
   auto const CR((bits + clz(a)) / 2);
-  lshl(r, CR);
+  lshl(copy(r, a), CR);
 
   array_t<T, M> Q{};
 
   for (auto i(2 * bits - CR); bits != i;)
   {
-    array_t<T, M> tmp;
-    copy(tmp, Q);
-    lshl<1>(tmp);
-    set_bit(tmp, --i);
+    auto tmp(Q);
+    set_bit(lshl<1>(tmp), --i);
 
     if (lshl<1>(r), ucmp(r, tmp) >= 0)
     {
