@@ -136,8 +136,7 @@ constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
     while (!eq(gldend<T, M>, B))
     {
-      array_t<T, M> k;
-      copy(k, newc<T, M, 2, 1>);
+      auto k{newc<T, M, 2, 1>};
       sub(k, B);
 
       newmul<N>(B, k);
@@ -162,7 +161,7 @@ constexpr auto glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }
   else
   {
-    if (ucmp(a, b) >= 0) add(q, {T(1)});
+    if (ucmp(a, b) >= 0) add(q, array_t<T, 1>{T(1)});
 
     copy(a, q);
   }
@@ -184,11 +183,9 @@ constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     // xn = 2 - b
     // xn = 48/17 - 32/17 * b
 
-    array_t<T, M> xn;
-    copy(xn, newc<T, M, 48, 17>);
+    auto xn{newc<T, M, 48, 17>};
 
-    array_t<T, M> tmp;
-    copy(tmp, newc<T, M, 32, 17>);
+    auto tmp{newc<T, M, 32, 17>};
     newmul<N>(tmp, B);
 
     sub(xn, tmp);
@@ -196,12 +193,9 @@ constexpr auto newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
     // xn = xn(2 - a * xn)
     for (; copy(tmp, B), newmul<N>(tmp, xn), tmp[N - 1];)
     {
-      array_t<T, M> k;
-      copy(k, newc<T, M, 2, 1>);
-
       // xn = newmul<N>(xn, k - tmp);
-      sub(k, tmp);
-      newmul<N>(xn, k);
+      sub(tmp, newc<T, M, 2, 1>);
+      newmul<N>(xn, neg(tmp));
     }
 
     copy(B, a);

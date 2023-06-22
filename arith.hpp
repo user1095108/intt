@@ -370,7 +370,7 @@ constexpr bool test_bit(array_t<T, N> const& a) noexcept
 
 //
 template <std::unsigned_integral T, std::size_t N>
-constexpr void neg(array_t<T, N>& a) noexcept
+constexpr auto& neg(array_t<T, N>& a) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -378,42 +378,52 @@ constexpr void neg(array_t<T, N>& a) noexcept
 
     ((c = (a[I] = T(~a[I]) + c) < c), ...);
   }(std::make_index_sequence<N>());
+
+  return a;
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void not_(array_t<T, N>& a) noexcept
+constexpr auto& not_(array_t<T, N>& a) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] = T(~a[I])), ...);
   }(std::make_index_sequence<N>());
+
+  return a;
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void and_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& and_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] &= b[I]), ...);
   }(std::make_index_sequence<N>());
+
+  return a;
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void or_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& or_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] |= b[I]), ...);
   }(std::make_index_sequence<N>());
+
+  return a;
 }
 
 template <std::unsigned_integral T, std::size_t N>
-constexpr void xor_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto& xor_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] ^= b[I]), ...);
   }(std::make_index_sequence<N>());
+
+  return a;
 }
 
 //
