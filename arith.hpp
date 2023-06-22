@@ -429,7 +429,7 @@ constexpr auto& xor_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 //
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
+constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -459,10 +459,12 @@ constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
       ...
     );
   }(std::make_index_sequence<N0 - S>());
+
+  return a;
 }
 
 template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
-constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b,
+constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b,
   std::size_t i) noexcept
 {
   bool c;
@@ -483,11 +485,13 @@ constexpr void add(array_t<T, N0>& a, array_t<T, N1> const& b,
   }
 
   while (N0 != i) c = (a[i++] += c) < c;
+
+  return a;
 }
 
 template <std::size_t S = 0, std::unsigned_integral T,
   std::size_t N0, std::size_t N1>
-constexpr void sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
+constexpr auto& sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   requires(S < N0)
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -517,6 +521,8 @@ constexpr void sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
       ...
     );
   }(std::make_index_sequence<N0 - S>());
+
+  return a;
 }
 
 template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
