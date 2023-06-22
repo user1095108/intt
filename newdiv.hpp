@@ -98,10 +98,8 @@ template <typename T, std::size_t M>
 static constexpr auto gldend{[]() noexcept
   {
     array_t<T, M> A{};
-    not_(A);
-    wshr<M / 2>(A);
 
-    return A;
+    return wshr<M / 2>(not_(A));
   }()
 };
 
@@ -109,11 +107,8 @@ template <typename T, std::size_t M, unsigned A0, unsigned B0>
 static constexpr auto newc{[]() noexcept
   {
     array_t<T, M> A{T(A0)};
-    wshl<M / 2>(A);
-    array_t<T, M> const B{T(B0)};
-    naidiv(A, B);
 
-    return A;
+    return naidiv(wshl<M / 2>(A), array_t<T, M>{T(B0)});
   }()
 };
 
@@ -153,7 +148,7 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 
   if constexpr(Rem)
   {
-    if (ucmp(a, b) >= 0) sub(a, b); return a;
+    return ucmp(a, b) >= 0 ? sub(a, b) : a;
   }
   else
   {
