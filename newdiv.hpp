@@ -31,8 +31,8 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
         auto const S(i + j);
 
         S % 2 ?
-          add(r, array_t<T, N>{pp << hwbits, pp >> hwbits}, S / 2) :
-          add(r, array_t<T, N>{pp}, S / 2);
+          add(r, array_t<T, 2>{pp << hwbits, pp >> hwbits}, S / 2) :
+          add(r, array_t<T, 1>{pp}, S / 2);
       }
     }
   }
@@ -44,7 +44,7 @@ constexpr void newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
       {
         D const pp(D(a[i]) * b[j]);
 
-        add(r, array_t<T, N>{T(pp), T(pp >> wbits)}, i + j);
+        add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, i + j);
       }
     }
   }

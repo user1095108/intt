@@ -398,12 +398,12 @@ struct intt
   // increment, decrement
   constexpr auto& operator++() noexcept
   {
-    ar::add(v_, ar::array_t<T, N>{T(1)}); return *this;
+    ar::add(v_, ar::array_t<T, 1>{T(1)}); return *this;
   }
 
   constexpr auto& operator--() noexcept
   {
-    ar::sub(v_, ar::array_t<T, N>{T(1)}); return *this;
+    ar::sub(v_, ar::array_t<T, 1>{T(1)}); return *this;
   }
 
   constexpr auto operator++(int) noexcept

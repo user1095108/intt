@@ -30,15 +30,15 @@ constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
 
           if constexpr((S % 2) && (M - 1 == S))
           {
-            add<S / 2>(r, array_t<T, N>{pp << hwbits});
+            add<S / 2>(r, array_t<T, 1>{pp << hwbits});
           }
           else if constexpr(S % 2)
           {
-            add<S / 2>(r, array_t<T, N>{pp << hwbits, pp >> hwbits});
+            add<S / 2>(r, array_t<T, 2>{pp << hwbits, pp >> hwbits});
           }
           else
           {
-            add<S / 2>(r, array_t<T, N>{pp});
+            add<S / 2>(r, array_t<T, 1>{pp});
           }
         }(),
         ...
@@ -56,11 +56,11 @@ constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
 
           if constexpr(N - 1 == S)
           {
-            add<S>(r, array_t<T, N>{T(pp)});
+            add<S>(r, array_t<T, 1>{T(pp)});
           }
           else
           {
-            add<S>(r, array_t<T, N>{T(pp), T(pp >> wbits)});
+            add<S>(r, array_t<T, 2>{T(pp), T(pp >> wbits)});
           }
         }(),
         ...

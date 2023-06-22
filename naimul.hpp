@@ -57,8 +57,8 @@ constexpr void naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
           H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
 
         S % 2 ?
-          add(r, array_t<T, N>{pp << hwbits, pp >> hwbits}, S / 2) :
-          add(r, array_t<T, N>{pp}, S / 2);
+          add(r, array_t<T, 2>{pp << hwbits, pp >> hwbits}, S / 2) :
+          add(r, array_t<T, 1>{pp}, S / 2);
       }
       while (M != ++S);
     }
@@ -73,7 +73,7 @@ constexpr void naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
       {
         D<T> const pp(D<T>(a[i]) * b[S - i]);
 
-        add(r, array_t<T, N>{T(pp), T(pp >> wbits)}, S);
+        add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, S);
       }
       while (N != ++S);
     }
