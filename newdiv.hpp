@@ -97,18 +97,14 @@ constexpr auto& newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
 template <typename T, std::size_t M>
 static constexpr auto gldend{[]() noexcept
   {
-    array_t<T, M> A{};
-
-    return wshr<M / 2>(not_(A));
+    return wshr<M / 2>(not_(array_t<T, M>{}));
   }()
 };
 
 template <typename T, std::size_t M, unsigned A0, unsigned B0>
 static constexpr auto newc{[]() noexcept
   {
-    array_t<T, M> A{T(A0)};
-
-    return naidiv(wshl<M / 2>(A), array_t<T, M>{T(B0)});
+    return naidiv(wshl<M / 2>(array_t<T, M>{T(A0)}), array_t<T, M>{T(B0)});
   }()
 };
 

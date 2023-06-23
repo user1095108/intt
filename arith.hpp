@@ -49,33 +49,45 @@ using H = std::conditional_t<
 template <typename T, std::size_t N> using array_t = std::array<T, N>;
 
 //
-template <std::unsigned_integral T, std::size_t N>
-constexpr bool any(array_t<T, N> const& a) noexcept
+template <typename T>
+constexpr auto size() noexcept
+{
+  return sizeof(T) / sizeof(std::declval<T>()[0]);
+}
+
+constexpr bool any(auto const& a) noexcept
 { // a != 0
+  constexpr auto N{size<decltype(a)>()};
+
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return (a[I] || ...);
     }(std::make_index_sequence<N>());
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr void clear(array_t<T, N>& a) noexcept
+constexpr void clear(auto& a) noexcept
 { // a = 0
-  std::fill_n(a.data(), N, T{});
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
+  std::fill_n(std::begin(a), N, T{});
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr bool eq(array_t<T, N> const& a, array_t<T, N> const& b) noexcept
+constexpr bool eq(auto const& a, decltype(a) b) noexcept
 { // a == b
+  constexpr auto N{size<decltype(a)>()};
+
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return ((a[I] == b[I]) && ...);
     }(std::make_index_sequence<N>());
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr bool is_neg(array_t<T, N> const& a) noexcept
+constexpr bool is_neg(auto const& a) noexcept
 { // a < 0
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
 }
@@ -85,9 +97,10 @@ constexpr bool is_neg(std::integral auto const a) noexcept
   return a < decltype(a){};
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto ucmp(array_t<T, N> const& a, array_t<T, N> const& b) noexcept
+constexpr auto ucmp(auto const& a, decltype(a) b) noexcept
 { // a <=> b
+  constexpr auto N{size<decltype(a)>()};
+
   auto r(a[N - 1] <=> b[N - 1]);
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -109,12 +122,14 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
   return std::countl_zero(a);
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto clz(array_t<T, N> const& a) noexcept
+constexpr auto clz(auto const& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      decltype(N) r{};
+      std::size_t r{};
 
       enum : decltype(r) { wbits = bit_size_v<T> };
 
@@ -133,10 +148,14 @@ constexpr auto clz(array_t<T, N> const& a) noexcept
     }(std::make_index_sequence<N>());
 }
 
-template <std::size_t D = 0, std::unsigned_integral T, std::size_t N0,
-  std::size_t N1> requires (D < N0)
-constexpr auto& copy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
+template <std::size_t D = 0>
+constexpr auto&& copy(auto&& d, auto const& s) noexcept
+  requires(D < size<decltype(d)>())
 { // d = s
+  using T = std::remove_cvref_t<decltype(d[0])>;
+  constexpr auto N0{size<decltype(d)>()};
+  constexpr auto N1{size<decltype(s)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
     ((d[I] = {}), ...);
@@ -150,10 +169,14 @@ constexpr auto& copy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
   return d;
 }
 
-template <std::size_t D, std::unsigned_integral T, std::size_t N0,
-  std::size_t N1> requires (D < N0)
-constexpr auto& rcopy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
+template <std::size_t D>
+constexpr auto&& rcopy(auto&& d, auto const& s) noexcept
+  requires(D < size<decltype(d)>())
 { // d = s
+  using T = std::remove_cvref_t<decltype(d[0])>;
+  constexpr auto N0{size<decltype(d)>()};
+  constexpr auto N1{size<decltype(s)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
     ((d[N0 - I - 1] = {}), ...);
@@ -168,10 +191,13 @@ constexpr auto& rcopy(array_t<T, N0>& d, array_t<T, N1> const& s) noexcept
 }
 
 //
-template <std::size_t M, std::unsigned_integral T, std::size_t N>
-  requires(bool(M) && (M < bit_size_v<T>))
-constexpr auto& lshl(array_t<T, N>& a) noexcept
+template <std::size_t M>
+constexpr auto&& lshl(auto&& a) noexcept
+  requires(bool(M) && (M < bit_size_v<std::remove_cvref_t<decltype(a[0])>>))
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -190,9 +216,11 @@ constexpr auto& lshl(array_t<T, N>& a) noexcept
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& lshl(array_t<T, N>& a, std::size_t M) noexcept
+constexpr auto&& lshl(auto&& a, std::size_t M) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   if (M)
@@ -223,9 +251,11 @@ constexpr auto& lshl(array_t<T, N>& a, std::size_t M) noexcept
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& ashr(array_t<T, N>& a, std::size_t M) noexcept
+constexpr auto&& ashr(auto&& a, std::size_t M) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   if (M)
@@ -255,10 +285,13 @@ constexpr auto& ashr(array_t<T, N>& a, std::size_t M) noexcept
   return a;
 }
 
-template <std::size_t M, std::unsigned_integral T, std::size_t N>
-  requires(bool(M) && (M < bit_size_v<T>))
-constexpr auto& lshr(array_t<T, N>& a) noexcept
+template <std::size_t M>
+constexpr auto&& lshr(auto&& a) noexcept
+  requires(bool(M) && (M < bit_size_v<std::remove_cvref_t<decltype(a[0])>>))
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -276,9 +309,11 @@ constexpr auto& lshr(array_t<T, N>& a) noexcept
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& lshr(array_t<T, N>& a, std::size_t M) noexcept
+constexpr auto&& lshr(auto&& a, std::size_t M) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   if (M)
@@ -308,9 +343,12 @@ constexpr auto& lshr(array_t<T, N>& a, std::size_t M) noexcept
   return a;
 }
 
-template <std::size_t M, std::unsigned_integral T, std::size_t N>
-constexpr auto& wshl(array_t<T, N>& a) noexcept requires(bool(M))
+template <std::size_t M> requires(bool(M))
+constexpr auto&& wshl(auto&& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
@@ -322,9 +360,11 @@ constexpr auto& wshl(array_t<T, N>& a) noexcept requires(bool(M))
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& wshl(array_t<T, N>& a, std::size_t const M) noexcept
+constexpr auto&& wshl(auto&& a, std::size_t const M) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   std::size_t i{};
 
   for (auto const J(N - M); i != J; ++i) a[i + M] = a[i];
@@ -333,9 +373,12 @@ constexpr auto& wshl(array_t<T, N>& a, std::size_t const M) noexcept
   return a;
 }
 
-template <std::size_t M, std::unsigned_integral T, std::size_t N>
-constexpr auto& wshr(array_t<T, N>& a) noexcept requires(bool(M))
+template <std::size_t M> requires(bool(M))
+constexpr auto&& wshr(auto&& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     (
@@ -347,9 +390,11 @@ constexpr auto& wshr(array_t<T, N>& a) noexcept requires(bool(M))
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& wshr(array_t<T, N>& a, std::size_t const M) noexcept
+constexpr auto&& wshr(auto&& a, std::size_t const M) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   std::size_t i{};
 
   for (auto const J(N - M); i != J; ++i) a[i] = a[i + M];
@@ -358,84 +403,87 @@ constexpr auto& wshr(array_t<T, N>& a, std::size_t const M) noexcept
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr void set_bit(array_t<T, N>& a, std::size_t const i) noexcept
+constexpr void set_bit(auto& a, std::size_t const i) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { wbits = bit_size_v<T> };
   a[i / wbits] |= T{1} << i % wbits;
 }
 
-template <std::size_t I, std::unsigned_integral T, std::size_t N>
-constexpr bool test_bit(array_t<T, N> const& a) noexcept
+template <std::size_t I>
+constexpr bool test_bit(auto const& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { wbits = bit_size_v<T> };
   return a[I / wbits] & T{1} << I % wbits;
 }
 
 //
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& neg(array_t<T, N>& a) noexcept
+constexpr auto&& neg(auto&& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     bool c{true};
 
     ((c = (a[I] = T(~a[I]) + c) < c), ...);
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& not_(array_t<T, N>& a) noexcept
+constexpr auto&& not_(auto&& a) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] = T(~a[I])), ...);
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& and_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto&& and_(auto&& a, auto const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] &= b[I]), ...);
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& or_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto&& or_(auto&& a, auto const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] |= b[I]), ...);
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& xor_(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto&& xor_(auto&& a, auto const& b) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     ((a[I] ^= b[I]), ...);
-  }(std::make_index_sequence<N>());
+  }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
 }
 
 //
-template <std::size_t S = 0, std::unsigned_integral T,
-  std::size_t N0, std::size_t N1>
-constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
-  requires(S < N0)
+template <std::size_t S = 0>
+constexpr auto&& add(auto&& a, auto const& b) noexcept
+  requires(S < size<decltype(a)>())
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N0{size<decltype(a)>()};
+  constexpr auto N1{size<decltype(b)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     bool c;
@@ -467,10 +515,12 @@ constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   return a;
 }
 
-template <std::unsigned_integral T, std::size_t N0, std::size_t N1>
-constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b,
-  std::size_t i) noexcept
+constexpr auto&& add(auto&& a, auto const& b, std::size_t i) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N0{size<decltype(a)>()};
+  constexpr auto N1{size<decltype(b)>()};
+
   bool c;
 
   {
@@ -493,11 +543,14 @@ constexpr auto& add(array_t<T, N0>& a, array_t<T, N1> const& b,
   return a;
 }
 
-template <std::size_t S = 0, std::unsigned_integral T,
-  std::size_t N0, std::size_t N1>
-constexpr auto& sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
-  requires(S < N0)
+template <std::size_t S = 0>
+constexpr auto&& sub(auto&& a, auto const& b) noexcept
+  requires(S < size<decltype(a)>())
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N0{size<decltype(a)>()};
+  constexpr auto N1{size<decltype(b)>()};
+
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
     bool c;
@@ -529,18 +582,20 @@ constexpr auto& sub(array_t<T, N0>& a, array_t<T, N1> const& b) noexcept
   return a;
 }
 
-template <bool Rem, auto F, std::unsigned_integral T, std::size_t N>
-constexpr void sdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <bool Rem, auto F>
+constexpr auto&& sdiv(auto&& a, auto const& b) noexcept
 {
   auto const s(Rem ? is_neg(a) : is_neg(a) != is_neg(b));
 
   if (is_neg(a)) neg(a);
 
-  array_t<T, N> B;
+  std::remove_cvref_t<decltype(a)> B;
 
   F(a, is_neg(b) ? copy(B, b), neg(B), B : b);
 
   if (s) neg(a);
+
+  return a;
 }
 
 }
