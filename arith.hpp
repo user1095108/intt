@@ -50,7 +50,7 @@ template <typename T, std::size_t N> using array_t = std::array<T, N>;
 
 //
 template <typename T>
-constexpr auto size() noexcept
+constexpr std::size_t size() noexcept
 {
   return sizeof(T) / sizeof(std::declval<T>()[0]);
 }
