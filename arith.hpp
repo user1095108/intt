@@ -362,7 +362,6 @@ constexpr auto&& wshl(auto&& a) noexcept
 
 constexpr auto&& wshl(auto&& a, std::size_t const M) noexcept
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};
 
   std::size_t i{};
@@ -392,7 +391,6 @@ constexpr auto&& wshr(auto&& a) noexcept
 
 constexpr auto&& wshr(auto&& a, std::size_t const M) noexcept
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};
 
   std::size_t i{};
@@ -480,7 +478,6 @@ template <std::size_t S = 0>
 constexpr auto&& add(auto&& a, auto const& b) noexcept
   requires(S < size<decltype(a)>())
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N0{size<decltype(a)>()};
   constexpr auto N1{size<decltype(b)>()};
 
@@ -517,7 +514,6 @@ constexpr auto&& add(auto&& a, auto const& b) noexcept
 
 constexpr auto&& add(auto&& a, auto const& b, std::size_t i) noexcept
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N0{size<decltype(a)>()};
   constexpr auto N1{size<decltype(b)>()};
 
@@ -547,7 +543,6 @@ template <std::size_t S = 0>
 constexpr auto&& sub(auto&& a, auto const& b) noexcept
   requires(S < size<decltype(a)>())
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N0{size<decltype(a)>()};
   constexpr auto N1{size<decltype(b)>()};
 
