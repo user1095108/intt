@@ -147,7 +147,8 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }
   else
   {
-    return add(copy(a, A), array_t<T, 1>{T(c)});
+    copy(a, A)
+    return c ? add(a, array_t<T, 1>{T(1)}) : a;
   }
 }
 
