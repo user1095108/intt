@@ -21,9 +21,8 @@ constexpr auto& seqsqrt(array_t<T, N>& a) noexcept
   for (auto i(2 * bits - CR); bits != i;)
   {
     auto tmp(Q);
-    set_bit(lshl<1>(tmp), --i);
 
-    if (ucmp(lshl<1>(r), tmp) >= 0)
+    if (set_bit(lshl<1>(tmp), --i); ucmp(lshl<1>(r), tmp) >= 0)
     {
       sub(r, tmp);
       set_bit(Q, i);
