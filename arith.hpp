@@ -57,20 +57,16 @@ constexpr auto size() noexcept
 
 constexpr bool any(auto const& a) noexcept
 { // a != 0
-  constexpr auto N{size<decltype(a)>()};
-
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       return (a[I] || ...);
-    }(std::make_index_sequence<N>());
+    }(std::make_index_sequence<size<decltype(a)>()>());
 }
 
 constexpr void clear(auto& a) noexcept
 { // a = 0
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  std::fill_n(std::begin(a), N, T{});
+  std::fill_n(std::begin(a), size<decltype(a)>(), T{});
 }
 
 constexpr bool eq(auto const& a, decltype(a) b) noexcept
@@ -211,7 +207,7 @@ constexpr auto&& lshl(auto&& a) noexcept
     );
   }(std::make_index_sequence<N - 1>());
 
-  a.front() <<= M;
+  a[0] <<= M;
 
   return a;
 }
@@ -236,7 +232,7 @@ constexpr auto&& lshl(auto&& a, std::size_t M) noexcept
           ...
         );
 
-        a.front() <<= e;
+        a[0] <<= e;
       }
     );
 
@@ -433,11 +429,9 @@ constexpr auto&& neg(auto&& a) noexcept
 
 constexpr auto&& not_(auto&& a) noexcept
 {
-  using T = std::remove_cvref_t<decltype(a[0])>;
-
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    ((a[I] = T(~a[I])), ...);
+    ((a[I] = ~a[I]), ...);
   }(std::make_index_sequence<size<decltype(a)>()>());
 
   return a;
@@ -493,7 +487,7 @@ constexpr auto&& add(auto&& a, auto const& b) noexcept
 
         if constexpr(!I)
         {
-          c = (s += b.front()) < a;
+          c = (s += b[0]) < a;
         }
         else if constexpr(I < N1)
         {
@@ -520,7 +514,7 @@ constexpr auto&& add(auto&& a, auto const& b, std::size_t i) noexcept
   bool c;
 
   {
-    auto const b0(b.front());
+    auto const b0(b[0]);
 
     c = (a[i++] += b0) < b0;
   }
@@ -558,7 +552,7 @@ constexpr auto&& sub(auto&& a, auto const& b) noexcept
 
         if constexpr(!I)
         {
-          c = (d -= b.front()) > a;
+          c = (d -= b[0]) > a;
         }
         else if constexpr(I < N1)
         {
