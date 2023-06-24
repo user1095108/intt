@@ -7,9 +7,11 @@
 namespace ar
 { // provides naive implementations of sqrt
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& seqsqrt(array_t<T, N>& a) noexcept
+constexpr auto&& seqsqrt(auto&& a) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
 
   array_t<T, M> r;

@@ -5,7 +5,6 @@
 #include <climits> // CHAR_BIT
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uintmax_t
-#include <algorithm> // std::max()
 #include <array> // std::to_array()
 #include <bit> // std::countl_zero
 #include <concepts> // std::floating_point, std::integral

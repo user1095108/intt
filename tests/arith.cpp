@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../arith.hpp"
+#include "../naisqrt.hpp"
 
 int main()
 {
@@ -14,6 +14,8 @@ int main()
 
   ar::add(a, b);
   ar::sub(a, b);
+
+  ar::seqsqrt(a);
 
   ar::clear(a);
 
