@@ -7,9 +7,12 @@
 namespace ar
 { // provides naive implementations of mul
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& seqmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto&& seqmul(auto&& a, auto const& b) noexcept
+  requires(size<decltype(a)>() == size<decltype(b)>())
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
 
   array_t<T, M> A;
@@ -34,9 +37,12 @@ constexpr auto& seqmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   return copy(a, r);
 }
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto& naimul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+constexpr auto&& naimul(auto&& a, auto const& b) noexcept
+  requires(size<decltype(a)>() == size<decltype(b)>())
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   array_t<T, N> r{};
