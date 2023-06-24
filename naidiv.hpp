@@ -7,15 +7,17 @@
 namespace ar
 { // provides naive implementations of div
 
-template <std::unsigned_integral T, std::size_t N>
-constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
+constexpr auto hwmul(auto const& a, std::integral auto const k) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
   using D = D<T>;
   using H = H<T>;
 
-  array_t<T, N> r{};
+  std::remove_cvref_t<decltype(a)> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
@@ -71,9 +73,19 @@ constexpr auto hwmul(array_t<T, N> const& a, H<T> const k) noexcept
   return r;
 }
 
-template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr auto& seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <bool Rem = false>
+constexpr auto&& seqdiv(auto&& a, auto const& b) noexcept
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
 
   // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
@@ -105,9 +117,19 @@ constexpr auto& seqdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   return a;
 }
 
-template <bool Rem = false, std::unsigned_integral T, std::size_t N>
-constexpr auto& naidiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <bool Rem = false>
+constexpr auto&& naidiv(auto&& a, auto const& b) noexcept
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 { // wbits per iteration
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 

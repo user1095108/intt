@@ -7,9 +7,12 @@
 namespace ar
 { // provides Newton-Raphson method implementations of div
 
-template <std::size_t O, std::unsigned_integral T, std::size_t N>
-constexpr auto& newmul(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <std::size_t O>
+constexpr auto& newmul(auto&& a, auto const& b) noexcept
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { wbits = bit_size_v<T> };
 
   using D = D<T>;
@@ -109,9 +112,19 @@ static constexpr auto newc{[]() noexcept
 };
 
 //
-template <bool Rem = false, typename T, std::size_t N>
-constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <bool Rem = false>
+constexpr auto&& glddiv(auto&& a, auto const& b) noexcept
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
   array_t<T, M> A;
@@ -148,9 +161,19 @@ constexpr auto& glddiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
   }
 }
 
-template <bool Rem = false, typename T, std::size_t N>
-constexpr auto& newdiv(array_t<T, N>& a, array_t<T, N> const& b) noexcept
+template <bool Rem = false>
+constexpr auto&& newdiv(auto&& a, auto const& b) noexcept
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 {
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  constexpr auto N{size<decltype(a)>()};
+
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = N * wbits };
 
   array_t<T, N> q;

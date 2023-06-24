@@ -8,7 +8,13 @@ namespace ar
 { // provides naive implementations of mul
 
 constexpr auto&& seqmul(auto&& a, auto const& b) noexcept
-  requires(size<decltype(a)>() == size<decltype(b)>())
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};
@@ -38,7 +44,13 @@ constexpr auto&& seqmul(auto&& a, auto const& b) noexcept
 }
 
 constexpr auto&& naimul(auto&& a, auto const& b) noexcept
-  requires(size<decltype(a)>() == size<decltype(b)>())
+  requires(
+    (size<decltype(a)>() == size<decltype(b)>()) &&
+    std::is_same_v<
+      std::remove_cvref_t<decltype(a[0])>,
+      std::remove_cvref_t<decltype(b[0])>
+    >
+  )
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};

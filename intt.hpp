@@ -273,46 +273,86 @@ struct intt
     return *this;
   }
 
-  constexpr auto operator/=(intt const& o) noexcept
+  constexpr auto& operator/=(intt const& o) noexcept
   {
+    auto const s(ar::is_neg(v_) != ar::is_neg(o.v_));
+
+    if (ar::is_neg(v_)) ar::neg(v_);
+
+    decltype(v_) B;
+
     if constexpr(detail::contains<F...>(GLDDIV))
     {
-      ar::sdiv<false, ar::glddiv<false, T, N>>(v_, o.v_);
+      ar::glddiv<false>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else if constexpr(detail::contains<F...>(NEWDIV))
     {
-      ar::sdiv<false, ar::newdiv<false, T, N>>(v_, o.v_);
+      ar::newdiv<false>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else if constexpr(detail::contains<F...>(SEQDIV))
     {
-      ar::sdiv<false, ar::seqdiv<false, T, N>>(v_, o.v_);
+      ar::seqdiv<false>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else
     {
-      ar::sdiv<false, ar::naidiv<false, T, N>>(v_, o.v_);
+      ar::naidiv<false>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
+
+    if (s) ar::neg(v_);
 
     return *this;
   }
 
-  constexpr auto operator%=(intt const& o) noexcept
+  constexpr auto& operator%=(intt const& o) noexcept
   {
+    auto const s(ar::is_neg(v_));
+
+    if (ar::is_neg(v_)) ar::neg(v_);
+
+    decltype(v_) B;
+
     if constexpr(detail::contains<F...>(GLDDIV))
     {
-      ar::sdiv<true, ar::glddiv<true, T, N>>(v_, o.v_);
+      ar::glddiv<true>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else if constexpr(detail::contains<F...>(NEWDIV))
     {
-      ar::sdiv<true, ar::newdiv<true, T, N>>(v_, o.v_);
+      ar::newdiv<true>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else if constexpr(detail::contains<F...>(SEQDIV))
     {
-      ar::sdiv<true, ar::seqdiv<true, T, N>>(v_, o.v_);
+      ar::seqdiv<true>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
     else
     {
-      ar::sdiv<true, ar::naidiv<true, T, N>>(v_, o.v_);
+      ar::naidiv<true>(
+        v_,
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+      );
     }
+
+    if (s) ar::neg(v_);
 
     return *this;
   }

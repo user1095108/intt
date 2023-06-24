@@ -1,23 +1,36 @@
 #include <iostream>
 
+#include "../naidiv.hpp"
+#include "../naimul.hpp"
 #include "../naisqrt.hpp"
 
 int main()
 {
-  using v4ui = std::uint32_t __attribute__ ((vector_size (4 * sizeof(std::uint32_t))));
+  {
+    unsigned a[4]{1};
+    unsigned b[4]{1};
 
-  v4ui a{1, 0, 0, 0};
-  v4ui b{1, 0, 0, 0};
+    ar::naidiv(a, b);
+    ar::add(a, b);
+    ar::naimul(a, b);
+  }
 
-  ar::neg(a);
-  ar::not_(a);
+  {
+    using v4ui = std::uint32_t __attribute__ ((vector_size (4 * sizeof(std::uint32_t))));
 
-  ar::add(a, b);
-  ar::sub(a, b);
+    v4ui a{1, 0, 0, 0};
+    v4ui b{1, 0, 0, 0};
 
-  ar::seqsqrt(a);
+    ar::neg(a);
+    ar::not_(a);
 
-  ar::clear(a);
+    ar::add(a, b);
+    ar::sub(a, b);
+
+    ar::seqsqrt(a);
+
+    ar::clear(a);
+  }
 
   return 0;
 }
