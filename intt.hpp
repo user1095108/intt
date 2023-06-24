@@ -279,9 +279,7 @@ struct intt
 
     if (ar::is_neg(v_)) ar::neg(v_);
 
-    decltype(v_) B;
-
-    if constexpr(detail::contains<F...>(GLDDIV))
+    if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
     {
       ar::glddiv<false>(
         v_,
@@ -321,9 +319,7 @@ struct intt
 
     if (ar::is_neg(v_)) ar::neg(v_);
 
-    decltype(v_) B;
-
-    if constexpr(detail::contains<F...>(GLDDIV))
+    if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
     {
       ar::glddiv<true>(
         v_,
