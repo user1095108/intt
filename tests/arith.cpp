@@ -15,5 +15,7 @@ int main()
   ar::add(a, b);
   ar::sub(a, b);
 
+  ar::clear(a);
+
   return 0;
 }

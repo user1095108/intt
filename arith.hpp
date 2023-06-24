@@ -65,8 +65,10 @@ constexpr bool any(auto const& a) noexcept
 
 constexpr void clear(auto& a) noexcept
 { // a = 0
-  using T = std::remove_cvref_t<decltype(a[0])>;
-  std::fill_n(std::begin(a), size<decltype(a)>(), T{});
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    return ((a[I] = {}), ...);
+  }(std::make_index_sequence<size<decltype(a)>()>());
 }
 
 constexpr bool eq(auto const& a, decltype(a) b) noexcept
