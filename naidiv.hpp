@@ -7,7 +7,8 @@
 namespace ar
 { // provides naive implementations of div
 
-constexpr auto hwmul(auto const& a, std::integral auto const k) noexcept
+constexpr auto hwmul(uarray_c auto const& a,
+  std::integral auto const k) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};
@@ -74,8 +75,9 @@ constexpr auto hwmul(auto const& a, std::integral auto const k) noexcept
 }
 
 template <bool Rem = false>
-constexpr auto&& seqdiv(auto&& a, auto const& b) noexcept
+constexpr auto&& seqdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
+    std::is_unsigned_v<std::remove_cvref_t<decltype(a[0])>> &&
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<
       std::remove_cvref_t<decltype(a[0])>,
@@ -118,7 +120,7 @@ constexpr auto&& seqdiv(auto&& a, auto const& b) noexcept
 }
 
 template <bool Rem = false>
-constexpr auto&& naidiv(auto&& a, auto const& b) noexcept
+constexpr auto&& naidiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<

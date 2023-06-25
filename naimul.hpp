@@ -7,7 +7,7 @@
 namespace ar
 { // provides naive implementations of mul
 
-constexpr auto&& seqmul(auto&& a, auto const& b) noexcept
+constexpr auto&& seqmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<
@@ -43,7 +43,7 @@ constexpr auto&& seqmul(auto&& a, auto const& b) noexcept
   return copy(a, r);
 }
 
-constexpr auto&& naimul(auto&& a, auto const& b) noexcept
+constexpr auto&& naimul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<

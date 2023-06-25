@@ -29,7 +29,7 @@ constexpr auto to_double(intt<T, N, FF...> const& a) noexcept
     }(std::make_index_sequence<N>());
 }
 
-auto to_raw(intt_concept auto const& a)
+auto to_raw(intt_c auto const& a)
 {
   using U = std::remove_cvref_t<decltype(a)>;
   using T = typename U::value_type;

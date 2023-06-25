@@ -8,7 +8,7 @@ namespace ar
 { // provides Newton-Raphson method implementations of div
 
 template <std::size_t O>
-constexpr auto& newmul(auto&& a, auto const& b) noexcept
+constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   constexpr auto N{size<decltype(a)>()};
@@ -113,7 +113,7 @@ static constexpr auto newc{[]() noexcept
 
 //
 template <bool Rem = false>
-constexpr auto&& glddiv(auto&& a, auto const& b) noexcept
+constexpr auto&& glddiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<
@@ -162,7 +162,7 @@ constexpr auto&& glddiv(auto&& a, auto const& b) noexcept
 }
 
 template <bool Rem = false>
-constexpr auto&& newdiv(auto&& a, auto const& b) noexcept
+constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(
     (size<decltype(a)>() == size<decltype(b)>()) &&
     std::is_same_v<
