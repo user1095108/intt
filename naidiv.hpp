@@ -8,7 +8,7 @@ namespace ar
 { // provides naive implementations of div
 
 constexpr auto hwmul(uarray_c auto const& a,
-  std::integral auto const k) noexcept
+  H<std::remove_cvref_t<decltype(a[0])>> const k) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { N = size<decltype(a)>() };
