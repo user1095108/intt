@@ -76,7 +76,7 @@ constexpr void clear(uarray_c auto& a) noexcept
 
 constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
 { // a == b
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -87,7 +87,7 @@ constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
 constexpr bool is_neg(uarray_c auto const& a) noexcept
 { // a < 0
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   using S = std::make_signed_t<T>;
   return S(a[N - 1]) < S{};
@@ -100,7 +100,7 @@ constexpr bool is_neg(std::integral auto const a) noexcept
 
 constexpr auto ucmp(uarray_c auto const& a, decltype(a) b) noexcept
 { // a <=> b
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   auto r(a[N - 1] <=> b[N - 1]);
 
@@ -126,7 +126,7 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 constexpr auto clz(uarray_c auto const& a) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
@@ -154,8 +154,7 @@ constexpr auto&& copy(uarray_c auto&& d, uarray_c auto const& s) noexcept
   requires(D < size<decltype(d)>())
 { // d = s
   using T = std::remove_cvref_t<decltype(d[0])>;
-  constexpr auto N0{size<decltype(d)>()};
-  constexpr auto N1{size<decltype(s)>()};
+  enum : std::size_t { N0 = size<decltype(d)>(), N1 = size<decltype(s)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
@@ -175,8 +174,7 @@ constexpr auto&& rcopy(uarray_c auto&& d, uarray_c auto const& s) noexcept
   requires(D < size<decltype(d)>())
 { // d = s
   using T = std::remove_cvref_t<decltype(d[0])>;
-  constexpr auto N0{size<decltype(d)>()};
-  constexpr auto N1{size<decltype(s)>()};
+  enum : std::size_t { N0 = size<decltype(d)>(), N1 = size<decltype(s)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
@@ -197,9 +195,7 @@ constexpr auto&& lshl(uarray_c auto&& a) noexcept
   requires(bool(M) && (M < bit_size_v<std::remove_cvref_t<decltype(a[0])>>))
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -220,9 +216,7 @@ constexpr auto&& lshl(uarray_c auto&& a) noexcept
 constexpr auto&& lshl(uarray_c auto&& a, std::size_t M) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
   if (M)
   {
@@ -255,9 +249,7 @@ constexpr auto&& lshl(uarray_c auto&& a, std::size_t M) noexcept
 constexpr auto&& ashr(uarray_c auto&& a, std::size_t M) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
   if (M)
   {
@@ -291,9 +283,7 @@ constexpr auto&& lshr(uarray_c auto&& a) noexcept
   requires(bool(M) && (M < bit_size_v<std::remove_cvref_t<decltype(a[0])>>))
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -313,9 +303,7 @@ constexpr auto&& lshr(uarray_c auto&& a) noexcept
 constexpr auto&& lshr(uarray_c auto&& a, std::size_t M) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
-  enum : std::size_t { wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
   if (M)
   {
@@ -348,7 +336,7 @@ template <std::size_t M> requires(bool(M))
 constexpr auto&& wshl(uarray_c auto&& a) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -363,7 +351,7 @@ constexpr auto&& wshl(uarray_c auto&& a) noexcept
 
 constexpr auto&& wshl(uarray_c auto&& a, std::size_t const M) noexcept
 {
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   std::size_t i{};
 
@@ -377,7 +365,7 @@ template <std::size_t M> requires(bool(M))
 constexpr auto&& wshr(uarray_c auto&& a) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -392,7 +380,7 @@ constexpr auto&& wshr(uarray_c auto&& a) noexcept
 
 constexpr auto&& wshr(uarray_c auto&& a, std::size_t const M) noexcept
 {
-  constexpr auto N{size<decltype(a)>()};
+  enum : std::size_t { N = size<decltype(a)>() };
 
   std::size_t i{};
 
@@ -477,8 +465,7 @@ template <std::size_t S = 0>
 constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(S < size<decltype(a)>())
 {
-  constexpr auto N0{size<decltype(a)>()};
-  constexpr auto N1{size<decltype(b)>()};
+  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
@@ -514,8 +501,7 @@ constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b) noexcept
 constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b,
   std::size_t i) noexcept
 {
-  constexpr auto N0{size<decltype(a)>()};
-  constexpr auto N1{size<decltype(b)>()};
+  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
 
   bool c;
 
@@ -543,8 +529,7 @@ template <std::size_t S = 0>
 constexpr auto&& sub(uarray_c auto&& a, uarray_c auto const& b) noexcept
   requires(S < size<decltype(a)>())
 {
-  constexpr auto N0{size<decltype(a)>()};
-  constexpr auto N1{size<decltype(b)>()};
+  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {

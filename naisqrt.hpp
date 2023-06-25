@@ -10,8 +10,8 @@ namespace ar
 constexpr auto&& seqsqrt(uarray_c auto&& a) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
 
+  enum : std::size_t { N = size<decltype(a)>() };
   enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
 
   array_t<T, M> r;

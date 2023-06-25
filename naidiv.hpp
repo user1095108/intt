@@ -11,8 +11,7 @@ constexpr auto hwmul(uarray_c auto const& a,
   std::integral auto const k) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
+  enum : std::size_t { N = size<decltype(a)>() };
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
   using D = D<T>;
@@ -86,8 +85,7 @@ constexpr auto&& seqdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   )
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
+  enum : std::size_t { N = size<decltype(a)>() };
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
 
   // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
@@ -130,8 +128,7 @@ constexpr auto&& naidiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   )
 { // wbits per iteration
   using T = std::remove_cvref_t<decltype(a[0])>;
-  constexpr auto N{size<decltype(a)>()};
-
+  enum : std::size_t { N = size<decltype(a)>() };
   enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 
