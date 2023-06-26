@@ -47,7 +47,7 @@ using H = std::conditional_t<
 
 template <typename T, std::size_t N> using array_t = std::array<T, N>;
 //template <typename T, std::size_t N>
-//using array_t __attribute__ ((vector_size(std::bit_ceil(N * sizeof(T))))) = T;
+//using array_t __attribute__ ((vector_size(N * sizeof(T)))) = T;
 
 template <typename T>
 concept uarray_c = requires(T a){a[0];} &&

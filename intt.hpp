@@ -390,7 +390,7 @@ struct intt
         }
         else
         {
-          return v_.front();
+          return v_[0];
         }
       }(std::make_index_sequence<ar::bit_size_v<U> / wbits>());
   }
