@@ -11,8 +11,8 @@ constexpr auto&& seqsqrt(uarray_c auto&& a) noexcept
 { // CR = CR + (N * wbits - CR) / 2;
   using T = std::remove_cvref_t<decltype(a[0])>;
 
-  enum : std::size_t { N = size<decltype(a)>() };
-  enum : std::size_t { M = 2 * N, bits = bit_size_v<decltype(a)> };
+  enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
+  enum : std::size_t { bits = bit_size_v<decltype(a)> };
 
   array_t<T, M> r;
   auto const CR((bits + clz(a)) / 2);
