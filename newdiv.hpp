@@ -13,9 +13,6 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
 
-  using D = D<T>;
-  using H = H<T>;
-
   array_t<T, N> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
@@ -26,8 +23,8 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
     {
       for (std::size_t j{}; M != j; ++j)
       {
-        T const pp(T(H(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
-          H(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
+        T const pp(T(H<T>(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+          H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
 
         auto const S(i + j);
 
@@ -43,7 +40,7 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
     {
       for (std::size_t j{}; O != j; ++j)
       {
-        D const pp(D(a[i]) * b[j]);
+        D<T> const pp(D<T>(a[i]) * b[j]);
 
         add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, i + j);
       }
