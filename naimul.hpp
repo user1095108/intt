@@ -17,8 +17,8 @@ constexpr auto&& seqmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   )
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>() };
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T> };
+  enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
+  enum : std::size_t { wbits = bit_size_v<T> };
 
   array_t<T, M> A;
   rcopy<M - 1>(A, a);

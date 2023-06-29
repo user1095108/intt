@@ -11,8 +11,8 @@ constexpr auto hwmul(uarray_c auto const& a,
   H<std::remove_cvref_t<decltype(a[0])>> const k) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>() };
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
+  enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
+  enum : std::size_t { wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
   using D = D<T>;
   using H = H<T>;
@@ -85,8 +85,8 @@ constexpr auto&& seqdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   )
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>() };
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, bits = wbits * N };
+  enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
+  enum : std::size_t { wbits = bit_size_v<T>, bits = wbits * N };
 
   // Na = Nq + Nb; Nq = Na - Nb = N * wbits - CA - (N * wbits - CB) = CB - CA
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
@@ -128,8 +128,8 @@ constexpr auto&& naidiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   )
 { // wbits per iteration
   using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>() };
-  enum : std::size_t { M = 2 * N, wbits = bit_size_v<T>, hwbits = wbits / 2 };
+  enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
+  enum : std::size_t { wbits = bit_size_v<T>, hwbits = wbits / 2 };
   enum : T { dmax = (T(1) << hwbits) - 1 };
 
   if (auto const CA(clz(a)), CB(clz(b)); CB >= CA) [[likely]]
