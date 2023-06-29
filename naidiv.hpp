@@ -14,10 +14,7 @@ constexpr auto hwmul(uarray_c auto const& a,
   enum : std::size_t { N = size<decltype(a)>(), M = 2 * N };
   enum : std::size_t { wbits = bit_size_v<T>, hwbits = wbits / 2 };
 
-  using D = D<T>;
-  using H = H<T>;
-
-  std::remove_cvref_t<decltype(a)> r{};
+  array_t<T, N> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
@@ -26,11 +23,9 @@ constexpr auto hwmul(uarray_c auto const& a,
       (
         [&]() noexcept
         {
-          T const pp(
-            T(k) * H(a[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0))
-          );
-
-          if constexpr((S % 2) && (M - 1 == S))
+          if constexpr(T const pp(
+            T(k) * H<T>(a[S / 2] >> (S % 2 ? std::size_t(hwbits) : 0)));
+            (S % 2) && (M - 1 == S))
           {
             add<S / 2>(r, array_t<T, 1>{pp << hwbits});
           }
@@ -54,9 +49,7 @@ constexpr auto hwmul(uarray_c auto const& a,
       (
         [&]() noexcept
         {
-          D const pp(D(k) * a[S]);
-
-          if constexpr(N - 1 == S)
+          if constexpr(D<T> const pp(k * D<T>(a[S])); N - 1 == S)
           {
             add<S>(r, array_t<T, 1>{T(pp)});
           }
