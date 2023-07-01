@@ -139,7 +139,7 @@ constexpr auto clz(uarray_c auto const& a) noexcept
       (
         [&]() noexcept
         {
-          decltype(r) const c(std::countl_zero(a[N - I - 1]));
+          decltype(r) const c(std::countl_zero(a[N - 1 - I]));
 
           r += c;
 
@@ -180,12 +180,12 @@ constexpr auto&& rcopy(uarray_c auto&& d, uarray_c auto const& s) noexcept
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[N0 - I - 1] = {}), ...);
+    ((d[N0 - 1 - I] = {}), ...);
   }(std::make_index_sequence<N0 - D - 1>());
 
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
   { // set every element of d
-    ((d[D - I] = I < N1 ? s[N1 - I - 1] : T{}), ...);
+    ((d[D - I] = I < N1 ? s[N1 - 1 - I] : T{}), ...);
   }(std::make_index_sequence<D + 1>());
 
   return d;

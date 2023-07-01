@@ -50,25 +50,31 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   //
   wshr<O>(r);
 
-  r[O] = a[O] * b[O];
-
   auto const nega(is_neg(a)), negb(is_neg(b));
 
   if (nega != negb)
   {
-    for (auto i{O + 1}; N != i; r[i++] = ~T{});
+    //for (auto i{O + 1}; N != i; r[i++] = ~T{});
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      ((r[O + 1 + I] = ~T{}), ...);
+    }(std::make_index_sequence<N - 1 - O>());
+
+    add(r, array_t<T, 1>{T(1)});
   }
+
+  r[O] = a[O] * b[O];
 
   if (a[O])
   {
     if (array_t<T, O> bb; copy(bb, b), nega)
     {
-      auto A{-a[O]};
+      T A(-a[O]);
       do sub(r, bb); while (--A);
     }
     else
     {
-      auto A{a[O]};
+      T A(a[O]);
       do add(r, bb); while (--A);
     }
   }
@@ -77,12 +83,12 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   {
     if (array_t<T, O> aa; copy(aa, a), negb)
     {
-      auto B{-b[O]};
+      T B(-b[O]);
       do sub(r, aa); while (--B);
     }
     else
     {
-      auto B{b[O]};
+      T B(b[O]);
       do add(r, aa); while (--B);
     }
   }
@@ -94,6 +100,9 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 //
 template <typename T, std::size_t M>
 static constexpr auto gldend{wshr<M / 2>(not_(array_t<T, M>{}))};
+
+template <typename T, std::size_t M>
+static constexpr auto newend{wshl<M / 2>(not_(array_t<T, M>{}))};
 
 template <typename T, std::size_t M, unsigned A0, unsigned B0>
 static constexpr auto newc{
@@ -180,10 +189,10 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     sub(xn, newmul<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
-    for (; newmul<N>(tmp = B, xn), tmp[N - 1];)
+    for (neg(B); newmul<N>(tmp = B, xn), tmp[0];)
     {
       // xn = newmul<N>(xn, k - tmp);
-      newmul<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));
+      newmul<N>(xn, add(tmp, newc<T, M, 2, 1>));
     }
 
     //
@@ -191,14 +200,7 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
   }
 
   //
-  if constexpr(Rem)
-  {
-    return sub(a, naimul(q, b)); // a = r = a - q * b
-  }
-  else
-  {
-    return copy(a, q);
-  }
+  return Rem ? sub(a, naimul(q, b)) : copy(a, q); // a = r = a - q * b
 }
 
 }
