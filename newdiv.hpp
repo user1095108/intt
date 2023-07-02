@@ -7,18 +7,17 @@
 namespace ar
 { // provides Newton-Raphson method implementations of div
 
-template <std::size_t O>
+template <std::size_t N>
 constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>(), wbits = bit_size_v<T> };
+  enum : std::size_t { M = size<decltype(a)>(), wbits = bit_size_v<T> };
+  enum : std::size_t { hwbits = wbits / 2 };
 
-  array_t<T, N> r{};
+  array_t<T, M> r{};
 
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   {
-    enum : std::size_t { M = 2 * O, hwbits = wbits / 2 };
-
     for (std::size_t i{}; M != i; ++i)
     {
       for (std::size_t j{}; M != j; ++j)
@@ -36,9 +35,9 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   }
   else
   {
-    for (std::size_t i{}; O != i; ++i)
+    for (std::size_t i{}; N != i; ++i)
     {
-      for (std::size_t j{}; O != j; ++j)
+      for (std::size_t j{}; N != j; ++j)
       {
         D<T> const pp(D<T>(a[i]) * b[j]);
 
@@ -48,26 +47,26 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   }
 
   //
-  wshr<O>(r);
+  wshr<N>(r);
 
   auto const nega(is_neg(a)), negb(is_neg(b));
 
   if (nega != negb)
   {
-    //for (auto i{O + 1}; N != i; r[i++] = ~T{});
+    //for (auto i{N + 1}; M != i; r[i++] = ~T{});
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      ((r[O + 1 + I] = ~T{}), ...);
-    }(std::make_index_sequence<N - 1 - O>());
+      ((r[N + 1 + I] = ~T{}), ...);
+    }(std::make_index_sequence<N - 1>());
 
     add(r, array_t<T, 1>{T(1)});
   }
 
-  r[O] = a[O] * b[O];
+  r[N] = a[N] * b[N];
 
-  if (T A(a[O]); A)
+  if (T A(a[N]); A)
   {
-    if (array_t<T, O> bb; copy(bb, b), nega)
+    if (array_t<T, N> bb; copy(bb, b), nega)
     {
       do sub(r, bb); while (++A);
     }
@@ -77,9 +76,9 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
     }
   }
 
-  if (T B(b[O]); B)
+  if (T B(b[N]); B)
   {
-    if (array_t<T, O> aa; copy(aa, a), negb)
+    if (array_t<T, N> aa; copy(aa, a), negb)
     {
       do sub(r, aa); while (++B);
     }
