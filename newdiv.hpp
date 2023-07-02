@@ -60,15 +60,13 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
       ((r[O + 1 + I] = ~T{}), ...);
     }(std::make_index_sequence<N - 1 - O>());
 
-    add(r, array_t<T, 1>{T(1)}); // truncating 2's complement fraction
+    add(r, array_t<T, 1>{T(1)});
   }
 
   r[O] = a[O] * b[O];
 
-  if (a[O])
+  if (T A(a[O]); A)
   {
-    T A(a[O]);
-
     if (array_t<T, O> bb; copy(bb, b), nega)
     {
       do sub(r, bb); while (++A);
@@ -79,10 +77,8 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
     }
   }
 
-  if (b[O])
+  if (T B(b[O]); B)
   {
-    T B(b[O]);
-
     if (array_t<T, O> aa; copy(aa, a), negb)
     {
       do sub(r, aa); while (++B);
