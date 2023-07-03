@@ -92,6 +92,70 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   return copy(a, r);
 }
 
+template <std::size_t N>
+constexpr auto&& newmul2(uarray_c auto&& a, uarray_c auto const& b) noexcept
+{
+  using T = std::remove_cvref_t<decltype(a[0])>;
+  enum : std::size_t { M = size<decltype(a)>(), wbits = bit_size_v<T> };
+  enum : std::size_t { hwbits = wbits / 2 };
+
+  array_t<T, M> r{};
+
+  if constexpr(std::is_same_v<T, std::uintmax_t>)
+  {
+    for (std::size_t i{}; M != i; ++i)
+    {
+      for (std::size_t j{}; M != j; ++j)
+      {
+        T const pp(T(H<T>(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
+          H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
+
+        auto const S(i + j);
+
+        S % 2 ?
+          add(r, array_t<T, 2>{pp << hwbits, pp >> hwbits}, S / 2) :
+          add(r, array_t<T, 1>{pp}, S / 2);
+      }
+    }
+  }
+  else
+  {
+    for (std::size_t i{}; N != i; ++i)
+    {
+      for (std::size_t j{}; N != j; ++j)
+      {
+        D<T> const pp(D<T>(a[i]) * b[j]);
+
+        add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, i + j);
+      }
+    }
+  }
+
+  //
+  wshr<N>(r);
+
+  r[N] = a[N] * b[N];
+
+  if (T A(a[N]); A)
+  {
+    array_t<T, N> bb;
+    copy(bb, b);
+
+    do add(r, bb); while (--A);
+  }
+
+  if (T B(b[N]); B)
+  {
+    array_t<T, N> aa;
+    copy(aa, a);
+
+    do add(r, aa); while (--B);
+  }
+
+  //
+  return copy(a, r);
+}
+
 //
 template <typename T, std::size_t M>
 static constexpr auto gldend{wshr<M / 2>(not_(array_t<T, M>{}))};
@@ -133,8 +197,8 @@ constexpr auto&& glddiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
       auto k{newc<T, M, 2, 1>};
       sub(k, B);
 
-      newmul<N>(B, k);
-      newmul<N>(A, k);
+      newmul2<N>(B, k);
+      newmul2<N>(A, k);
     }
 
     //
@@ -181,17 +245,17 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     auto xn{newc<T, M, 48, 17>};
     auto tmp{newc<T, M, 32, 17>};
 
-    sub(xn, newmul<N>(tmp, B));
+    sub(xn, newmul2<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
-    for (neg(B); newmul<N>(tmp = B, xn), tmp[0];)
+    for (; newmul2<N>(tmp = B, xn), tmp[N-1];)
     {
       // xn = newmul<N>(xn, k - tmp);
-      newmul<N>(xn, add(tmp, newc<T, M, 2, 1>));
+      newmul2<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));
     }
 
     //
-    copy(q, lshr(newmul<N>(copy(B, a), xn), bits - C)); // a * inv(b)
+    copy(q, lshr(newmul2<N>(copy(B, a), xn), bits - C)); // a * inv(b)
   }
 
   //
