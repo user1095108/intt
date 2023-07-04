@@ -66,25 +66,25 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   if (auto A(a[N]); A)
   {
-    if (array_t<T, N> bb; copy(bb, b), nega)
+    if (nega)
     {
-      do sub(r, bb); while (++A);
+      do sub<0, N>(r, b); while (++A);
     }
     else
     {
-      do add(r, bb); while (--A);
+      do add<0, N>(r, b); while (--A);
     }
   }
 
   if (auto B(b[N]); B)
   {
-    if (array_t<T, N> aa; copy(aa, a), negb)
+    if (negb)
     {
-      do sub(r, aa); while (++B);
+      do sub<0, N>(r, a); while (++B);
     }
     else
     {
-      do add(r, aa); while (--B);
+      do add<0, N>(r, a); while (--B);
     }
   }
 
