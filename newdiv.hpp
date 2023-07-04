@@ -64,7 +64,7 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   r[N] = a[N] * b[N];
 
-  if (T A(a[N]); A)
+  if (auto A(a[N]); A)
   {
     if (array_t<T, N> bb; copy(bb, b), nega)
     {
@@ -76,7 +76,7 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
     }
   }
 
-  if (T B(b[N]); B)
+  if (auto B(b[N]); B)
   {
     if (array_t<T, N> aa; copy(aa, a), negb)
     {
@@ -136,21 +136,8 @@ constexpr auto&& newmul2(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   r[N] = a[N] * b[N];
 
-  if (T A(a[N]); A)
-  {
-    array_t<T, N> bb;
-    copy(bb, b);
-
-    do add(r, bb); while (--A);
-  }
-
-  if (T B(b[N]); B)
-  {
-    array_t<T, N> aa;
-    copy(aa, a);
-
-    do add(r, aa); while (--B);
-  }
+  if (auto A(a[N]); A) do add<0, N>(r, b); while (--A);
+  if (auto B(b[N]); B) do add<0, N>(r, a); while (--B);
 
   //
   return copy(a, r);
