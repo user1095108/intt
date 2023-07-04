@@ -147,9 +147,6 @@ constexpr auto&& newmul2(uarray_c auto&& a, uarray_c auto const& b) noexcept
 template <typename T, std::size_t M>
 static constexpr auto gldend{wshr<M / 2>(not_(array_t<T, M>{}))};
 
-template <typename T, std::size_t M>
-static constexpr auto newend{wshl<M / 2>(not_(array_t<T, M>{}))};
-
 template <typename T, std::size_t M, unsigned A0, unsigned B0>
 static constexpr auto newc{
   naidiv(wshl<M / 2>(array_t<T, M>{T(A0)}), array_t<T, M>{T(B0)})
@@ -193,6 +190,7 @@ constexpr auto&& glddiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     sub(a, naimul(copy(q, lshr(A, bits - C)), b)); // a = a - q * b
   }
 
+  //
   if constexpr(auto const c(ucmp(a, b) >= 0); Rem)
   {
     return c ? sub(a, b) : a;
@@ -235,7 +233,7 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     sub(xn, newmul2<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
-    for (; newmul2<N>(tmp = B, xn), tmp[N-1];)
+    for (; newmul2<N>(copy(tmp, B), xn), tmp[N - 1];)
     {
       // xn = newmul<N>(xn, k - tmp);
       newmul2<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));
