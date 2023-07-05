@@ -22,10 +22,16 @@ constexpr auto&& seqsqrt(uarray_c auto&& a) noexcept
 
   for (auto i(2 * bits - CR); bits != i;)
   {
-    if (auto tmp(Q); set_bit(lshl<1>(tmp), --i), ucmp(lshl<1>(r), tmp) >= 0)
+    if (set_bit(lshl<1>(Q), --i), ucmp(lshl<1>(r), Q) >= 0)
     {
-      sub(r, tmp);
-      set_bit(Q, i);
+      sub(r, Q);
+      clear_bit(Q, i);
+      set_bit(lshr<1>(Q), i);
+    }
+    else
+    {
+      clear_bit(Q, i);
+      lshr<1>(Q);
     }
   }
 
