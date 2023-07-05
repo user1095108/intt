@@ -392,18 +392,20 @@ constexpr auto&& wshr(uarray_c auto&& a, std::size_t const M) noexcept
   return a;
 }
 
-constexpr void clear_bit(uarray_c auto& a, std::size_t const i) noexcept
+constexpr auto&& clear_bit(uarray_c auto&& a, std::size_t const i) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { wbits = bit_size_v<T> };
   a[i / wbits] &= T(~(T{1} << i % wbits));
+  return a;
 }
 
-constexpr void set_bit(uarray_c auto& a, std::size_t const i) noexcept
+constexpr auto&& set_bit(uarray_c auto&& a, std::size_t const i) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
   enum : std::size_t { wbits = bit_size_v<T> };
   a[i / wbits] |= T{1} << i % wbits;
+  return a;
 }
 
 template <std::size_t I>
