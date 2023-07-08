@@ -8,6 +8,78 @@ namespace ar
 { // provides Newton-Raphson method implementations of div
 
 template <std::size_t N>
+constexpr auto&& newadd(uarray_c auto&& a, uarray_c auto const& b) noexcept
+{ // add [0, N] words
+  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    bool c;
+
+    (
+      [&]() noexcept
+      {
+        auto& s(a[I]);
+        auto const a(s);
+
+        if constexpr(!I)
+        {
+          c = (s += b[0]) < a;
+        }
+        else if constexpr(I < N)
+        {
+          s += c + b[I];
+          c = c ? s <= a : s < a;
+        }
+        else
+        {
+          c = (s += c) < c;
+        }
+      }(),
+      ...
+    );
+  }(std::make_index_sequence<N + 1>());
+
+  return a;
+}
+
+template <std::size_t N>
+constexpr auto&& newsub(uarray_c auto&& a, uarray_c auto const& b) noexcept
+{// sub [0, N] words
+  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
+
+  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  {
+    bool c;
+
+    (
+      [&]() noexcept
+      {
+        auto& d(a[I]);
+        auto const a(d);
+
+        if constexpr(!I)
+        {
+          c = (d -= b[0]) > a;
+        }
+        else if constexpr(I < N)
+        {
+          d = d - b[I] - c;
+          c = c ? d >= a : d > a;
+        }
+        else
+        {
+          c = (d -= c) > a;
+        }
+      }(),
+      ...
+    );
+  }(std::make_index_sequence<N + 1>());
+
+  return a;
+}
+
+template <std::size_t N>
 constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
@@ -68,11 +140,11 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   {
     if (nega)
     {
-      do sub<0, N>(r, b); while (++A);
+      do newsub<N>(r, b); while (++A);
     }
     else
     {
-      do add<0, N>(r, b); while (--A);
+      do newadd<N>(r, b); while (--A);
     }
   }
 
@@ -80,11 +152,11 @@ constexpr auto&& newmul(uarray_c auto&& a, uarray_c auto const& b) noexcept
   {
     if (negb)
     {
-      do sub<0, N>(r, a); while (++B);
+      do newsub<N>(r, a); while (++B);
     }
     else
     {
-      do add<0, N>(r, a); while (--B);
+      do newadd<N>(r, a); while (--B);
     }
   }
 
@@ -136,8 +208,8 @@ constexpr auto&& newmul2(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   r[N] = a[N] * b[N];
 
-  if (auto A(a[N]); A) do add<0, N>(r, b); while (--A);
-  if (auto B(b[N]); B) do add<0, N>(r, a); while (--B);
+  if (auto A(a[N]); A) do newadd<N>(r, b); while (--A);
+  if (auto B(b[N]); B) do newadd<N>(r, a); while (--B);
 
   //
   return copy(a, r);

@@ -518,43 +518,6 @@ constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b) noexcept
   return a;
 }
 
-template <std::size_t S, std::size_t NO>
-constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b) noexcept
-  requires(S < size<decltype(a)>())
-{
-  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    bool c;
-
-    (
-      [&]() noexcept
-      {
-        auto& s(a[S + I]);
-        auto const a(s);
-
-        if constexpr(!I)
-        {
-          c = (s += b[0]) < a;
-        }
-        else if constexpr(I < NO)
-        {
-          s += c + b[I];
-          c = c ? s <= a : s < a;
-        }
-        else
-        {
-          c = (s += c) < c;
-        }
-      }(),
-      ...
-    );
-  }(std::make_index_sequence<N0 - S>());
-
-  return a;
-}
-
 constexpr auto&& add(uarray_c auto&& a, uarray_c auto const& b,
   std::size_t i) noexcept
 {
@@ -618,44 +581,6 @@ constexpr auto&& sub(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   return a;
 }
-
-template <std::size_t S, std::size_t NO>
-constexpr auto&& sub(uarray_c auto&& a, uarray_c auto const& b) noexcept
-  requires(S < size<decltype(a)>())
-{
-  enum : std::size_t { N0 = size<decltype(a)>(), N1 = size<decltype(b)>() };
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
-  {
-    bool c;
-
-    (
-      [&]() noexcept
-      {
-        auto& d(a[S + I]);
-        auto const a(d);
-
-        if constexpr(!I)
-        {
-          c = (d -= b[0]) > a;
-        }
-        else if constexpr(I < NO)
-        {
-          d = d - b[I] - c;
-          c = c ? d >= a : d > a;
-        }
-        else
-        {
-          c = (d -= c) > a;
-        }
-      }(),
-      ...
-    );
-  }(std::make_index_sequence<N0 - S>());
-
-  return a;
-}
-
 
 template <bool Rem, auto F>
 constexpr auto&& sdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
