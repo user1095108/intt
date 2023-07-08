@@ -176,7 +176,7 @@ constexpr auto&& glddiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     auto const C(clz(b));
     lshl(copy(B, b), C);
 
-    while (!eq(gldend<T, M>, B))
+    while (!eq<N, 0>(gldend<T, M>, B))
     {
       auto k{newc<T, M, 2, 1>};
       sub(k, B);
@@ -233,7 +233,7 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     sub(xn, newmul2<N>(tmp, B));
 
     // xn = xn(2 - a * xn)
-    for (; newmul2<N>(copy(tmp, B), xn), tmp[N - 1];)
+    for (; newmul2<N>(copy(tmp, B), xn), !eq<N, 0>(tmp, newc<T, M, 1, 1>);)
     {
       // xn = newmul<N>(xn, k - tmp);
       newmul2<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));

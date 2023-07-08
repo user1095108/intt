@@ -86,6 +86,15 @@ constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
     }(std::make_index_sequence<N>());
 }
 
+template <std::size_t B, std::size_t A>
+constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
+{ // a == b
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      return ((a[A + I] == b[A + I]) && ...);
+    }(std::make_index_sequence<B - A + 1>());
+}
+
 constexpr bool is_neg(uarray_c auto const& a) noexcept
 { // a < 0
   using T = std::remove_cvref_t<decltype(a[0])>;
