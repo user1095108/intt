@@ -88,6 +88,7 @@ constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
 
 template <std::size_t B, std::size_t A>
 constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
+  requires(B >= A)
 { // a == b
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
