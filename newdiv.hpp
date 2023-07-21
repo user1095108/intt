@@ -298,14 +298,20 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
     // xn = 2 - b
     // xn = 48/17 - 32/17 * b
-
     auto xn{newc<T, M, 48, 17>};
-    auto tmp{newc<T, M, 32, 17>};
+    auto tmp(newc<T, M, 32, 17>);
+    newsub<N>(xn, newmul2<N>(tmp, B));
 
-    sub(xn, newmul2<N>(tmp, B));
+    //xn = 140/33 + b * (-64/11 + b * 256/99)
+    //auto xn(newc<T, M, 140, 33>);
+    //auto tmp(newc<T, M, 256, 99>);
+    //newsub<N>(
+    //  xn,
+    //  newmul2<N>(newadd<N>(neg(newmul2<N>(tmp, B)), newc<T, M, 64, 11>), B)
+    //);
 
     // xn = xn(2 - a * xn)
-    for (; newmul2<N>(copy(tmp, B), xn), !eq<N, 0>(tmp, newc<T, M, 1, 1>);)
+    for (; !eq<N, 0>(newmul2<N>(copy(tmp, B), xn), newc<T, M, 1, 1>);)
     {
       // xn = newmul<N>(xn, k - tmp);
       newmul2<N>(xn, neg(sub(tmp, newc<T, M, 2, 1>)));
