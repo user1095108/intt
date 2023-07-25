@@ -297,6 +297,7 @@ constexpr auto&& newdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
     lshl(B, C);
 
     // xn = 2 - b
+    // xn = 3 - 2 * b
     // xn = 48/17 - 32/17 * b
     auto xn{newc<T, M, 48, 17>};
     auto tmp(newc<T, M, 32, 17>);
