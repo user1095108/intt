@@ -56,6 +56,26 @@ constexpr auto&& naimul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   array_t<T, N> r{};
 
+  #if defined(__SIZEOF_INT128__)
+  if constexpr(std::is_same_v<T, std::uint64_t>)
+  {
+    using D = unsigned __int128;
+
+    for (std::size_t i{}; N != i; ++i)
+    { // bit_size_v<T> * (i + j) < bit_size_v<T> * N
+      auto S(i);
+
+      do
+      {
+        D const pp(D(a[i]) * b[S - i]); // S = i + j < N
+
+        add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, S);
+      }
+      while (N != ++S);
+    }
+  }
+  else
+  #endif // __SIZEOF_INT128__
   if constexpr(std::is_same_v<T, std::uintmax_t>)
   { // multiplying half-words, wbits per iteration
     enum : std::size_t { M = 2 * N, hwbits = wbits / 2 };
@@ -66,7 +86,7 @@ constexpr auto&& naimul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
       do
       {
-        auto const j(S - i);
+        auto const j(S - i); // S = i + j < M
 
         T const pp(T(H<T>(a[i / 2] >> (i % 2 ? std::size_t(hwbits) : 0))) *
           H<T>(b[j / 2] >> (j % 2 ? std::size_t(hwbits) : 0)));
@@ -86,7 +106,7 @@ constexpr auto&& naimul(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
       do
       {
-        D<T> const pp(D<T>(a[i]) * b[S - i]);
+        D<T> const pp(D<T>(a[i]) * b[S - i]); // S = i + j < N
 
         add(r, array_t<T, 2>{T(pp), T(pp >> wbits)}, S);
       }
