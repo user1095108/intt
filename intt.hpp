@@ -17,7 +17,8 @@
 namespace intt
 {
 
-struct direct{};
+struct direct_t { explicit direct_t() = default; };
+constexpr direct_t direct{};
 
 enum feat
 {
@@ -98,7 +99,7 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct, auto&& ...a) noexcept:
+  constexpr intt(direct_t, auto&& ...a) noexcept:
     v_{std::forward<decltype(a)>(a)...}
   {
   }
@@ -209,7 +210,7 @@ struct intt
   }
 
   template <std::size_t M, enum feat... FF>
-  constexpr intt(intt<T, M, FF...> const& o, direct) noexcept
+  constexpr intt(intt<T, M, FF...> const& o, direct_t) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
