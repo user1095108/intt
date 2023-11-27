@@ -42,10 +42,10 @@ template <typename T, std::size_t N, enum feat ...F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
 template <typename T>
-static constexpr auto is_intt_v{is_intt<T>::value};
+constexpr bool is_intt_v{is_intt<T>::value};
 
 template <typename T>
-concept intt_c = is_intt<std::remove_cvref_t<T>>::value;
+concept intt_c = is_intt_v<std::remove_cvref_t<T>>;
 
 namespace detail
 {
