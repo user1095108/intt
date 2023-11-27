@@ -18,7 +18,7 @@ namespace intt
 {
 
 struct direct_t { explicit direct_t() = default; };
-constexpr direct_t direct{};
+inline constexpr direct_t direct{};
 
 enum feat
 {
@@ -42,7 +42,7 @@ template <typename T, std::size_t N, enum feat ...F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
 template <typename T>
-constexpr bool is_intt_v{is_intt<T>::value};
+inline constexpr bool is_intt_v{is_intt<T>::value};
 
 template <typename T>
 concept intt_c = is_intt_v<std::remove_cvref_t<T>>;
