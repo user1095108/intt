@@ -15,9 +15,9 @@ namespace ar
 { // provides ops on arrays of unsigned ints
 
 template <typename U>
-static constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
+inline constexpr std::size_t bit_size_v(CHAR_BIT * sizeof(U));
 
-template <auto C> static constexpr auto coeff() noexcept { return C; }
+template <auto C> constexpr auto coeff() noexcept { return C; }
 
 template <typename T>
 using D = std::conditional_t<
