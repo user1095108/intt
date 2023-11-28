@@ -99,11 +99,7 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct_t, auto&& ...a) noexcept
-    requires(
-      (sizeof...(a) != 1) ||
-      !std::same_as<intt, std::remove_cvref_t<decltype((a, ...))>>
-    ):
+  constexpr intt(direct_t, auto&& ...a) noexcept:
     v_{std::forward<decltype(a)>(a)...}
   {
   }
@@ -194,7 +190,7 @@ struct intt
   }
 
   template <std::size_t M, enum feat ...FF>
-  constexpr intt(direct_t, intt<T, M, FF...> const& o) noexcept
+  constexpr intt(intt<T, M, FF...> const& o, direct_t) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
