@@ -177,7 +177,7 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <std::size_t M, enum feat... FF>
+  template <std::size_t M, enum feat ...FF>
   constexpr intt(intt<T, M, FF...> const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -191,7 +191,19 @@ struct intt
     }(std::make_index_sequence<N>());
   }
 
-  template <typename U, std::size_t M, enum feat... FF>
+  template <std::size_t M, enum feat ...FF>
+  constexpr intt(direct_t, intt<T, M, FF...> const& o) noexcept
+  {
+    [&]<auto ...I>(std::index_sequence<I...>) noexcept
+    {
+      (
+        (v_[I] = I < M ? o.v_[I] : T{}),
+        ...
+      );
+    }(std::make_index_sequence<N>());
+  }
+
+  template <typename U, std::size_t M, enum feat ...FF>
   constexpr intt(intt<U, M, FF...> const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -204,18 +216,6 @@ struct intt
             T(o >> I * wbits) :
             neg ? ~T{} : T{}
         ),
-        ...
-      );
-    }(std::make_index_sequence<N>());
-  }
-
-  template <std::size_t M, enum feat... FF>
-  constexpr intt(direct_t, intt<T, M, FF...> const& o) noexcept
-  {
-    [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
-      (
-        (v_[I] = I < M ? o.v_[I] : T{}),
         ...
       );
     }(std::make_index_sequence<N>());
