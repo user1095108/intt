@@ -99,7 +99,11 @@ struct intt
   intt(intt const&) = default;
   intt(intt&&) = default;
 
-  constexpr intt(direct_t, auto&& ...a) noexcept:
+  constexpr intt(direct_t, auto&& ...a) noexcept
+    requires(
+      (sizeof...(a) != 1) ||
+      !std::same_as<intt, std::remove_cvref_t<decltype((a, ...))>>
+    ):
     v_{std::forward<decltype(a)>(a)...}
   {
   }
@@ -167,9 +171,7 @@ struct intt
       {
         (
           (
-            v_[I] = I * wbits < ar::bit_size_v<U> ?
-              v >> I * wbits :
-              T{}
+            v_[I] = I * wbits < ar::bit_size_v<U> ? v >> I * wbits : T{}
           ),
           ...
         );
