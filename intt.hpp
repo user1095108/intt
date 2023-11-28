@@ -210,7 +210,7 @@ struct intt
   }
 
   template <std::size_t M, enum feat... FF>
-  constexpr intt(intt<T, M, FF...> const& o, direct_t) noexcept
+  constexpr intt(direct_t, intt<T, M, FF...> const& o) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
