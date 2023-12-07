@@ -45,7 +45,7 @@ template <typename T>
 inline constexpr bool is_intt_v{is_intt<T>::value};
 
 template <typename T>
-concept intt_c = is_intt_v<std::remove_cvref_t<T>>;
+concept is_intt_c = is_intt_v<std::remove_cvref_t<T>>;
 
 namespace detail
 {
@@ -576,7 +576,7 @@ INTT_RIGHT_CONVERSION__(>=)
 INTT_RIGHT_CONVERSION__(<=>)
 
 //utilities///////////////////////////////////////////////////////////////////
-constexpr bool is_neg(intt_c auto const& a) noexcept
+constexpr bool is_neg(is_intt_c auto const& a) noexcept
 {
   return ar::is_neg(a.v_);
 }
@@ -591,24 +591,24 @@ constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
 constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
 #endif
 
-constexpr auto abs(intt_c auto const& a) noexcept
+constexpr auto abs(is_intt_c auto const& a) noexcept
 {
   return is_neg(a) ? -a : a;
 }
 
 template <std::size_t M> requires(bool(M))
-constexpr auto&& lshr(intt_c auto&& a) noexcept
+constexpr auto&& lshr(is_intt_c auto&& a) noexcept
 {
   ar::lshr<M>(a.v_); return a;
 }
 
-constexpr auto&& lshr(intt_c auto&& a, std::size_t const M) noexcept
+constexpr auto&& lshr(is_intt_c auto&& a, std::size_t const M) noexcept
 {
   ar::lshr(a.v_, M); return a;
 }
 
 //
-constexpr auto isqrt(intt_c auto const& a) noexcept
+constexpr auto isqrt(is_intt_c auto const& a) noexcept
 {
   auto r(a); ar::seqsqrt(r.v_); return r;
 }
@@ -679,7 +679,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   }
 }
 
-constexpr auto& to_array(intt_c auto const& a) noexcept { return a.v_; }
+constexpr auto& to_array(is_intt_c auto const& a) noexcept { return a.v_; }
 
 template <typename T>
 constexpr auto to_integral(auto const& s) noexcept ->
@@ -711,14 +711,14 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   return std::pair(i, std::to_array(std::move(data)));
 }
 
-constexpr auto to_string(intt_c auto const& a)
+constexpr auto to_string(is_intt_c auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
   return std::string(arr.begin() + (i + !is_neg(a)), arr.end());
 }
 
-inline auto& operator<<(std::ostream& os, intt_c auto const& a)
+inline auto& operator<<(std::ostream& os, is_intt_c auto const& a)
 {
   auto const f(os.flags());
 
@@ -739,7 +739,7 @@ inline auto& operator<<(std::ostream& os, intt_c auto const& a)
 namespace std
 {
 
-template <intt::intt_c U>
+template <intt::is_intt_c U>
 struct hash<U>
 {
   using T = typename U::value_type;

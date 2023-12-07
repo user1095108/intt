@@ -3,7 +3,7 @@
 #include "../debug.hpp"
 #include "../intt.hpp"
 
-inline auto to_raw(intt::intt_c auto const& a)
+inline auto to_raw(intt::is_intt_c auto const& a)
 {
   return ar::to_raw(a.v_);
 }
