@@ -36,13 +36,18 @@ template <
   enum feat...
 > requires(N > 0) struct intt;
 
+namespace detail
+{
+
 template <typename> struct is_intt : std::false_type {};
 
 template <std::unsigned_integral T, std::size_t N, enum feat ...F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
+}
+
 template <typename T>
-inline constexpr bool is_intt_v{is_intt<std::remove_cv_t<T>>::value};
+inline constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
 
 template <typename T>
 concept is_intt_c = is_intt_v<std::remove_reference_t<T>>;
