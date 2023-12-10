@@ -38,14 +38,14 @@ template <
 
 template <typename> struct is_intt : std::false_type {};
 
-template <typename T, std::size_t N, enum feat ...F>
+template <std::unsigned_integral T, std::size_t N, enum feat ...F>
 struct is_intt<intt<T, N, F...>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool is_intt_v{is_intt<T>::value};
+inline constexpr bool is_intt_v{is_intt<std::remove_cv_t<T>>::value};
 
 template <typename T>
-concept is_intt_c = is_intt_v<std::remove_cvref_t<T>>;
+concept is_intt_c = is_intt_v<std::remove_reference_t<T>>;
 
 namespace detail
 {
