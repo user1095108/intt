@@ -739,7 +739,7 @@ inline auto& operator<<(std::ostream& os, is_intt_c auto const& a)
 namespace std
 {
 
-template <intt::is_intt_c U>
+template <typename U> requires (intt::is_intt_v<U>)
 struct hash<U>
 {
   using T = typename U::value_type;
