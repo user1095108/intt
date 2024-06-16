@@ -98,11 +98,9 @@ constexpr bool eq(uarray_c auto const& a, decltype(a) b) noexcept
 
 constexpr bool is_neg(uarray_c auto const& a) noexcept
 { // a < 0
-  using T = std::remove_cvref_t<decltype(a[0])>;
-  enum : std::size_t { N = size<decltype(a)>() };
+  using S = std::make_signed_t<std::remove_cvref_t<decltype(a[0])>>;
 
-  using S = std::make_signed_t<T>;
-  return S(a[N - 1]) < S{};
+  return S(a[size<decltype(a)>() - 1]) < S{};
 }
 
 constexpr bool is_neg(std::integral auto const a) noexcept
