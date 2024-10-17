@@ -47,10 +47,9 @@ struct is_intt<intt<T, N, F...>> : std::true_type {};
 }
 
 template <typename T>
-inline constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
+constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
 
-template <typename T>
-concept is_intt_c = is_intt_v<std::remove_reference_t<T>>;
+template <typename T> concept is_intt_c = is_intt_v<T>;
 
 namespace detail
 {
