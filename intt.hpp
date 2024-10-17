@@ -47,7 +47,7 @@ struct is_intt<intt<T, N, F...>> : std::true_type {};
 }
 
 template <typename T>
-constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
+constexpr auto is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
 
 template <typename T> concept is_intt_c = is_intt_v<T>;
 
