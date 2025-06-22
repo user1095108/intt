@@ -5,6 +5,7 @@
 #include <cmath> // std::ldexp()
 #include <algorithm> // std::max()
 #include <functional> // std::hash
+#include <istream>
 #include <iterator> // std::begin(), std::end()
 #include <ostream>
 
