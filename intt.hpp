@@ -740,7 +740,7 @@ auto& operator<<(std::ostream& os, is_intt_c auto const& a)
 auto& operator>>(std::istream& i, is_intt_c auto& a)
 {
   bool f;
-  std::tie(a, f) = to_integral<std::remove_cvref_t<decltype(a)>>(
+  std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(
     *std::istream_iterator<std::string>(i));
 
   if (f) i.setstate(std::ios::failbit);
