@@ -650,13 +650,16 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
     }
 
     //
+    bool digitconsumed{};
+
     for (; end != i; ++i)
     {
       switch (*i)
       {
         [[likely]] case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-          if (r >= ar::coeff<T::min() / 10>()) [[likely]]
+          if (digitconsumed = true;
+            r >= ar::coeff<T::min() / 10>()) [[likely]]
           {
             if (decltype(r) const t(10 * r), d(*i - '0');
               t >= T::min() + d) [[likely]]
@@ -669,18 +672,15 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
 
           return {r, true};
 
-        case '\0':
-          break;
-
         [[unlikely]] default:
-          return {r, true};
+          break;
       }
 
       break;
     }
 
     //
-    return {neg ? r : -r, !neg && (T::min() == r)}; // can return error
+    return {neg ? r : -r, !digitconsumed}; // can return error
   }
 }
 
@@ -723,7 +723,7 @@ constexpr auto to_string(is_intt_c auto const& a)
   return std::string(arr.begin() + (i + !is_neg(a)), arr.end());
 }
 
-inline auto& operator<<(std::ostream& os, is_intt_c auto const& a)
+auto& operator<<(std::ostream& os, is_intt_c auto const& a)
 {
   auto const f(os.flags());
 
@@ -737,6 +737,17 @@ inline auto& operator<<(std::ostream& os, is_intt_c auto const& a)
   );
 
   return os << std::string_view(arr.begin() + (i + !is_neg(a)), arr.end());
+}
+
+auto& operator>>(std::istream& i, is_intt_c auto& a)
+{
+  bool f;
+  std::tie(a, f) = to_integral<std::remove_cvref_t<decltype(a)>>(
+    *std::istream_iterator<std::string>(i));
+
+  if (f) i.setstate(std::ios::failbit);
+
+  return i;
 }
 
 }
