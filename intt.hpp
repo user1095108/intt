@@ -623,7 +623,7 @@ template <typename T>
 constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   decltype(i) const end) noexcept
 {
-  if (end == i) [[unlikely]] return {{} , true};
+  if (end == i) [[unlikely]] return {{}, true};
 
   //
   bool neg{};
