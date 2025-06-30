@@ -723,29 +723,37 @@ constexpr auto to_string(is_intt_c auto const& a)
 
 auto& operator<<(std::ostream& os, is_intt_c auto const& a)
 {
-  auto const f(os.flags());
+  if (std::ostream::sentry s(os); s)
+  {
+    auto const f(os.flags());
 
-  auto const& [i, arr](
-    to_pair(
-      a,
-      f & std::ios_base::dec ? 10u :
-      f & std::ios_base::hex ? 16u :
-      f & std::ios_base::oct ? 8u : 10u
-    )
-  );
+    auto const& [i, arr](
+      to_pair(
+        a,
+        f & std::ios_base::dec ? 10u :
+        f & std::ios_base::hex ? 16u :
+        f & std::ios_base::oct ? 8u : 10u
+      )
+    );
 
-  return os << std::string_view(arr.begin() + (i + !is_neg(a)), arr.end());
+    os << std::string_view(arr.begin() + (i + !is_neg(a)), arr.end());
+  }
+
+  return os;
 }
 
-auto& operator>>(std::istream& i, is_intt_c auto& a)
+auto& operator>>(std::istream& is, is_intt_c auto& a)
 {
-  bool f;
-  std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(
-    *std::istream_iterator<std::string>(i));
+  if (std::istream::sentry s(is, true); s)
+  {
+    bool f;
+    std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(
+      *std::istream_iterator<std::string>(is));
 
-  if (f) i.setstate(std::ios::failbit);
+    if (f) is.setstate(std::ios::failbit);
+  }
 
-  return i;
+  return is;
 }
 
 }
