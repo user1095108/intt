@@ -593,7 +593,7 @@ constexpr auto&& sdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
 
   std::remove_cvref_t<decltype(a)> B;
 
-  F(abs(a), is_neg(b) ? copy(B, b), neg(B), B : b);
+  F(abs(a), is_neg(b) ? copy(B, b), abs(B) : b);
 
   return s ? neg(a) : a;
 }
