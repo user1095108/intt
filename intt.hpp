@@ -692,19 +692,19 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   decltype(a) const k = 10u) noexcept
 {
   std::array<char, detail::num_digits(decltype(a)::bits - 1) + 1> data;
-  auto i(std::size(data) - 1);
+  auto i(std::size(data));
 
   //
   decltype(auto) A{"0123456789abcdef"};
 
   do
   {
-    data[i--] = A[std::abs(int(a % k))];
+    data[--i] = A[std::abs(int(a % k))];
     a /= k;
   }
   while (a);
 
-  data[i] = '-';
+  data[--i] = '-';
 
   //
   return std::pair(i, data);
