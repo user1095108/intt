@@ -439,6 +439,11 @@ constexpr auto&& neg(uarray_c auto&& a) noexcept
   return a;
 }
 
+constexpr auto&& abs(uarray_c auto&& a) noexcept
+{
+  return is_neg(a) ? neg(a) : a;
+}
+
 constexpr auto&& not_(uarray_c auto&& a) noexcept
 {
   [&]<auto ...I>(std::index_sequence<I...>) noexcept
@@ -586,15 +591,11 @@ constexpr auto&& sdiv(uarray_c auto&& a, uarray_c auto const& b) noexcept
 {
   auto const s(Rem ? is_neg(a) : is_neg(a) != is_neg(b));
 
-  if (is_neg(a)) neg(a);
-
   std::remove_cvref_t<decltype(a)> B;
 
-  F(a, is_neg(b) ? copy(B, b), neg(B), B : b);
+  F(abs(a), is_neg(b) ? copy(B, b), neg(B), B : b);
 
-  if (s) neg(a);
-
-  return a;
+  return s ? neg(a) : a;
 }
 
 }

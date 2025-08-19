@@ -281,34 +281,32 @@ struct intt
   {
     auto const s(ar::is_neg(v_) != ar::is_neg(o.v_));
 
-    if (ar::is_neg(v_)) ar::neg(v_);
-
     if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
     {
       ar::glddiv<false>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else if constexpr(detail::contains<F...>(NEWDIV))
     {
       ar::newdiv<false>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else if constexpr(detail::contains<F...>(SEQDIV))
     {
       ar::seqdiv<false>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else
     {
       ar::naidiv<false>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
 
@@ -321,34 +319,32 @@ struct intt
   {
     auto const s(ar::is_neg(v_));
 
-    if (ar::is_neg(v_)) ar::neg(v_);
-
     if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
     {
       ar::glddiv<true>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else if constexpr(detail::contains<F...>(NEWDIV))
     {
       ar::newdiv<true>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else if constexpr(detail::contains<F...>(SEQDIV))
     {
       ar::seqdiv<true>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
     else
     {
       ar::naidiv<true>(
-        v_,
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B), B : o.v_
+        ar::abs(v_),
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
       );
     }
 
