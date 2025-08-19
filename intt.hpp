@@ -692,22 +692,22 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   decltype(a) const k = 10u) noexcept
 {
   std::array<char, detail::num_digits(decltype(a)::bits - 1) + 1> data;
-  auto i(std::size(data));
+  auto i(std::end(data));
 
   //
   decltype(auto) A{"0123456789abcdef"};
 
   do
   {
-    data[--i] = A[std::abs(int(a % k))];
+    *--i = A[std::abs(int(a % k))];
     a /= k;
   }
   while (a);
 
-  data[--i] = '-';
+  *--i = '-';
 
   //
-  return std::pair(i, data);
+  return std::pair(std::distance(std::begin(data), i), data);
 }
 
 constexpr auto to_string(is_intt_c auto const& a)
@@ -732,7 +732,7 @@ auto& operator<<(std::ostream& os, is_intt_c auto const& a)
       )
     );
 
-    os << std::string_view(arr.begin() + (i + !is_neg(a)), arr.end());
+    os << std::string_view(std::next(arr.begin(), i + !is_neg(a)), arr.end());
   }
 
   return os;
