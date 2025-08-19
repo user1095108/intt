@@ -714,7 +714,7 @@ constexpr auto to_string(is_intt_c auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
-  return std::string(arr.begin() + (i + !is_neg(a)), arr.end());
+  return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
 }
 
 auto& operator<<(std::ostream& os, is_intt_c auto const& a)
