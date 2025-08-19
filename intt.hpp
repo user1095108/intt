@@ -691,7 +691,7 @@ template <typename T, std::size_t N, enum feat... FF>
 constexpr auto to_pair(intt<T, N, FF...> a,
   decltype(a) const k = 10u) noexcept
 {
-  char data[detail::num_digits(decltype(a)::bits - 1) + 1];
+  std::array<char, detail::num_digits(decltype(a)::bits - 1) + 1> data;
   auto i(std::size(data) - 1);
 
   //
@@ -707,7 +707,7 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   data[i] = '-';
 
   //
-  return std::pair(i, std::to_array(std::move(data)));
+  return std::pair(i, data);
 }
 
 constexpr auto to_string(is_intt_c auto const& a)
