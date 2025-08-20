@@ -282,33 +282,25 @@ struct intt
     auto const s(ar::is_neg(v_) != ar::is_neg(o.v_));
 
     if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
-    {
       ar::glddiv<false>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else if constexpr(detail::contains<F...>(NEWDIV))
-    {
       ar::newdiv<false>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else if constexpr(detail::contains<F...>(SEQDIV))
-    {
       ar::seqdiv<false>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else
-    {
       ar::naidiv<false>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
 
     if (s) ar::neg(v_);
 
@@ -320,33 +312,25 @@ struct intt
     auto const s(ar::is_neg(v_));
 
     if constexpr(decltype(v_) B; detail::contains<F...>(GLDDIV))
-    {
       ar::glddiv<true>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else if constexpr(detail::contains<F...>(NEWDIV))
-    {
       ar::newdiv<true>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else if constexpr(detail::contains<F...>(SEQDIV))
-    {
       ar::seqdiv<true>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
     else
-    {
       ar::naidiv<true>(
         ar::abs(v_),
-        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::abs(B) : o.v_
+        ar::is_neg(o.v_) ? ar::copy(B, o.v_), ar::neg(B) : o.v_
       );
-    }
 
     if (s) ar::neg(v_);
 
