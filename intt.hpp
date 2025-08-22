@@ -79,7 +79,7 @@ consteval auto contains([[maybe_unused]] auto const f) noexcept
 
 consteval std::size_t num_digits(std::size_t const N) noexcept
 {
-  return N / 3 + bool(N % 3); // 2^N <= 8^J, J >= N * log8(2) = N / 3
+  return N / 3 + !!(N % 3); // 2^N <= 8^J, N <= 3*J
 }
 
 }
