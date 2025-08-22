@@ -84,5 +84,5 @@ int main()
   }
 
   //
-  return 0;
+  return std::hash<D>()(a);
 }
