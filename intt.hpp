@@ -35,7 +35,7 @@ template <
   std::unsigned_integral,
   std::size_t N,
   enum feat...
-> requires(N > 0) struct intt;
+> requires(!!N) struct intt;
 
 namespace detail
 {
@@ -85,7 +85,7 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
 }
 
 template <std::unsigned_integral T, std::size_t N, enum feat... F>
-  requires(N > 0)
+  requires(!!N)
 struct intt
 {
   enum : std::size_t
@@ -739,7 +739,7 @@ auto& operator>>(std::istream& is, is_intt_c auto& a)
 namespace std
 {
 
-template <typename U> requires (intt::is_intt_v<U>)
+template <typename U> requires intt::is_intt_v<U>
 struct hash<U>
 {
   using T = typename U::value_type;
