@@ -112,14 +112,14 @@ constexpr auto ucmp(uarray_c auto const& a, decltype(a) b) noexcept
 { // a <=> b
   enum : std::size_t { N = size<decltype(a)>() };
 
-  auto r(a[N - 1] <=> b[N - 1]);
-
-  [&]<auto ...I>(std::index_sequence<I...>) noexcept
+  return [&]<auto ...I>(std::index_sequence<I...>) noexcept
   {
-    (void)((r == 0) && ... && ((r = a[N - I - 2] <=> b[N - I - 2]) == 0));
-  }(std::make_index_sequence<N - 1>());
+    auto r(a[N - 1] <=> b[N - 1]);
 
-  return r;
+    (void)((r == 0) && ... && ((r = a[N - I - 2] <=> b[N - I - 2]) == 0));
+
+    return r;
+  }(std::make_index_sequence<N - 1>());
 }
 
 //
@@ -136,18 +136,18 @@ constexpr std::size_t clz(std::unsigned_integral auto const a) noexcept
 constexpr auto clz(uarray_c auto const& a) noexcept
 {
   using T = std::remove_cvref_t<decltype(a[0])>;
+
   enum : std::size_t { N = size<decltype(a)>() };
+  enum : decltype(std::countl_zero(a[0])) { wbits = bit_size_v<T> };
 
   return [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
       std::size_t r{};
 
-      enum : decltype(r) { wbits = bit_size_v<T> };
-
       (
         [&]() noexcept
         {
-          decltype(r) const c(std::countl_zero(a[N - 1 - I]));
+          auto const c(std::countl_zero(a[N - 1 - I]));
 
           r += c;
 
