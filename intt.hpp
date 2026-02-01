@@ -710,7 +710,7 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
 
 auto& operator>>(std::istream& is, is_intt auto& a)
 {
-  if (std::istream::sentry s(is); s)
+  if (std::istream::sentry s(is); s) [[likely]]
   {
     bool err;
 
