@@ -50,8 +50,7 @@ struct is_intt<intt<T, N, F...>> : std::true_type {};
 template <typename T>
 constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
 
-template <typename T>
-concept is_intt_c = is_intt_v<std::remove_reference_t<T>>;
+template <typename T> concept is_intt = is_intt_v<T>;
 
 namespace detail
 {
@@ -562,34 +561,34 @@ INTT_RIGHT_CONVERSION__(>=)
 INTT_RIGHT_CONVERSION__(<=>)
 
 //utilities///////////////////////////////////////////////////////////////////
-constexpr bool is_neg(is_intt_c auto const& a) noexcept
+constexpr bool is_neg(is_intt auto const& a) noexcept
 {
   return ar::is_neg(a.v_);
 }
 
-constexpr bool is_neg(auto const a) noexcept requires(!is_intt_c<decltype(a)>)
+constexpr bool is_neg(auto const a) noexcept requires(!is_intt<decltype(a)>)
 {
   return ar::is_neg(a);
 }
 
-constexpr auto abs(is_intt_c auto const& a) noexcept
+constexpr auto abs(is_intt auto const& a) noexcept
 {
   return is_neg(a) ? -a : a;
 }
 
 template <std::size_t M> requires(bool(M))
-constexpr auto&& lshr(is_intt_c auto&& a) noexcept
+constexpr auto&& lshr(is_intt auto&& a) noexcept
 {
   ar::lshr<M>(a.v_); return a;
 }
 
-constexpr auto&& lshr(is_intt_c auto&& a, std::size_t const M) noexcept
+constexpr auto&& lshr(is_intt auto&& a, std::size_t const M) noexcept
 {
   ar::lshr(a.v_, M); return a;
 }
 
 //
-constexpr auto isqrt(is_intt_c auto const& a) noexcept
+constexpr auto isqrt(is_intt auto const& a) noexcept
 {
   auto r(a); ar::seqsqrt(r.v_); return r;
 }
@@ -655,7 +654,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   return {neg ? r : -r, !digitconsumed}; // can return error
 }
 
-constexpr auto& to_array(is_intt_c auto const& a) noexcept { return a.v_; }
+constexpr auto& to_array(is_intt auto const& a) noexcept { return a.v_; }
 
 template <typename T>
 constexpr auto to_integral(auto const& s) noexcept ->
@@ -687,14 +686,14 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   return std::pair(std::distance(std::begin(data), i), data);
 }
 
-constexpr auto to_string(is_intt_c auto const& a)
+constexpr auto to_string(is_intt auto const& a)
 {
   auto const& [i, arr](to_pair(a));
 
   return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
 }
 
-auto& operator<<(std::ostream& os, is_intt_c auto const& a)
+auto& operator<<(std::ostream& os, is_intt auto const& a)
 {
   if (std::ostream::sentry s(os); s)
   {
@@ -715,7 +714,7 @@ auto& operator<<(std::ostream& os, is_intt_c auto const& a)
   return os;
 }
 
-auto& operator>>(std::istream& is, is_intt_c auto& a)
+auto& operator>>(std::istream& is, is_intt auto& a)
 {
   if (std::istream::sentry s(is, true); s)
   {
