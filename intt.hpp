@@ -576,7 +576,7 @@ constexpr auto abs(is_intt auto const& a) noexcept
   return is_neg(a) ? -a : a;
 }
 
-template <std::size_t M> requires(bool(M))
+template <std::size_t M> requires(!!M)
 constexpr auto&& lshr(is_intt auto&& a) noexcept
 {
   ar::lshr<M>(a.v_); return a;
@@ -641,7 +641,7 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
             continue;
           }
 
-        return {r, true};
+        return {{}, true};
 
       [[unlikely]] default:
         break;
@@ -650,8 +650,8 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
     break;
   }
 
-  //
-  return {neg ? r : -r, !digitconsumed}; // can return error
+  // can return error
+  return {neg ? r : -r, !digitconsumed || (!neg && (r == T::min()))};
 }
 
 constexpr auto& to_array(is_intt auto const& a) noexcept { return a.v_; }
@@ -708,7 +708,8 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
       )
     );
 
-    os << std::string_view(std::next(arr.begin(), i + !is_neg(a)), arr.end());
+    os << std::string_view(std::next(arr.begin(), i +
+      ((std::ios_base::dec & f) && !is_neg(a))), arr.end());
   }
 
   return os;
