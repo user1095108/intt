@@ -48,9 +48,10 @@ struct is_intt<intt<T, N, F...>> : std::true_type {};
 }
 
 template <typename T>
-constexpr auto is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
+constexpr bool is_intt_v{detail::is_intt<std::remove_cv_t<T>>::value};
 
-template <typename T> concept is_intt_c = is_intt_v<T>;
+template <typename T>
+concept is_intt_c = is_intt_v<std::remove_reference_t<T>>;
 
 namespace detail
 {
@@ -566,15 +567,10 @@ constexpr bool is_neg(is_intt_c auto const& a) noexcept
   return ar::is_neg(a.v_);
 }
 
-constexpr bool is_neg(std::integral auto const a) noexcept
+constexpr bool is_neg(auto const a) noexcept requires(!is_intt_c<decltype(a)>)
 {
-  return a < decltype(a){};
+  return ar::is_neg(a);
 }
-
-#if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
-constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
-constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
-#endif
 
 constexpr auto abs(is_intt_c auto const& a) noexcept
 {

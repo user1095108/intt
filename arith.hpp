@@ -108,6 +108,11 @@ constexpr bool is_neg(std::integral auto const a) noexcept
   return a < decltype(a){};
 }
 
+#if defined(__STRICT_ANSI__) && defined (__SIZEOF_INT128__)
+constexpr bool is_neg(__int128 const a) noexcept { return a < decltype(a){}; }
+constexpr bool is_neg(unsigned __int128) noexcept { return {}; }
+#endif
+
 constexpr auto ucmp(uarray_c auto const& a, decltype(a) b) noexcept
 { // a <=> b
   enum : std::size_t { N = size<decltype(a)>() };
