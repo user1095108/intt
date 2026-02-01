@@ -654,8 +654,6 @@ constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   return {neg ? r : -r, !digitconsumed || (!neg && (r == T::min()))};
 }
 
-constexpr auto& to_array(is_intt auto const& a) noexcept { return a.v_; }
-
 template <typename T>
 constexpr auto to_integral(auto const& s) noexcept ->
   decltype(std::cbegin(s), std::cend(s), std::pair<T, bool>())
@@ -706,8 +704,8 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
     )
   );
 
-  return os << std::string_view(std::next(arr.begin(), i +
-    (!(std::ios_base::dec & f) || !is_neg(a))), arr.end());
+  return os << std::string_view(std::next(arr.begin(),
+     i + (!(std::ios_base::dec & f) || !is_neg(a))), arr.end());
 }
 
 auto& operator>>(std::istream& is, is_intt auto& a)
