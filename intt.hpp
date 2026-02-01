@@ -594,7 +594,7 @@ constexpr auto isqrt(is_intt auto const& a) noexcept
 }
 
 //
-template <typename T>
+template <typename T> requires is_intt<T>
 constexpr std::pair<T, bool> to_integral(std::input_iterator auto i,
   decltype(i) const end) noexcept
 {
