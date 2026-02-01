@@ -11,7 +11,7 @@ int main()
 
   D a;
   std::cin >> a;
-  std::cout << "error: " << !std::cin << ' ' << a << std::endl;
+  std::cout << a << " error: " << !std::cin << std::endl;
 
   return 0;
 }
