@@ -6,7 +6,7 @@
 #include <algorithm> // std::max()
 #include <functional> // std::hash
 #include <istream>
-#include <iterator> // std::begin(), std::end()
+#include <iterator> // std::begin(), std::end(), std::istream_iterator<>
 #include <ostream>
 
 #include "constants.hpp"
@@ -712,11 +712,11 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
 
 auto& operator>>(std::istream& is, is_intt auto& a)
 {
-  if (std::istream::sentry s(is, true); s)
+  if (auto const i(std::istream_iterator<std::string>{is});
+    std::istream_iterator<std::string>{} != i)
   {
     bool f;
-    std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(
-      *std::istream_iterator<std::string>(is));
+    std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(*i);
 
     if (f) is.setstate(std::ios::failbit);
   }
