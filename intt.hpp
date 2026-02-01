@@ -715,8 +715,8 @@ auto& operator>>(std::istream& is, is_intt auto& a)
     bool err;
 
     if (std::tie(a, err) = to_integral<std::remove_reference_t<decltype(a)>>(
-      std::istreambuf_iterator<char>{is}, {}); err)
-      is.setstate(std::ios::failbit); // set failbit
+      std::istreambuf_iterator<char>{is}, {}); err) // convert & handle error
+      is.setstate(std::ios::failbit);
   }
 
   return is;
