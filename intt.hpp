@@ -695,24 +695,19 @@ constexpr auto to_string(is_intt auto const& a)
 
 auto& operator<<(std::ostream& os, is_intt auto const& a)
 {
-  if (std::ostream::sentry s(os); s)
-  {
-    auto const f(os.flags());
+  auto const f(os.flags());
 
-    auto const& [i, arr](
-      to_pair(
-        a,
-        std::ios_base::dec & f ? 10u :
-        std::ios_base::hex & f ? 16u :
-        std::ios_base::oct & f ? 8u : 10u
-      )
-    );
+  auto const& [i, arr](
+    to_pair(
+      a,
+      std::ios_base::dec & f ? 10u :
+      std::ios_base::hex & f ? 16u :
+      std::ios_base::oct & f ? 8u : 10u
+    )
+  );
 
-    os << std::string_view(std::next(arr.begin(), i +
-      (!(std::ios_base::dec & f) || !is_neg(a))), arr.end());
-  }
-
-  return os;
+  return os << std::string_view(std::next(arr.begin(), i +
+    (!(std::ios_base::dec & f) || !is_neg(a))), arr.end());
 }
 
 auto& operator>>(std::istream& is, is_intt auto& a)
