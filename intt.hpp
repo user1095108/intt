@@ -702,9 +702,9 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
     auto const& [i, arr](
       to_pair(
         a,
-        f & std::ios_base::dec ? 10u :
-        f & std::ios_base::hex ? 16u :
-        f & std::ios_base::oct ? 8u : 10u
+        std::ios_base::dec & f ? 10u :
+        std::ios_base::hex & f ? 16u :
+        std::ios_base::oct & f ? 8u : 10u
       )
     );
 
