@@ -712,13 +712,13 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
 
 auto& operator>>(std::istream& is, is_intt auto& a)
 {
-  if (auto const i(std::istream_iterator<std::string>{is});
-    std::istream_iterator<std::string>{} != i)
+  if (std::istream::sentry s(is); s)
   {
-    bool f;
-    std::tie(a, f) = to_integral<std::remove_reference_t<decltype(a)>>(*i);
+    bool err;
 
-    if (f) is.setstate(std::ios::failbit);
+    if (std::tie(a, err) = to_integral<std::remove_reference_t<decltype(a)>>(
+      std::istreambuf_iterator<char>{is}, {}); err)
+      is.setstate(std::ios::failbit); // set failbit
   }
 
   return is;
