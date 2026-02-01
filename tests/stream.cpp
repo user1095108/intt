@@ -9,9 +9,13 @@ int main()
   std::cout << D::min() << std::endl;;
   std::cout << D::max() << std::endl;;
 
-  D a;
-  std::cin >> a;
-  std::cout << a << " error: " << !std::cin << std::endl;
+  for (;;)
+  {
+    D a;
+    std::cin >> a;
+    std::cout << a << " error: " << !std::cin << std::endl;
+    std::cin.clear();
+  }
 
   return 0;
 }
