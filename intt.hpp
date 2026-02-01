@@ -709,7 +709,7 @@ auto& operator<<(std::ostream& os, is_intt auto const& a)
     );
 
     os << std::string_view(std::next(arr.begin(), i +
-      ((std::ios_base::dec & f) && !is_neg(a))), arr.end());
+      (!(std::ios_base::dec & f) || !is_neg(a))), arr.end());
   }
 
   return os;
