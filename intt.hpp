@@ -154,16 +154,14 @@ struct intt
   constexpr intt(U const v) noexcept
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
-    {
+    { // v_[0] is lsw, v_[N - 1] msw
       if constexpr(std::is_signed_v<detail::underlying_type_t<U>>)
-      { // v_[0] is lsw, v_[N - 1] msw
-        auto const neg(v < U{});
+      { 
+        auto const filler(v < U{} ? ~T{} : T{});
 
         (
           (
-            v_[I] = I * wbits < ar::bit_size_v<U> ?
-              v >> I * wbits :
-              neg ? ~T{} : T{}
+            v_[I] = I * wbits < ar::bit_size_v<U> ? v >> I * wbits : filler
           ),
           ...
         );
