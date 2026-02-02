@@ -46,11 +46,9 @@ auto to_raw(uarray_c auto const& a)
   ss << '"' << std::hex << std::setfill('0');
 
   for (auto i(N - 1); i; --i)
-  {
-    ss << std::setw(2) << V(a[i]) << " ";
-  }
+    ss << std::setw(sizeof(T) * 2) << V(a[i]) << " ";
 
-  ss << std::setw(2) << V(a[0]) << '"';
+  ss << std::setw(sizeof(T) * 2) << V(a[0]) << '"';
 
   return ss.str();
 }
