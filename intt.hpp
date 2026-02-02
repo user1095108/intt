@@ -684,11 +684,12 @@ constexpr auto to_pair(intt<T, N, FF...> a,
   return std::pair(std::distance(std::begin(data), i), data);
 }
 
-constexpr auto to_string(is_intt auto const& a)
+constexpr std::string to_string(is_intt auto const& a,
+  unsigned const k = 10u)
 {
-  auto const& [i, arr](to_pair(a));
+  auto const& [i, arr](to_pair(a, k));
 
-  return std::string(std::next(arr.begin(), i + !is_neg(a)), arr.end());
+  return {std::next(arr.begin(), i + ((10u != k) || !is_neg(a))), arr.end()};
 }
 
 auto& operator<<(std::ostream& os, is_intt auto const& a)
