@@ -157,7 +157,7 @@ struct intt
     { // v_[0] is lsw, v_[N - 1] msw
       if constexpr(std::is_signed_v<detail::underlying_type_t<U>>)
       { 
-        auto const filler(v < U{} ? ~T{} : T{});
+        T const filler(v < U{} ? ~T{} : T{});
 
         (
           (
@@ -183,12 +183,9 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      auto const neg(is_neg(o));
+      T const filler(is_neg(o) ? ~T{} : T{});
 
-      (
-        (v_[I] = I < M ? o.v_[I] : neg ? ~T{} : T{}),
-        ...
-      );
+      ((v_[I] = I < M ? o.v_[I] : filler), ...);
     }(std::make_index_sequence<N>());
   }
 
@@ -209,13 +206,13 @@ struct intt
   {
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     {
-      auto const neg(is_neg(o));
+      T const filler(is_neg(o) ? ~T{} : T{});
 
       (
         (
           v_[I] = I * wbits < M * intt<U, M>::wbits ?
             T(o >> I * wbits) :
-            neg ? ~T{} : T{}
+            filler
         ),
         ...
       );
@@ -357,23 +354,17 @@ struct intt
   {
     return [&]<auto ...I>(std::index_sequence<I...>) noexcept
       {
-        if constexpr(bool(sizeof...(I)))
-        { // words shifted to the left
+        if constexpr(!!sizeof...(I)) // words shifted to the left
           if constexpr(ar::bit_size_v<U> > N * wbits)
           {
-            return is_neg(*this) ?
-              (((I < N ? U(v_[I]) : U(~U{})) << I * wbits) | ...) :
-              (((I < N ? U(v_[I]) : U{}) << I * wbits) | ...);
+            U const filler(is_neg(*this) ? ~U{} : U{});
+
+            return (((I < N ? U(v_[I]) : filler) << I * wbits) | ...);
           }
           else
-          {
             return ((U(v_[I]) << I * wbits) | ...);
-          }
-        }
         else
-        {
           return v_[0];
-        }
       }(std::make_index_sequence<ar::bit_size_v<U> / wbits>());
   }
 
