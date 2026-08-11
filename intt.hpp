@@ -735,7 +735,7 @@ auto& operator>>(std::istream& is, is_intt auto& a)
 namespace std
 {
 
-template <typename U> requires intt::is_intt_v<U>
+template <typename U> requires intt::is_intt<U>
 struct hash<U>
 {
   using T = typename U::value_type;
