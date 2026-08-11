@@ -87,16 +87,14 @@ constexpr std::size_t mix(std::size_t x) noexcept
   {
     x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
     x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
-    x ^= x >> 28;
+    return x ^ (x >> 28);
   }
   else // 32-bit std::size_t
   {
     x ^= x >> 16; x *= std::size_t(0x21f0aaadU);
     x ^= x >> 15; x *= std::size_t(0x735a2d97U);
-    x ^= x >> 15;
+    return x ^ (x >> 15);
   }
-
-  return x;
 }
 
 }
