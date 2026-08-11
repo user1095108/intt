@@ -88,11 +88,9 @@ constexpr std::uint64_t ror64(std::uint64_t x, int k) noexcept {
 constexpr std::size_t mix(std::size_t x) noexcept
 {
   if constexpr(sizeof(std::size_t) >= 8)
-  { // nasam
-    x ^= ror64(x, 25) ^ ror64(x, 47);
-    x *= std::size_t(0x9E6C63D0676A9A99UL);
-    x ^= x >> 23 ^ x >> 51;
-    x *= std::size_t(0x9E6D62D06F6A9A9BUL);
+  { // NASAM
+    x ^= ror64(x, 25) ^ ror64(x, 47); x *= std::size_t(0x9E6C63D0676A9A99ULL);
+    x ^= x >> 23 ^ x >> 51; x *= std::size_t(0x9E6D62D06F6A9A9BULL);
     return x ^ (x >> 23) ^ (x >> 51);
   }
   else // 32-bit std::size_t
