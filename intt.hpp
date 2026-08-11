@@ -9,7 +9,6 @@
 #include <iterator> // std::begin(), std::end(), std::istream_iterator<>
 #include <ostream>
 
-#include "constants.hpp"
 #include "naidiv.hpp"
 #include "newdiv.hpp"
 #include "naimul.hpp"
