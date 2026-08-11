@@ -97,10 +97,8 @@ constexpr std::size_t mix(std::size_t x) noexcept
   }
   else // 32-bit std::size_t
   { // lowbias32
-    x ^= x >> 16;
-    x *= 0x7feb352dU;
-    x ^= x >> 15;
-    x *= 0x846ca68bU;
+    x ^= x >> 16; x *= std::size_t(0x7feb352dU);
+    x ^= x >> 15; x *= std::size_t(0x846ca68bU);
     return x ^ (x >> 16);
   }
 }
