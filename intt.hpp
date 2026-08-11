@@ -81,19 +81,27 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
   return N / 3 + !!(N % 3); // 2^N <= 8^J, N <= 3*J
 }
 
+constexpr std::uint64_t ror64(std::uint64_t x, int k) noexcept {
+  return (x >> k) | (x << (64 - k));
+}
+
 constexpr std::size_t mix(std::size_t x) noexcept
 {
   if constexpr(sizeof(std::size_t) >= 8)
-  {
-    x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
-    x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
-    return x ^ (x >> 28);
+  { // nasam
+    x ^= ror64(x, 25) ^ ror64(x, 47);
+    x *= std::size_t(0x9E6C63D0676A9A99UL);
+    x ^= x >> 23 ^ x >> 51;
+    x *= std::size_t(0x9E6D62D06F6A9A9BUL);
+    return x ^ (x >> 23) ^ (x >> 51);
   }
   else // 32-bit std::size_t
-  {
-    x ^= x >> 16; x *= std::size_t(0x21f0aaadU);
-    x ^= x >> 15; x *= std::size_t(0x735a2d97U);
-    return x ^ (x >> 15);
+  { // lowbias32
+    x ^= x >> 16;
+    x *= 0x7feb352dU;
+    x ^= x >> 15;
+    x *= 0x846ca68bU;
+    return x ^ (x >> 16);
   }
 }
 
