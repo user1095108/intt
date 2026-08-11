@@ -747,7 +747,7 @@ struct hash<U>
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
       {
         return ((h = intt::detail::mix(h + std::hash<T>()(a[I]))), ...);
-      }(intt::consts::ISR, std::make_index_sequence<U::words>());
+      }({}, std::make_index_sequence<U::words>());
   }
 };
 
