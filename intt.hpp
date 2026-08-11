@@ -82,6 +82,24 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
   return N / 3 + !!(N % 3); // 2^N <= 8^J, N <= 3*J
 }
 
+constexpr std::size_t mix(std::size_t x) noexcept
+{
+  if constexpr(sizeof(std::size_t) >= 8)
+  {
+    x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
+    x ^= x >> 32; x *= std::size_t(0xe9846af9b1a615dULL);
+    x ^= x >> 28;
+  }
+  else // 32-bit std::size_t
+  {
+    x ^= x >> 16; x *= std::size_t(0x21f0aaadU);
+    x ^= x >> 15; x *= std::size_t(0x735a2d97U);
+    x ^= x >> 15;
+  }
+
+  return x;
+}
+
 }
 
 template <std::unsigned_integral T, std::size_t N, enum feat... F>
@@ -727,10 +745,11 @@ struct hash<U>
   {
     return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
-      {
-        return ((s ^= std::hash<T>()(a[I + 1]) + intt::consts::ISR +
-          (s << 6) + (s >> 2)), ...), s; // !!
-      }(std::hash<T>()(a[0]), std::make_index_sequence<U::words - 1>());
+      { // !!!
+        return ((s = intt::detail::mix(s + std::hash<T>()(a[I + 1]))), ...),
+          s;
+      }(intt::detail::mix(std::hash<T>()(a[0]) + intt::consts::ISR),
+        std::make_index_sequence<U::words - 1>());
   }
 };
 
