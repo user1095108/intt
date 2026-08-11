@@ -743,11 +743,11 @@ struct hash<U>
   constexpr auto operator()(auto const& a) const
     noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
   {
-    return [&]<auto ...I>(auto&& s, std::index_sequence<I...>)
+    return [&]<auto ...I>(auto&& h, std::index_sequence<I...>)
       noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
       { // !!!
-        return ((s = intt::detail::mix(s + std::hash<T>()(a[I + 1]))), ...),
-          s;
+        return ((h = intt::detail::mix(h + std::hash<T>()(a[I + 1]))), ...),
+          h;
       }(intt::detail::mix(std::hash<T>()(a[0]) + intt::consts::ISR),
         std::make_index_sequence<U::words - 1>());
   }
