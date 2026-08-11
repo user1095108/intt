@@ -748,7 +748,7 @@ struct hash<U>
       { // !!!
         return ((h = intt::detail::mix(h + std::hash<T>()(a[I + 1]))), ...),
           h;
-      }(intt::detail::mix(std::hash<T>()(a[0]) + intt::consts::ISR),
+      }(intt::detail::mix(intt::consts::ISR + std::hash<T>()(a[0])),
         std::make_index_sequence<U::words - 1>());
   }
 };
