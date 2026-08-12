@@ -81,14 +81,14 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
   return N / 3 + !!(N % 3); // 2^N <= 8^J, N <= 3*J
 }
 
-constexpr std::size_t mix(std::uint64_t x) noexcept
+constexpr std::uint64_t mix(std::uint64_t x) noexcept
 { // moremur
   x = (x ^ (x >> 27)) * std::uint64_t(0x3C79AC492BA7B653ULL);
   x = (x ^ (x >> 33)) * std::uint64_t(0x1C69B3F74AC4AE35ULL);
   return x ^ (x >> 27);
 }
 
-constexpr std::size_t mix(std::uint32_t x) noexcept
+constexpr std::uint32_t mix(std::uint32_t x) noexcept
 { // lowbias32
   x = (x ^ (x >> 16)) * std::uint32_t(0x7feb352dU);
   x = (x ^ (x >> 15)) * std::uint32_t(0x846ca68bU);
