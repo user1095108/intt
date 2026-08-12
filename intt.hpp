@@ -87,10 +87,10 @@ constexpr std::size_t mix(std::size_t x) noexcept
     sizeof(x) == sizeof(std::uint64_t));
 
   if constexpr(sizeof(x) == sizeof(std::uint64_t))
-  { // fast-hash
-    x ^= x >> 23;
-    x *= std::size_t(0x2127599bf4325c37ULL);
-    return x ^ (x >> 47);
+  { // mxm
+    x *= std::size_t(0xbf58476d1ce4e5b9ull);
+    x ^= x >> 56;
+    return x * std::size_t(0x94d049bb133111ebull);
   }
   else
   { // lowbias32
