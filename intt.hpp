@@ -87,10 +87,12 @@ constexpr std::size_t mix(std::size_t x) noexcept
     sizeof(x) == sizeof(std::uint64_t));
 
   if constexpr(sizeof(x) == sizeof(std::uint64_t))
-  { // mxm
-    x *= std::size_t(0xbf58476d1ce4e5b9ull);
-    x ^= x >> 56;
-    return x * std::size_t(0x94d049bb133111ebull);
+  { // splitmix64
+    x ^= x >> 30;
+    x *= std::size_t(0xbf58476d1ce4e5b9ULL);
+    x ^= x >> 27;
+    x *= std::size_t(0x94d049bb133111ebULL);
+    return x ^ (x >> 31);
   }
   else
   { // lowbias32
