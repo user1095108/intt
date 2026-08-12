@@ -741,7 +741,7 @@ struct hash<U>
 {
   using T = typename U::value_type;
 
-  constexpr std::size_t operator()(auto const& a) const
+  std::size_t operator()(auto const& a) const
     noexcept(noexcept(std::hash<T>()(std::declval<T const&>())))
   {
     return [&]<auto ...I>(std::size_t h, std::index_sequence<I...>)
