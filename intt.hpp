@@ -83,9 +83,10 @@ consteval std::size_t num_digits(std::size_t const N) noexcept
 
 constexpr std::size_t mix(std::size_t x) noexcept
 {
-  static_assert(sizeof(std::size_t) == 4 || sizeof(std::size_t) == 8);
+  static_assert(sizeof(std::size_t) == sizeof(std::uint32_t) ||
+    sizeof(std::size_t) == sizeof(std::uint64_t));
 
-  if constexpr(sizeof(std::size_t) == 8)
+  if constexpr(sizeof(std::size_t) == sizeof(std::uint64_t))
   { // NASAM
     x ^= std::rotr(x, 25) ^ std::rotr(x, 47);
     x *= std::size_t(0x9E6C63D0676A9A99ULL);
