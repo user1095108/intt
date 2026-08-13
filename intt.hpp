@@ -169,7 +169,7 @@ struct intt
     [&]<auto ...I>(std::index_sequence<I...>) noexcept
     { // v_[0] is lsw, v_[N - 1] msw
       if constexpr(std::is_signed_v<detail::underlying_type_t<U>>)
-      { 
+      {
         T const filler(v < U{} ? ~T{} : T{});
 
         (
